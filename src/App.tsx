@@ -456,7 +456,7 @@ export default function App() {
             className="flex items-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-bold text-xs shadow-xl active:scale-95 transition-transform border border-blue-400/40 cursor-pointer"
           >
             <List className="w-4 h-4" />
-            <span>Ver Fichas y Lista ({activeElements.length})</span>
+            <span>Accidentes ({activeElements.length})</span>
             <ChevronUp className="w-4 h-4" />
           </button>
         </div>

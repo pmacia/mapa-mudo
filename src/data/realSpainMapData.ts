@@ -196,8 +196,8 @@ export const REAL_SPAIN_MAP = {
   },
   "estrecho_gibraltar": {"x":408,"y":566},
   "oceano_atlantico": {"x":120,"y":220},
-  "mar_cantabrico": {"x":470.0,"y":18.0},
-  "mar_mediterraneo": {"x":780,"y":440},
+  "mar_cantabrico": {"x":440.0,"y":15.0},
+  "mar_mediterraneo": {"x":780,"y":460},
   "mallorca": {"x":852,"y":322},
   "menorca": {
     "x": 900.2,

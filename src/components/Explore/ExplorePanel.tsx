@@ -24,7 +24,7 @@ import {
 interface ExplorePanelProps {
   elements: GeoElement[];
   selectedElement: GeoElement | null;
-  onSelectElement: (element: GeoElement) => void;
+  onSelectElement: (element: GeoElement | null) => void;
   activeCategory?: CategoryType | 'todos';
   onCategoryChange?: (cat: CategoryType | 'todos') => void;
   visitedAtlasIds?: string[];
@@ -57,6 +57,7 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
   const [selectedCat, setSelectedCat] = useState<CategoryType | 'todos'>(activeCategory);
   const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
   const filterDropdownRef = useRef<HTMLDivElement>(null);
+  const [showProgressCard, setShowProgressCard] = useState(true);
 
   // Sync if prop changes
   useEffect(() => {
@@ -117,7 +118,7 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
 
   return (
     <div className="flex flex-col h-[650px] max-h-[calc(100vh-210px)] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
-      {/* Header, Search & Category Filter (Compact layout saving maximum vertical space) */}
+      {/* Header, Search, Category Filter (Compact layout saving maximum vertical space), detalles de la selección (opcional) */}
       <div className="p-3 border-b border-slate-100 dark:border-slate-800 flex flex-col gap-2 shrink-0 bg-slate-50/50 dark:bg-slate-900/50">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -233,6 +234,7 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
         </div>
 
         {/* Atlas Gamification Progress Card */}
+        {showProgressCard && (
         <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-orange-950/20 border border-amber-200/80 dark:border-amber-900/60 rounded-xl p-2.5 flex flex-col gap-1.5 shadow-xs">
           <div className="flex items-center justify-between text-xs">
             <div className="flex items-center gap-1.5 font-bold text-amber-950 dark:text-amber-200">
@@ -240,19 +242,33 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
               <span>Exploración del Atlas</span>
             </div>
 
-            {atlasStampUnlocked ? (
+            <div className="flex items-center justify-end gap-1.5">
+              {atlasStampUnlocked ? (
+                <button
+                  onClick={onOpenStampModal}
+                  className="h-7 flex items-center justify-center gap-1 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white text-[10px] font-black px-2 rounded-lg shadow-xs cursor-pointer transition-transform"
+                  title="¡Sello Real Conseguido! Pulsa para ver"
+                >
+                  <span>🎖️ Sello Obtenido</span>
+                </button>
+              ) : (
+                <span className="h-7 flex items-center justify-center text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/40 border border-amber-300 dark:border-amber-800 px-2 rounded-lg">
+                  🎖️ Sello a los 65
+                </span>
+              )}
+
+              {/* Botón para cerrar la Progress Card */}
               <button
-                onClick={onOpenStampModal}
-                className="flex items-center gap-1 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white text-[10px] font-black px-2 py-0.5 rounded-lg shadow-xs cursor-pointer transition-transform"
-                title="¡Sello Real Conseguido! Pulsa para ver"
+                type="button"
+                onClick={() => setShowProgressCard(false)}
+                className="h-7 w-7 shrink-0 flex items-center justify-center bg-white dark:bg-slate-800 hover:bg-red-100 dark:hover:bg-red-900/30 text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 rounded-lg border border-slate-200 dark:border-slate-700 transition-colors shadow-xs cursor-pointer"
+                title="Cerrar progreso"
+                aria-label="Cerrar progreso"
               >
-                <span>🎖️ Sello Obtenido</span>
+                <X className="w-3.5 h-3.5" />
               </button>
-            ) : (
-              <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/40 border border-amber-300 dark:border-amber-800 px-2 py-0.5 rounded-lg">
-                🎖️ Sello a los 65
-              </span>
-            )}
+            </div>
+
           </div>
 
           {/* Progress bar and counter */}
@@ -280,11 +296,11 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
             </span>
           </div>
         </div>
-      </div>
+        )}
 
       {/* Selected Element Detailed Card (If any is selected) */}
-      {selectedElement && (
-        <div className="p-3.5 bg-blue-50/80 dark:bg-slate-800/95 border-b border-blue-200/80 dark:border-slate-700 flex flex-col gap-2 shrink-0 max-h-[220px] overflow-y-auto scrollbar-thin">
+      {selectedElement && (                                     
+        <div className="p-3.5 bg-blue-50/80 dark:bg-slate-800/95 border border-slate-200/80 dark:border-slate-900/60 rounded-xl p-2.5 flex flex-col gap-1.5 shadow-xs">
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-1.5 flex-wrap">
@@ -311,12 +327,22 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
               </h3>
             </div>
 
+            {/* Botón para escuchar el nombre */}
             <button
               onClick={() => speakSpanish(selectedElement.name)}
               className="p-1.5 bg-white dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-slate-700 text-blue-600 dark:text-blue-400 rounded-lg border border-slate-200 dark:border-slate-700 transition-colors shadow-xs cursor-pointer"
               title="Escuchar pronunciación"
             >
               <Volume2 className="w-3.5 h-3.5" />
+            </button>
+
+            {/* Botón para cerrar la tarjeta de detalles */}
+            <button
+              onClick={() => onSelectElement(null)} 
+              className="p-1.5 bg-white dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-slate-700 text-blue-600 dark:text-blue-400 rounded-lg border border-slate-200 dark:border-slate-700 transition-colors shadow-xs cursor-pointer"
+              title="Cerrar descripción"
+            >
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
 
@@ -333,6 +359,9 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
           </div>
         </div>
       )}
+
+      </div>
+
 
       {/* List of Geographic Elements */}
       <div className="flex-1 overflow-y-auto p-2 space-y-1 scrollbar-thin">
