@@ -1,0 +1,8 @@
+{
+  "name": "GeoEspaña Reto: Mapa Mudo Interactivo",
+  "description": "Aprende y pon a prueba tus conocimientos sobre ríos, cordilleras, picos, costas e islas de España con un mapa mudo interactivo y desafíos lúdicos.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
