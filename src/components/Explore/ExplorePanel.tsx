@@ -18,7 +18,8 @@ import {
   Filter,
   FilterX,
   ChevronDown,
-  X
+  X,
+  RotateCcw
 } from 'lucide-react';
 
 interface ExplorePanelProps {
@@ -30,6 +31,8 @@ interface ExplorePanelProps {
   visitedAtlasIds?: string[];
   atlasStampUnlocked?: boolean;
   onOpenStampModal?: () => void;
+  onResetAtlas?: () => void;
+  className?: string;
 }
 
 const CATEGORY_OPTIONS: { id: CategoryType | 'todos'; label: string; emoji: string }[] = [
@@ -52,6 +55,8 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
   visitedAtlasIds,
   atlasStampUnlocked,
   onOpenStampModal,
+  onResetAtlas,
+  className,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCat, setSelectedCat] = useState<CategoryType | 'todos'>(activeCategory);
@@ -117,7 +122,7 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-[650px] max-h-[calc(100vh-210px)] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+    <div className={`flex flex-col flex-1 h-full min-h-0 bg-white dark:bg-slate-900 border-0 lg:border border-slate-200 dark:border-slate-800 rounded-none lg:rounded-2xl shadow-none lg:shadow-sm overflow-hidden ${className || ''}`}>
       {/* Header, Search, Category Filter (Compact layout saving maximum vertical space), detalles de la selección (opcional) */}
       <div className="p-3 border-b border-slate-100 dark:border-slate-800 flex flex-col gap-2 shrink-0 bg-slate-50/50 dark:bg-slate-900/50">
         <div className="flex items-center justify-between">
@@ -257,6 +262,17 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
                 </span>
               )}
 
+              {/* Botón de reinicio de la exploración del Atlas */}
+              <button
+                type="button"
+                onClick={onResetAtlas}
+                className="h-7 w-7 shrink-0 flex items-center justify-center bg-white dark:bg-slate-800 hover:bg-amber-100 dark:hover:bg-amber-950/50 text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 rounded-lg border border-slate-200 dark:border-slate-700 transition-colors shadow-xs cursor-pointer"
+                title="Reiniciar exploración del Atlas para volver a conseguir el Sello Real"
+                aria-label="Reiniciar exploración del Atlas"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+              </button>
+
               {/* Botón para cerrar la Progress Card */}
               <button
                 type="button"
@@ -364,7 +380,7 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
 
 
       {/* List of Geographic Elements */}
-      <div className="flex-1 overflow-y-auto p-2 space-y-1 scrollbar-thin">
+      <div className="flex-1 min-h-0 overflow-y-auto p-2 space-y-1 scrollbar-thin">
         {filteredElements.length === 0 ? (
           <div className="text-center py-8 text-xs text-slate-400">
             No se han encontrado elementos con esa búsqueda o filtro.

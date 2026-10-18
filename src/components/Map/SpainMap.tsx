@@ -145,8 +145,12 @@ export const SpainMap: React.FC<SpainMapProps> = ({
     }
   };
 
-  const handleItemClick = (elem: GeoElement) => {
+  const handleItemClick = (elem: GeoElement, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
     if (!isInteractive) return;
+    if (feedbackStatus) return; // Lock map clicks while question feedback is active
     if (onElementHover) {
       onElementHover(elem);
     }
@@ -365,7 +369,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
               const isFeedback = feedbackElementId === elem.id;
 
               return (
-                <g key={elem.id} className="cursor-pointer" onClick={() => handleItemClick(elem)}>
+                <g key={elem.id} className="cursor-pointer" onClick={(e) => handleItemClick(elem, e)}>
                   {/* Mountain Range Polygon */}
                   <path
                     d={elem.svgPath}
@@ -433,7 +437,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
               const isFeedback = feedbackElementId === elem.id;
 
               return (
-                <g key={elem.id} className="cursor-pointer" onClick={() => handleItemClick(elem)}>
+                <g key={elem.id} className="cursor-pointer" onClick={(e) => handleItemClick(elem, e)}>
                   {/* Invisible wide hit path for comfortable clicking */}
                   <path
                     d={elem.svgPath}
@@ -544,7 +548,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
                 key={elem.id}
                 className="cursor-pointer group"
                 transform={`translate(${elem.mapX}, ${elem.mapY})`}
-                onClick={() => handleItemClick(elem)}
+                onClick={(e) => handleItemClick(elem, e)}
                 onMouseEnter={() => handleElementHover(elem)}
                 onMouseLeave={() => setHoveredElement(null)}
               >
@@ -786,7 +790,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
       {/* Floating Hover Tooltip */}
       {hoveredElement && !blankMode && (
         <div
-          className="pointer-events-none absolute bottom-4 left-4 z-30 flex items-center gap-3 bg-slate-900/95 text-white px-4 py-2.5 rounded-xl shadow-xl backdrop-blur-md border border-slate-700 animate-fadeIn"
+          className="pointer-events-none absolute bottom-4 right-4 z-30 flex items-center gap-3 bg-slate-900/95 text-white px-4 py-2.5 rounded-xl shadow-xl backdrop-blur-md border border-slate-700 animate-fadeIn"
         >
           <div className="flex flex-col">
             <span className="text-xs uppercase tracking-wider text-amber-400 font-semibold flex items-center gap-2">

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Award, Compass, Sparkles, X, CheckCircle, Trophy } from 'lucide-react';
 import { playSound } from '../../utils/audio';
+import confetti from 'canvas-confetti';
 
 interface AtlasStampCelebrationModalProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ export const AtlasStampCelebrationModal: React.FC<AtlasStampCelebrationModalProp
       const timer = setTimeout(() => {
         setStampDown(true);
         setShowConfetti(true);
+        confetti({ particleCount: 150, spread: 90, origin: { y: 0.5 } });
       }, 250);
       return () => clearTimeout(timer);
     } else {

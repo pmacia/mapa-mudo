@@ -15,8 +15,11 @@ import { AccidentFilterPanel, AccidentFilterState } from './components/Controls/
 import { AchievementsModal } from './components/Achievements/AchievementsModal';
 import { PrintableMapModal } from './components/Printable/PrintableMapModal';
 import { AtlasStampCelebrationModal } from './components/Achievements/AtlasStampCelebrationModal';
+import { GameManualModal } from './components/Manual/GameManualModal';
 import { playSound } from './utils/audio';
-import { List, X, ChevronUp } from 'lucide-react';
+import { List, X, ChevronDown, ChevronUp } from 'lucide-react';
+import confetti from 'canvas-confetti';
+import { GAME_CONFIG } from './constants/gameConfig';
 
 const STORAGE_KEY_STATS = 'geoespana_player_stats_v2';
 
@@ -29,7 +32,22 @@ export default function App() {
   const [targetHighlightId, setTargetHighlightId] = useState<string | null>(null);
   const [feedbackElementId, setFeedbackElementId] = useState<string | null>(null);
   const [feedbackStatus, setFeedbackStatus] = useState<'correct' | 'wrong' | null>(null);
-  const [lastClickedElement, setLastClickedElement] = useState<GeoElement | null>(null);
+
+  // Responsive device detection to prevent duplicate mounted ChallengeMode instances
+  const [isDesktop, setIsDesktop] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth >= GAME_CONFIG.UI.DESKTOP_BREAKPOINT_PX;
+    }
+    return true;
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth >= GAME_CONFIG.UI.DESKTOP_BREAKPOINT_PX);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Accident Filter & Selection State (Active on Map & in Games)
   const [accidentFilters, setAccidentFilters] = useState<AccidentFilterState>({
@@ -61,6 +79,7 @@ export default function App() {
   const [isAccidentFilterOpen, setIsAccidentFilterOpen] = useState(false);
   const [isAchievementsOpen, setIsAchievementsOpen] = useState(false);
   const [isPrintableOpen, setIsPrintableOpen] = useState(false);
+  const [isManualOpen, setIsManualOpen] = useState(false);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   const [isStampCelebrationOpen, setIsStampCelebrationOpen] = useState(false);
 
@@ -119,7 +138,6 @@ export default function App() {
     setTargetHighlightId(null);
     setFeedbackElementId(null);
     setFeedbackStatus(null);
-    setLastClickedElement(null);
     setIsMobileDrawerOpen(false);
 
     // In quiz challenge, automatically toggle off labels for authentic "mapa mudo" test
@@ -196,25 +214,25 @@ export default function App() {
     if (!unlocked.includes('primer-paso') && updatedStats.correctAnswers >= 1) {
       unlocked.push('primer-paso');
     }
-    if (!unlocked.includes('senor-rios') && (newCounts['rios'] || 0) >= 5) {
+    if (!unlocked.includes('senor-rios') && (newCounts['rios'] || 0) >= GAME_CONFIG.BADGE_REQUIREMENTS.RIOS_COUNT) {
       unlocked.push('senor-rios');
     }
     if (
       !unlocked.includes('alpinista') &&
-      ((newCounts['montanas'] || 0) + (newCounts['picos'] || 0)) >= 5
+      ((newCounts['montanas'] || 0) + (newCounts['picos'] || 0)) >= GAME_CONFIG.BADGE_REQUIREMENTS.MONTANAS_PICOS_COUNT
     ) {
       unlocked.push('alpinista');
     }
-    if (!unlocked.includes('marinero-costas') && (newCounts['costas'] || 0) >= 5) {
+    if (!unlocked.includes('marinero-costas') && (newCounts['costas'] || 0) >= GAME_CONFIG.BADGE_REQUIREMENTS.COSTAS_COUNT) {
       unlocked.push('marinero-costas');
     }
-    if (!unlocked.includes('explorador-islas') && (newCounts['islas'] || 0) >= 4) {
+    if (!unlocked.includes('explorador-islas') && (newCounts['islas'] || 0) >= GAME_CONFIG.BADGE_REQUIREMENTS.ISLAS_COUNT) {
       unlocked.push('explorador-islas');
     }
-    if (!unlocked.includes('racha-de-fuego') && updatedStats.streak >= 5) {
+    if (!unlocked.includes('racha-de-fuego') && updatedStats.streak >= GAME_CONFIG.BADGE_REQUIREMENTS.STREAK_COUNT) {
       unlocked.push('racha-de-fuego');
     }
-    if (!unlocked.includes('geografo-maestro') && updatedStats.xp >= 500) {
+    if (!unlocked.includes('geografo-maestro') && updatedStats.xp >= GAME_CONFIG.BADGE_REQUIREMENTS.MASTER_XP) {
       unlocked.push('geografo-maestro');
     }
 
@@ -230,7 +248,7 @@ export default function App() {
 
     setStats((prev) => {
       const newXp = prev.xp + earnedXp;
-      const newLevel = Math.floor(newXp / 100) + 1;
+      const newLevel = Math.floor(newXp / GAME_CONFIG.GAMEPLAY.LEVEL_XP_STEP) + 1;
       const newStreak = prev.streak + 1;
       const newMaxStreak = Math.max(prev.maxStreak, newStreak);
       const newCorrect = prev.correctAnswers + 1;
@@ -247,6 +265,12 @@ export default function App() {
       };
 
       const updatedBadges = checkBadgeUnlocks(tempStats, updatedCounts);
+      const isNewBadgeUnlocked = updatedBadges.length > prev.unlockedBadges.length;
+      if (isNewBadgeUnlocked) {
+        playSound('levelup');
+        confetti({ particleCount: 160, spread: 85, origin: { y: 0.5 } });
+      }
+
       return {
         ...tempStats,
         unlockedBadges: updatedBadges,
@@ -262,7 +286,7 @@ export default function App() {
     }));
   };
 
-  // Gamification: Track exploration of accidents in Atlas mode (10 pts per visited accident, stamp at 65)
+  // Gamification: Track exploration of accidents in Atlas mode
   const handleVisitAtlasElement = (element: GeoElement) => {
     if (currentMode !== 'explorar') return;
 
@@ -273,7 +297,7 @@ export default function App() {
     }
 
     const newVisited = [...currentVisited, element.id];
-    const earnedXp = 10;
+    const earnedXp = GAME_CONFIG.POINTS.ATLAS_DISCOVERY_XP;
     const isCompleted = newVisited.length >= GEO_ELEMENTS.length; // 65/65
 
     if (isCompleted) {
@@ -283,9 +307,9 @@ export default function App() {
     }
 
     setStats((prev) => {
-      const bonusXp = isCompleted && !prev.atlasStampUnlocked ? 100 : 0;
+      const bonusXp = isCompleted && !prev.atlasStampUnlocked ? GAME_CONFIG.POINTS.ATLAS_STAMP_BONUS_XP : 0;
       const newXp = prev.xp + earnedXp + bonusXp;
-      const newLevel = Math.floor(newXp / 100) + 1;
+      const newLevel = Math.floor(newXp / GAME_CONFIG.GAMEPLAY.LEVEL_XP_STEP) + 1;
       const updatedBadges = [...prev.unlockedBadges];
       if (isCompleted && !updatedBadges.includes('sello-atlas')) {
         updatedBadges.push('sello-atlas');
@@ -306,13 +330,33 @@ export default function App() {
     }
   };
 
+  // Reset Atlas exploration progress to allow re-discovering accidents and obtaining stamp again
+  const handleResetAtlas = () => {
+    setStats((prev) => ({
+      ...prev,
+      visitedAtlasElements: [],
+      atlasStampUnlocked: false,
+      unlockedBadges: prev.unlockedBadges.filter((b) => b !== 'sello-atlas'),
+    }));
+    playSound('click');
+  };
+
   const handleMapElementClick = (element: GeoElement) => {
     if (currentMode === 'explorar') {
       setSelectedElement(element);
       handleVisitAtlasElement(element);
       playSound('click');
     } else {
-      setLastClickedElement(element);
+      if (
+        challengeType !== 'identificar' &&
+        challengeSession.currentQuestion &&
+        !challengeSession.feedback &&
+        !challengeSession.isGameOver &&
+        !challengeSession.isCompleted
+      ) {
+        const isCorrect = element.id === challengeSession.currentQuestion.id;
+        challengeSession.handleAnswer(isCorrect, element);
+      }
     }
   };
 
@@ -335,7 +379,7 @@ export default function App() {
       setFeedbackElementId(id);
       setFeedbackStatus(status);
     },
-    roundSize: 10,
+    roundSize: GAME_CONFIG.GAMEPLAY.DEFAULT_ROUND_SIZE,
   });
 
   return (
@@ -355,6 +399,7 @@ export default function App() {
         stats={stats}
         onOpenAchievements={() => setIsAchievementsOpen(true)}
         onOpenPrintable={() => setIsPrintableOpen(true)}
+        onOpenManual={() => setIsManualOpen(true)}
         soundEnabled={soundEnabled}
         onToggleSound={() => setSoundEnabled(!soundEnabled)}
         isCollapsed={isHeaderCollapsed}
@@ -406,16 +451,23 @@ export default function App() {
             className={`hidden lg:flex flex-col ${
               currentMode === 'explorar' ? 'lg:col-span-5 xl:col-span-4' : 'lg:col-span-4 xl:col-span-3'
             } lg:sticky transition-all duration-300 ${
-              isHeaderCollapsed ? 'lg:top-14' : 'lg:top-20'
+              isHeaderCollapsed
+                ? 'lg:top-14 lg:max-h-[calc(100dvh-4.75rem)] lg:max-h-[calc(100vh-4.75rem)]'
+                : 'lg:top-20 lg:max-h-[calc(100dvh-6.25rem)] lg:max-h-[calc(100vh-6.25rem)]'
             }`}
           >
             {currentMode === 'explorar' ? (
               <ExplorePanel
+                className={`w-full ${
+                  isHeaderCollapsed
+                    ? 'lg:max-h-[calc(100dvh-4.75rem)] lg:max-h-[calc(100vh-4.75rem)]'
+                    : 'lg:max-h-[calc(100dvh-6.25rem)] lg:max-h-[calc(100vh-6.25rem)]'
+                }`}
                 elements={GEO_ELEMENTS}
                 selectedElement={selectedElement}
                 onSelectElement={(elem) => {
                   setSelectedElement(elem);
-                  handleVisitAtlasElement(elem);
+                  if (elem) handleVisitAtlasElement(elem);
                   playSound('click');
                 }}
                 activeCategory={exploreCategory}
@@ -423,25 +475,27 @@ export default function App() {
                 visitedAtlasIds={stats.visitedAtlasElements}
                 atlasStampUnlocked={stats.atlasStampUnlocked}
                 onOpenStampModal={() => setIsStampCelebrationOpen(true)}
+                onResetAtlas={handleResetAtlas}
               />
-            ) : (
+            ) : isDesktop ? (
               <ChallengeMode
+                className={`w-full ${
+                  isHeaderCollapsed
+                    ? 'lg:max-h-[calc(100dvh-4.75rem)] lg:max-h-[calc(100vh-4.75rem)]'
+                    : 'lg:max-h-[calc(100dvh-6.25rem)] lg:max-h-[calc(100vh-6.25rem)]'
+                }`}
                 session={challengeSession}
                 challengeType={challengeType}
-                lastClickedElement={lastClickedElement}
-                onResetClickedElement={() => setLastClickedElement(null)}
               />
-            )}
+            ) : null}
           </div>
 
           {/* Mobile Bottom Challenge Banner (When in Quiz mode on mobile) */}
-          {currentMode !== 'explorar' && (
+          {!isDesktop && currentMode !== 'explorar' && (
             <div className="lg:hidden mt-2">
               <ChallengeMode
                 session={challengeSession}
                 challengeType={challengeType}
-                lastClickedElement={lastClickedElement}
-                onResetClickedElement={() => setLastClickedElement(null)}
               />
             </div>
           )}
@@ -469,44 +523,46 @@ export default function App() {
           onClick={() => setIsMobileDrawerOpen(false)}
         >
           <div 
-            className="w-full bg-white dark:bg-slate-900 rounded-t-3xl shadow-2xl border-t border-slate-200 dark:border-slate-800 flex flex-col max-h-[85vh] animate-slideUp overflow-hidden"
+            className="w-full bg-white dark:bg-slate-900 rounded-t-3xl shadow-2xl border-t border-slate-200 dark:border-slate-800 flex flex-col h-[95vh] animate-slideUp overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Sheet Handle & Close Bar */}
             <div className="p-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-              <div className="flex items-center gap-2">
+            {/*   <div className="flex items-center gap-2">
                 <div className="w-8 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto" />
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
                   Accidentes Geográficos ({activeElements.length})
                 </span>
-              </div>
+              </div> */}
 
               <button
                 onClick={() => setIsMobileDrawerOpen(false)}
                 className="flex items-center gap-1 px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-bold cursor-pointer"
               >
-                <X className="w-3.5 h-3.5" />
-                <span>Volver al Mapa</span>
+                <ChevronDown className="w-3.5 h-3.5" />
               </button>
             </div>
 
             {/* Explore Panel inside Bottom Sheet */}
-            <div className="flex-1 overflow-hidden">
+            <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
               <ExplorePanel
                 elements={GEO_ELEMENTS}
                 selectedElement={selectedElement}
                 onSelectElement={(elem) => {
                   setSelectedElement(elem);
-                  handleVisitAtlasElement(elem);
-                  playSound('click');
-                  // Auto close sheet so student sees the element on map
-                  setIsMobileDrawerOpen(false);
+                  if (elem) {
+                    handleVisitAtlasElement(elem);
+                    playSound('click');
+                    // Auto close sheet so student sees the element on map
+                    setIsMobileDrawerOpen(false);
+                  }
                 }}
                 activeCategory={exploreCategory}
                 onCategoryChange={setExploreCategory}
                 visitedAtlasIds={stats.visitedAtlasElements}
                 atlasStampUnlocked={stats.atlasStampUnlocked}
                 onOpenStampModal={() => setIsStampCelebrationOpen(true)}
+                onResetAtlas={handleResetAtlas}
               />
             </div>
           </div>
@@ -544,6 +600,13 @@ export default function App() {
         onClose={() => setIsStampCelebrationOpen(false)}
         onOpenAchievements={() => setIsAchievementsOpen(true)}
         totalExplored={stats.visitedAtlasElements?.length || 0}
+      />
+
+      {/* Game Manual & Didactic Guide Modal */}
+      <GameManualModal
+        isOpen={isManualOpen}
+        onClose={() => setIsManualOpen(false)}
+        onSelectMode={(mode) => handleModeChange(mode)}
       />
     </div>
   );

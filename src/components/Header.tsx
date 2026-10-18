@@ -14,7 +14,8 @@ import {
   Volume2,
   VolumeX,
   ChevronUp,
-  ChevronDown
+  ChevronDown,
+  BookOpen
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -27,6 +28,7 @@ interface HeaderProps {
   stats: PlayerStats;
   onOpenAchievements: () => void;
   onOpenPrintable: () => void;
+  onOpenManual: () => void;
   soundEnabled: boolean;
   onToggleSound: () => void;
   isCollapsed: boolean;
@@ -43,6 +45,7 @@ export const Header: React.FC<HeaderProps> = ({
   stats,
   onOpenAchievements,
   onOpenPrintable,
+  onOpenManual,
   soundEnabled,
   onToggleSound,
   isCollapsed,
@@ -255,6 +258,18 @@ export const Header: React.FC<HeaderProps> = ({
             ) : (
               <ChevronUp className="w-4 h-4 text-slate-600 dark:text-slate-300" />
             )}
+          </button>
+
+          {/* Manual / Guía Didáctica Button */}
+          <button
+            onClick={onOpenManual}
+            className={`items-center gap-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-800/80 text-xs font-bold text-indigo-700 dark:text-indigo-300 transition-colors cursor-pointer ${
+              isCollapsed ? 'hidden sm:flex px-2 py-1 text-[11px]' : 'flex px-2.5 sm:px-3 py-1.5'
+            }`}
+            title="Abrir Manual del Juego y Guía Didáctica"
+          >
+            <BookOpen className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+            <span className="hidden md:inline">Manual</span>
           </button>
 
           {/* Printable Map Generator Button */}

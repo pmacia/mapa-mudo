@@ -198,7 +198,7 @@ export const REAL_SPAIN_MAP = {
   "oceano_atlantico": {"x":120,"y":220},
   "mar_cantabrico": {"x":440.0,"y":15.0},
   "mar_mediterraneo": {"x":780,"y":460},
-  "mallorca": {"x":852,"y":322},
+  "mallorca": {"x":852,"y":314},
   "menorca": {
     "x": 900.2,
     "y": 289.6
