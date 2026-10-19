@@ -493,9 +493,44 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
                 </div>
               </div>
 
-              {/* Layers */}
+              {/* Territorial Hierarchy & Layers */}
               <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">7 Familias de Accidentes Geográficos</h4>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Jerarquía de Capas Cartográficas</h4>
+                <div className="space-y-2.5 text-xs">
+                  <div className="p-3 bg-emerald-50/80 dark:bg-emerald-950/40 rounded-xl border border-emerald-200 dark:border-emerald-800">
+                    <span className="font-extrabold text-emerald-950 dark:text-emerald-200 block mb-0.5">
+                      🗺️ Capa 0: Contorno Geográfico Base (Siempre Activa)
+                    </span>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                      Silueta física continental continua de España peninsular, Portugal contiguo, el sur de Francia pirenaico, la costa norte de África (Marruecos y Estrecho de Gibraltar), las Islas Baleares y el recuadro cartográfico de las Islas Canarias. Sin rótulos ni nombres distractores para un mapa mudo limpio.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div className="p-3 bg-amber-50/80 dark:bg-amber-950/40 rounded-xl border border-amber-200 dark:border-amber-800">
+                      <span className="font-extrabold text-amber-950 dark:text-amber-200 block mb-0.5">
+                        🏛️ Capa 1: Comunidades Autónomas (17 CC.AA.)
+                      </span>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                        Activa o desactiva las líneas fronterizas de las 17 Comunidades Autónomas y las Ciudades Autónomas de Ceuta y Melilla.
+                      </p>
+                    </div>
+
+                    <div className="p-3 bg-blue-50/80 dark:bg-blue-950/40 rounded-xl border border-blue-200 dark:border-blue-800">
+                      <span className="font-extrabold text-blue-950 dark:text-blue-200 block mb-0.5">
+                        📍 Capa 2: Provincias de España (50 Provincias)
+                      </span>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                        Muestra la subdivisión provincial con trazo fino delimitador para memorizar la organización territorial completa de España.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Physical Accident Layers */}
+              <div>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Capas de Accidentes Geográficos Físicos (65 elementos)</h4>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                   <div className="p-2.5 bg-blue-50 dark:bg-blue-950/40 rounded-xl border border-blue-200 dark:border-blue-900/40 font-medium">
                     🌊 <strong>Ríos</strong> (Ebro, Duero, Tajo, Guadiana, Guadalquivir, Miño, Júcar, Segura...)
@@ -519,7 +554,7 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
                     🏞️ <strong>Unidades de Relieve</strong> (Meseta Norte/Sur, Depresiones Ebro/Guadalquivir)
                   </div>
                   <div className="p-2.5 bg-purple-50 dark:bg-purple-950/40 rounded-xl border border-purple-200 dark:border-purple-900/40 font-medium">
-                    🏷️ <strong>Etiquetas de Texto</strong> (Activa o desactiva para examen o reto mudo)
+                    🏷️ <strong>Rótulos de Nombres</strong> (Activa o desactiva para examen o reto mudo)
                   </div>
                 </div>
               </div>

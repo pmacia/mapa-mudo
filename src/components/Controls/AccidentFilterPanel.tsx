@@ -13,7 +13,9 @@ import {
   EyeOff,
   X,
   Waves,
-  Sparkles
+  Sparkles,
+  Map as MapIcon,
+  Building2
 } from 'lucide-react';
 
 export interface AccidentFilterState {
@@ -25,6 +27,8 @@ export interface AccidentFilterState {
   islas: boolean;
   unidades_relieve: boolean;
   showLabels: boolean;
+  showCommunities?: boolean;
+  showProvinces?: boolean;
 }
 
 interface AccidentFilterPanelProps {
@@ -220,11 +224,96 @@ export const AccidentFilterPanel: React.FC<AccidentFilterPanelProps> = ({
             </div>
           </div>
 
-          {/* Map labels toggle */}
-          <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2.5">
-              Visualización en el mapa
-            </h3>
+          {/* Capas Base y División Política */}
+          <div className="pt-3 border-t border-slate-200 dark:border-slate-800 space-y-3">
+            <div>
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                Capas de Territorio y Visualización
+              </h3>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                Ajusta el nivel de detalle geográfico desde el contorno puro hasta la división provincial
+              </p>
+            </div>
+
+            {/* Capa 0 Info Card */}
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400">
+                  <MapIcon className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="font-extrabold text-slate-900 dark:text-white">
+                    Capa 0: Contorno Geográfico Base
+                  </div>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400 font-normal">
+                    España, Portugal, Sur de Francia, Costa Norte de África, Baleares y Canarias
+                  </div>
+                </div>
+              </div>
+              <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300">
+                Base Activa
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {/* Capa 1: Comunidades Autónomas Toggle */}
+              <button
+                onClick={() => onToggleFilter('showCommunities')}
+                className={`p-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-between gap-2 cursor-pointer ${
+                  filters.showCommunities !== false
+                    ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-950 dark:text-amber-200 border-amber-300 dark:border-amber-800'
+                    : 'bg-slate-50 dark:bg-slate-800/40 text-slate-400 border-slate-200 dark:border-slate-800 opacity-70 hover:opacity-100'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-lg bg-white/80 dark:bg-slate-800/80">
+                    <Layers className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <div className="text-left">
+                    <div className="font-bold text-xs sm:text-sm">
+                      Capa 1: Comunidades
+                    </div>
+                    <div className="text-[10px] sm:text-[11px] opacity-75 font-normal">
+                      Límites de las 17 CC.AA.
+                    </div>
+                  </div>
+                </div>
+
+                <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 font-bold border border-slate-200 dark:border-slate-700 shadow-xs shrink-0">
+                  {filters.showCommunities !== false ? 'Visible' : 'Oculto'}
+                </span>
+              </button>
+
+              {/* Capa 2: Provincias Toggle */}
+              <button
+                onClick={() => onToggleFilter('showProvinces')}
+                className={`p-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-between gap-2 cursor-pointer ${
+                  filters.showProvinces !== false
+                    ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-950 dark:text-blue-200 border-blue-300 dark:border-blue-800'
+                    : 'bg-slate-50 dark:bg-slate-800/40 text-slate-400 border-slate-200 dark:border-slate-800 opacity-70 hover:opacity-100'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-lg bg-white/80 dark:bg-slate-800/80">
+                    <Building2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div className="text-left">
+                    <div className="font-bold text-xs sm:text-sm">
+                      Capa 2: Provincias
+                    </div>
+                    <div className="text-[10px] sm:text-[11px] opacity-75 font-normal">
+                      División de las 50 provincias
+                    </div>
+                  </div>
+                </div>
+
+                <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 font-bold border border-slate-200 dark:border-slate-700 shadow-xs shrink-0">
+                  {filters.showProvinces !== false ? 'Visible' : 'Oculto'}
+                </span>
+              </button>
+            </div>
+
+            {/* Map labels toggle */}
             <button
               onClick={() => onToggleFilter('showLabels')}
               className={`w-full p-3.5 rounded-xl border text-xs font-bold transition-all flex items-center justify-between gap-2 cursor-pointer ${
@@ -243,12 +332,12 @@ export const AccidentFilterPanel: React.FC<AccidentFilterPanelProps> = ({
                 </div>
                 <div className="text-left">
                   <div className="font-bold text-sm">
-                    {filters.showLabels ? 'Modo Didáctico: Rótulos Visibles' : 'Modo Mapa Mudo 100%'}
+                    {filters.showLabels ? 'Rótulos de Accidentes: Visibles' : 'Modo Mapa Mudo 100%'}
                   </div>
                   <div className="text-[11px] opacity-75 font-normal">
                     {filters.showLabels
                       ? 'Los nombres de los accidentes se muestran directamente sobre el mapa.'
-                      : 'Sin textos en el mapa: ideal para memorizar, practicar y examinarse.'}
+                      : 'Sin nombres de accidentes: ideal para memorizar, practicar y examinarse.'}
                   </div>
                 </div>
               </div>

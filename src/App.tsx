@@ -59,6 +59,8 @@ export default function App() {
     islas: true,
     unidades_relieve: true,
     showLabels: true,
+    showCommunities: true,
+    showProvinces: true,
   });
 
   const [theme, setTheme] = useState<MapTheme>('clasico');

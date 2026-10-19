@@ -1,7 +1,37 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { GeoElement, CategoryType } from '../../types/geography';
-import { REAL_SPAIN_MAP } from '../../data/realSpainMapData';
+import { LAYERED_SPAIN_MAP, SvgMapPath } from '../../data/spainMapSvgData';
 import { ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
+
+// Geographic coordinates remain unchanged. Only the displayed selector may move.
+// The layout uses every feature, so toggling layers never moves another selector.
+export const MIN_SELECTOR_DISTANCE = 36;
+export const SELECTOR_HIT_RADIUS = 12;
+export function getSeparatedMarkerPositions(elements: readonly GeoElement[]): Record<string, { x: number; y: number }> {
+  const result: Record<string, { x: number; y: number }> = {};
+  const placed: { x: number; y: number }[] = [];
+  const ordered = [...elements].sort((a, b) =>
+    Number(b.category === 'picos') - Number(a.category === 'picos') || a.id.localeCompare(b.id));
+  const available = (x: number, y: number) => x >= 16 && x <= 1184 && y >= 16 && y <= 659
+    && placed.every(p => Math.hypot(x - p.x, y - p.y) >= MIN_SELECTOR_DISTANCE);
+  for (const elem of ordered) {
+    let position: { x: number; y: number } | undefined;
+    // Search nearest concentric rings rather than modifying the geographic data.
+    for (let radius = 0; !position && radius <= 1400; radius += 2) {
+      const steps = Math.max(1, Math.ceil(2 * Math.PI * radius / 3));
+      for (let step = 0; step < steps; step++) {
+        const angle = -Math.PI / 2 + 2 * Math.PI * step / steps;
+        const x = elem.mapX + radius * Math.cos(angle);
+        const y = elem.mapY + radius * Math.sin(angle);
+        if (available(x, y)) { position = { x, y }; break; }
+      }
+    }
+    if (!position) throw new Error(`No hay espacio para el selector ${elem.id}`);
+    result[elem.id] = position;
+    placed.push(position);
+  }
+  return result;
+}
 
 export interface MapLayers {
   rios: boolean;
@@ -13,6 +43,7 @@ export interface MapLayers {
   unidades_relieve: boolean;
   showLabels: boolean;
   showCommunities?: boolean;
+  showProvinces?: boolean;
 }
 
 export type MapTheme = 'clasico' | 'fisico_moderno' | 'nocturno';
@@ -56,11 +87,13 @@ export const SpainMap: React.FC<SpainMapProps> = ({
   blankMode = false,
 }) => {
   const [hoveredElement, setHoveredElement] = useState<GeoElement | null>(null);
-  const [zoomLevel, setZoomLevel] = useState<number>(1);
+  const [zoomLevel, setZoomLevel] = useState<number>(1.32);
   const [panOffset, setPanOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const markerPositions = useMemo(() => getSeparatedMarkerPositions(elements), [elements]);
 
   // Theme styling definitions
   const themeStyles = {
@@ -114,7 +147,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
   };
 
   const handleResetZoom = () => {
-    setZoomLevel(1);
+    setZoomLevel(1.32);
     setPanOffset({ x: 0, y: 0 });
   };
 
@@ -173,6 +206,29 @@ export const SpainMap: React.FC<SpainMapProps> = ({
     ? elements.find((e) => e.id === targetHighlightId)
     : null;
 
+  // Optional flags preserve the previous appearance when callers omit them.
+  const showCommunities = layers.showCommunities ?? true;
+  const showProvinces = layers.showProvinces ?? false;
+  const renderMapPaths = (paths: SvgMapPath[], boundaryLayer = false) => paths.map((part, index) => {
+    const sourceFill = part.fill.toLowerCase();
+    const isSea = sourceFill === '#cbeaf1';
+    const isNeighbour = sourceFill === '#f7d3aa';
+    const isLand = sourceFill === '#ffffd0' || sourceFill === '#e6e6e6';
+    const isCoast = sourceFill === '#000000';
+    // In the source some boundaries are filled ribbons, not stroked lines.
+    // Keep those fills: replacing every fill with "none" would erase them.
+    const fill = boundaryLayer
+      ? sourceFill === 'none' ? 'none' : isLand ? themeStyles.landBg : themeStyles.communityStroke
+      : isSea ? themeStyles.seaBg : isNeighbour ? themeStyles.portugalBg
+      : isLand ? themeStyles.landBg : isCoast ? themeStyles.landBorder : part.fill;
+    const stroke = part.stroke === 'none' ? 'none'
+      : boundaryLayer ? themeStyles.communityStroke
+      : part.stroke === '#87cdde' ? themeStyles.seaBg : part.stroke;
+    return <path key={`${part.id}-${index}`} d={part.d} fill={fill} stroke={stroke}
+      strokeWidth={part.strokeWidth} fillRule={part.fillRule}
+      strokeLinecap="round" strokeLinejoin="round" />;
+  });
+
   return (
     <div
       ref={containerRef}
@@ -225,14 +281,14 @@ export const SpainMap: React.FC<SpainMapProps> = ({
       {/* Zoom / Pan Controls Overlay */}
       <div className="absolute top-4 right-4 z-20 flex flex-col gap-1.5 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md p-1.5 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
         <button
-          onClick={() => handleZoom(0.3)}
+          onClick={() => handleZoom(0.32)}
           title="Acercar mapa (+)"
           className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
         >
           <ZoomIn className="w-5 h-5" />
         </button>
         <button
-          onClick={() => handleZoom(-0.3)}
+          onClick={() => handleZoom(-0.32)}
           title="Alejar mapa (-)"
           disabled={zoomLevel <= 1}
           className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-700 dark:text-slate-200 disabled:opacity-30 transition-colors cursor-pointer"
@@ -258,13 +314,13 @@ export const SpainMap: React.FC<SpainMapProps> = ({
           <polygon points="50,94 56,56 50,50 44,56" fill="#3b82f6" />
           <polygon points="94,50 56,56 50,50 56,44" fill="#64748b" />
           <polygon points="6,50 44,56 50,50 44,44" fill="#64748b" />
-          <text x="50" y="20" textAnchor="middle" fill="#ef4444" fontSize="12" fontWeight="bold">N</text>
+          {layers.showLabels && !blankMode && <text x="50" y="20" textAnchor="middle" fill="#ef4444" fontSize="12" fontWeight="bold">N</text>}
         </svg>
       </div>
 
       {/* SVG Map Canvas */}
       <svg
-        viewBox={REAL_SPAIN_MAP.viewBox}
+        viewBox={LAYERED_SPAIN_MAP.viewBox}
         className="w-full h-full transition-transform duration-100 ease-out"
         style={{
           transform: `scale(${zoomLevel}) translate(${panOffset.x / zoomLevel}px, ${panOffset.y / zoomLevel}px)`,
@@ -277,82 +333,29 @@ export const SpainMap: React.FC<SpainMapProps> = ({
           </pattern>
         </defs>
 
-        {/* Sea background subtle grid */}
-        <rect width="1000" height="720" fill="url(#seaGridReal)" pointerEvents="none" />
-
-        {/* Portugal Territory (authentic border and coast) */}
-        <path
-          d={REAL_SPAIN_MAP.portugalPath}
-          fill={themeStyles.portugalBg}
-          stroke={themeStyles.portugalBorder}
-          strokeWidth="1.2"
-          strokeLinejoin="round"
-          className="transition-colors duration-300"
-        />
-        <text
-          x="195"
-          y="350"
-          fill={themeStyles.textPrimary}
-          fontSize="12"
-          letterSpacing="4"
-          opacity="0.3"
-          fontWeight="bold"
-          pointerEvents="none"
-        >
-          PORTUGAL
-        </text>
-
-        {/* Spain Autonomous Communities & Coastlines (REAL GeoJSON) */}
-        <g id="spain-communities" className="drop-shadow-sm">
-          {REAL_SPAIN_MAP.communities.map((comm) => (
-            <path
-              key={comm.name}
-              d={comm.d}
-              fill={themeStyles.landBg}
-              stroke={themeStyles.landBorder}
-              strokeWidth="1.6"
-              strokeLinejoin="round"
-              className="transition-colors duration-300"
-            />
-          ))}
+        {/* Layer 0: source coastlines, neighbours and all islands. Always visible. */}
+        <rect width="1200" height="675" fill={themeStyles.seaBg} pointerEvents="none" />
+        <g id="map-base" pointerEvents="none" transform={`scale(${LAYERED_SPAIN_MAP.sourceScale})`}>
+          {renderMapPaths(LAYERED_SPAIN_MAP.base)}
         </g>
-
-        {/* Dedicated Canary Islands Inset Box */}
-        <g id="canarias-inset">
-          <rect
-            x={REAL_SPAIN_MAP.canariasInsetBox.x}
-            y={REAL_SPAIN_MAP.canariasInsetBox.y}
-            width={REAL_SPAIN_MAP.canariasInsetBox.width}
-            height={REAL_SPAIN_MAP.canariasInsetBox.height}
-            fill={themeStyles.insetBackground}
-            stroke={theme === 'nocturno' ? '#334155' : '#64748b'}
-            strokeWidth="1.5"
-            rx="8"
-            className="drop-shadow-md"
-          />
-          <text
-            x={REAL_SPAIN_MAP.canariasInsetBox.x + 12}
-            y={REAL_SPAIN_MAP.canariasInsetBox.y + 20}
-            fill={themeStyles.textPrimary}
-            fontSize="11"
-            fontWeight="bold"
-            letterSpacing="1.5"
-            opacity="0.75"
-          >
-            ISLAS CANARIAS
-          </text>
-
-          {/* Real Canary Islands Geometry */}
-          <path
-            d={REAL_SPAIN_MAP.canariasPath}
-            fill={themeStyles.landBg}
-            stroke={themeStyles.landBorder}
-            strokeWidth="1.4"
-            strokeLinejoin="round"
-            className="drop-shadow-sm"
-          />
-        </g>
-
+        <rect {...LAYERED_SPAIN_MAP.canariasInsetBox} fill="none"
+          stroke={themeStyles.portugalBorder} strokeWidth="1" rx="5" pointerEvents="none" />
+        {/* Layers 1 and 2 are independent of geographic feature layers. */}
+        {showCommunities && <g id="spain-communities" pointerEvents="none"
+          transform={`scale(${LAYERED_SPAIN_MAP.sourceScale})`}>
+          {renderMapPaths(LAYERED_SPAIN_MAP.communities, true)}
+        </g>}
+        {showProvinces && <g id="spain-provinces" pointerEvents="none" opacity="0.65"
+          transform={`scale(${LAYERED_SPAIN_MAP.sourceScale})`}>
+          {renderMapPaths(LAYERED_SPAIN_MAP.provinces, true)}
+        </g>}
+        {layers.showLabels && !blankMode && <g pointerEvents="none"
+          fill={themeStyles.textPrimary} fontSize="11" fontWeight="bold" opacity="0.6">
+          <text x="440" y="295" textAnchor="middle" transform="rotate(-80 440 295)">PORTUGAL</text>
+          <text x="920" y="70">FRANCIA</text>
+          <text x="860" y="620">NORTE DE ÁFRICA</text>
+          <text x="165" y="545">ISLAS CANARIAS</text>
+        </g>}
 
         {/* ============================================================== */}
         {/* INTERACTIVE GEOGRAPHIC ACCIDENTS */}
@@ -515,9 +518,9 @@ export const SpainMap: React.FC<SpainMapProps> = ({
             })}
 
         {/* 3. PUNTOS Y MARCADORES (Picos, Costas, Islas, Mesetas) */}
-        {visibleElements
-          .filter((e) => e.svgType === 'point')
-          .map((elem) => {
+        {visibleElements.map((elem) => {
+            const markerPosition = markerPositions[elem.id];
+            const markerMoved = Math.hypot(markerPosition.x - elem.mapX, markerPosition.y - elem.mapY) > 1;
             const isSelected = selectedElement?.id === elem.id;
             const isHovered = hoveredElement?.id === elem.id;
             const isTargetHighlight = targetHighlightId === elem.id;
@@ -546,14 +549,24 @@ export const SpainMap: React.FC<SpainMapProps> = ({
             return (
               <g
                 key={elem.id}
+                data-geo-id={elem.id}
+                pointerEvents="none"
                 className="cursor-pointer group"
-                transform={`translate(${elem.mapX}, ${elem.mapY})`}
+                transform={`translate(${markerPosition.x}, ${markerPosition.y})`}
                 onClick={(e) => handleItemClick(elem, e)}
                 onMouseEnter={() => handleElementHover(elem)}
                 onMouseLeave={() => setHoveredElement(null)}
               >
-                {/* Generous hit circle */}
-                <circle cx="0" cy="0" r="22" fill="transparent" />
+                {/* Connect a displaced selector to its true geographic anchor. */}
+                {markerMoved && <g pointerEvents="none">
+                  <line x1="0" y1="0" x2={elem.mapX - markerPosition.x} y2={elem.mapY - markerPosition.y}
+                    stroke={markerColor} strokeWidth="1" opacity="0.7" />
+                  <circle cx={elem.mapX - markerPosition.x} cy={elem.mapY - markerPosition.y}
+                    r="2.5" fill={markerColor} stroke={themeStyles.landBg} strokeWidth="0.8" />
+                </g>}
+                {/* Only this disk captures input; halos, labels and lines never block other selectors. */}
+                <circle data-selector-hit={elem.id} cx="0" cy="0" r={SELECTOR_HIT_RADIUS}
+                  fill="transparent" pointerEvents="all" />
 
                 {/* Visited indicator ring in Atlas mode */}
                 {currentMode === 'explorar' && visitedAtlasIds?.includes(elem.id) && (
@@ -605,7 +618,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
                 )}
 
                 {/* Specific Shape based on Category */}
-                {elem.category === 'picos' ? (
+                {(elem.category === 'picos' || elem.category === 'montanas') ? (
                   // Mountain Peak with Snow Cap
                   <g>
                     <polygon
@@ -631,7 +644,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
                     />
                     <circle cx="0" cy="0" r="2.5" fill="#ffffff" />
                   </g>
-                ) : elem.category === 'mares' ? (
+                ) : (elem.category === 'mares' || elem.category === 'rios') ? (
                   // Sea & Ocean Waves Marker
                   <g>
                     <circle
@@ -683,8 +696,8 @@ export const SpainMap: React.FC<SpainMapProps> = ({
                   </g>
                 )}
 
-                {/* Label text */}
-                {layers.showLabels && !blankMode && (
+                {/* River and range labels are already rendered alongside their paths. */}
+                {elem.svgType === 'point' && layers.showLabels && !blankMode && (
                   <text
                     x="0"
                     y={elem.category === 'picos' ? -18 : 18}
@@ -726,7 +739,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
           return (
             <g
               className="pointer-events-none"
-              transform={`translate(${targetHighlightElement.mapX}, ${targetHighlightElement.mapY})`}
+              transform={`translate(${markerPositions[targetHighlightElement.id].x}, ${markerPositions[targetHighlightElement.id].y})`}
             >
               {/* Concentric radar pulse ring */}
               <circle
@@ -755,7 +768,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
               <circle cx="0" cy="0" r="5" fill="#ffffff" stroke="#e11d48" strokeWidth="2.5" />
 
               {/* Bouncing pointer pin with high-contrast category-specific badge */}
-              <g className="animate-bounce" style={{ animationDuration: '0.9s' }}>
+              <g display={layers.showLabels && !blankMode ? undefined : "none"} className="animate-bounce" style={{ animationDuration: '0.9s' }}>
                 <g transform="translate(0, -22)">
                   <rect
                     x={-badgeWidth / 2}
@@ -788,7 +801,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
       </svg>
 
       {/* Floating Hover Tooltip */}
-      {hoveredElement && !blankMode && (
+      {hoveredElement && layers.showLabels && !blankMode && (
         <div
           className="pointer-events-none absolute bottom-4 right-4 z-30 flex items-center gap-3 bg-slate-900/95 text-white px-4 py-2.5 rounded-xl shadow-xl backdrop-blur-md border border-slate-700 animate-fadeIn"
         >

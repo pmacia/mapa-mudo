@@ -117,18 +117,24 @@ A medida que se acumula Experiencia (XP), el alumno asciende en la escala cartog
 
 ---
 
-## 🗺️ Cartografía y Capas Geográficas
+## 🗺️ Cartografía y Jerarquía de Capas
 
-El panel de **Capas** permite activar o aislar familias de accidentes geográficos tanto en el modo libre como en las rondas de preguntas:
+El panel de **Capas** permite configurar el mapa desde su contorno físico mudo más esencial hasta la división territorial provincial completa, además de seleccionar qué accidentes geográficos entran en los retos:
 
-- 🌊 **Ríos**: Trazados hidrológicos vectoriales.
+### 🏛️ Capas de Territorio y División Administrativa
+- **🗺️ Capa 0: Contorno Geográfico Base (Siempre Activa)**: Silueta física continental continua de España peninsular, Portugal contiguo, el sur de Francia (franja pirenaica de Aquitania y Golfo de León), la costa norte de África (Marruecos y Estrecho de Gibraltar), Islas Baleares y el recuadro cartográfico de las Islas Canarias. Sin rótulos ni divisiones interiores: el auténtico mapa mudo.
+- **🏛️ Capa 1: Comunidades Autónomas**: Conmutador para mostrar u ocultar las líneas fronterizas de las 17 Comunidades Autónomas y las 2 Ciudades Autónomas (Ceuta y Melilla).
+- **📍 Capa 2: Provincias de España**: Conmutador para activar o desactivar la división de las 50 provincias españolas con trazo fino delimitador.
+- **🏷️ Rótulos Didácticos**: Conmutador para alternar entre el modo de estudio con nombres visibles y el **Modo Mapa Mudo 100% puro** para autoevaluación o examen.
+
+### ⛰️ Capas de Accidentes Geográficos Físicos (65 elementos)
+- 🌊 **Ríos**: Trazados hidrológicos vectoriales reales de las tres vertientes.
 - 🏔️ **Cordilleras**: Áreas orográficas con relieves característicos.
 - ⛰️ **Picos**: Coordenadas exactas con triángulos altimétricos.
 - 🏖️ **Costas**: Cabos, rías y golfos costeros.
-- 🌊 **Mares y Océanos**: Atlántico, Cantábrico y Mediterráneo.
+- 🌊 **Mares y Océanos**: Océano Atlántico, Mar Cantábrico y Mar Mediterráneo.
 - 🏝️ **Islas y Archipiélagos**: Comunidades insulares al completo.
 - 🏞️ **Unidades de Relieve**: Mesetas y depresiones fluviales.
-- 🏷️ **Etiquetas de Texto**: Interruptor para ocultar rótulos y convertir el mapa en un **mapa mudo 100% puro**.
 
 ---
 
