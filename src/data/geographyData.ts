@@ -190,7 +190,7 @@ export const GEO_ELEMENTS: GeoElement[] = [
   },
   {
     id: 'teide-tenerife',
-    name: 'Teide (Tenerife)',
+    name: 'Teide',
     category: 'picos',
     subCategory: 'Volcán / Techo de España',
     vertiente: 'insular',

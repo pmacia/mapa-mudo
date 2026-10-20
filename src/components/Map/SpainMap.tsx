@@ -1,6 +1,7 @@
 import React, { useState, useRef, useMemo } from 'react';
 import { GeoElement, CategoryType } from '../../types/geography';
 import { LAYERED_SPAIN_MAP, SvgMapPath } from '../../data/spainMapSvgData';
+import { CompassRose } from './CompassRose';
 import { ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 
 // Geographic coordinates remain unchanged. Only the displayed selector may move.
@@ -10,7 +11,7 @@ export const SELECTOR_HIT_RADIUS = 12;
 export function getSeparatedMarkerPositions(elements: readonly GeoElement[]): Record<string, { x: number; y: number }> {
   const result: Record<string, { x: number; y: number }> = {};
   const placed: { x: number; y: number }[] = [];
-  const ordered = [...elements].sort((a, b) =>
+  const ordered = elements.filter(e => e.svgType === 'point').sort((a, b) =>
     Number(b.category === 'picos') - Number(a.category === 'picos') || a.id.localeCompare(b.id));
   const available = (x: number, y: number) => x >= 16 && x <= 1184 && y >= 16 && y <= 659
     && placed.every(p => Math.hypot(x - p.x, y - p.y) >= MIN_SELECTOR_DISTANCE);
@@ -295,7 +296,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
         >
           <ZoomOut className="w-5 h-5" />
         </button>
-        {zoomLevel > 1 && (
+        {zoomLevel != 1.32 && (
           <button
             onClick={handleResetZoom}
             title="Centrar mapa"
@@ -306,17 +307,10 @@ export const SpainMap: React.FC<SpainMapProps> = ({
         )}
       </div>
 
-      {/* Decorative Compass Rose (Rosa de los vientos) */}
-      <div className="absolute top-4 left-4 z-10 pointer-events-none opacity-40 dark:opacity-20 hidden md:block">
-        <svg width="60" height="60" viewBox="0 0 100 100" fill="none">
-          <circle cx="50" cy="50" r="44" stroke="currentColor" strokeWidth="1" strokeDasharray="3 3" />
-          <polygon points="50,6 56,44 50,50 44,44" fill="#ef4444" />
-          <polygon points="50,94 56,56 50,50 44,56" fill="#3b82f6" />
-          <polygon points="94,50 56,56 50,50 56,44" fill="#64748b" />
-          <polygon points="6,50 44,56 50,50 44,44" fill="#64748b" />
-          {layers.showLabels && !blankMode && <text x="50" y="20" textAnchor="middle" fill="#ef4444" fontSize="12" fontWeight="bold">N</text>}
-        </svg>
-      </div>
+      {/* Decorative Classical Compass Rose (Rosa de los vientos náutica) */}
+      <div className="absolute top-4 left-4 z-10 pointer-events-none hidden md:block opacity-90 transition-opacity hover:opacity-100">
+        <CompassRose theme={theme} size={84} />
+      </div>      
 
       {/* SVG Map Canvas */}
       <svg
@@ -352,8 +346,8 @@ export const SpainMap: React.FC<SpainMapProps> = ({
         {layers.showLabels && !blankMode && <g pointerEvents="none"
           fill={themeStyles.textPrimary} fontSize="11" fontWeight="bold" opacity="0.6">
           <text x="440" y="295" textAnchor="middle" transform="rotate(-80 440 295)">PORTUGAL</text>
-          <text x="920" y="70">FRANCIA</text>
-          <text x="860" y="620">NORTE DE ÁFRICA</text>
+          <text x="820" y="50">FRANCIA</text>
+          <text x="860" y="590">NORTE DE ÁFRICA</text>
           <text x="165" y="545">ISLAS CANARIAS</text>
         </g>}
 
@@ -518,7 +512,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
             })}
 
         {/* 3. PUNTOS Y MARCADORES (Picos, Costas, Islas, Mesetas) */}
-        {visibleElements.map((elem) => {
+        {visibleElements.filter(e => e.svgType === 'point').map((elem) => {
             const markerPosition = markerPositions[elem.id];
             const markerMoved = Math.hypot(markerPosition.x - elem.mapX, markerPosition.y - elem.mapY) > 1;
             const isSelected = selectedElement?.id === elem.id;
@@ -739,7 +733,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
           return (
             <g
               className="pointer-events-none"
-              transform={`translate(${markerPositions[targetHighlightElement.id].x}, ${markerPositions[targetHighlightElement.id].y})`}
+              transform={`translate(${markerPositions[targetHighlightElement.id]?.x ?? targetHighlightElement.mapX}, ${markerPositions[targetHighlightElement.id]?.y ?? targetHighlightElement.mapY})`}
             >
               {/* Concentric radar pulse ring */}
               <circle

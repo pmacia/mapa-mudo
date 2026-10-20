@@ -237,16 +237,16 @@ export const REAL_SPAIN_MAP = {
       "y": 308.278
     },
     "golfo_cadiz": {
-      "x": 483.811,
-      "y": 498.545
+      "x": 463.811,
+      "y": 478.545
     },
     "golfo_leon": {
       "x": 965.137,
       "y": 74.371
     },
     "estrecho_gibraltar": {
-      "x": 542.33,
-      "y": 532.446
+      "x": 512.33,
+      "y": 542.446
     },
     "oceano_atlantico": {
       "x": 296.032,
