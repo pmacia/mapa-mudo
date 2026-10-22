@@ -11,7 +11,7 @@ export interface ChallengeSessionOptions {
   challengeType: ChallengeType;
   filterCategory?: CategoryType | 'todos';
   isActive?: boolean;
-  onCorrectAnswer?: (element: GeoElement, earnedXp: number) => void;
+  onCorrectAnswer?: (element: GeoElement, earnedXp: number, streak: number) => void;
   onWrongAnswer?: () => void;
   onSetTargetHighlight?: (id: string | null) => void;
   onSetFeedback?: (id: string | null, status: 'correct' | 'wrong' | null) => void;
@@ -65,6 +65,7 @@ export function useChallengeSession({
   // Game metrics & indicators
   const [lives, setLives] = useState<number>(GAME_CONFIG.GAMEPLAY.INITIAL_LIVES);
   const [streak, setStreak] = useState(0);
+  const [maxStreak, setMaxStreak] = useState(0);
   const [score, setScore] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
   const [wrongCount, setWrongCount] = useState(0);
@@ -160,6 +161,7 @@ export function useChallengeSession({
     setCurrentIndex(0);
     setLives(GAME_CONFIG.GAMEPLAY.INITIAL_LIVES);
     setStreak(0);
+    setMaxStreak(0);
     setScore(0);
     setCorrectCount(0);
     correctCountRef.current = 0;
@@ -329,6 +331,7 @@ export function useChallengeSession({
         playSound('correct');
         const newStreak = streak + 1;
         setStreak(newStreak);
+        setMaxStreak((previousMax) => Math.max(previousMax, newStreak));
 
         // Scoring rules per mode & hint penalty
         let points: number = GAME_CONFIG.POINTS.LOCALIZAR_BASE;
@@ -370,7 +373,7 @@ export function useChallengeSession({
           clickedName: clickedItem?.name,
         });
 
-        onCorrectAnswerRef.current?.(currentQuestion, points);
+        onCorrectAnswerRef.current?.(currentQuestion, points, newStreak);
 
         if (newStreak % GAME_CONFIG.GAMEPLAY.STREAK_CELEBRATION_INTERVAL === 0) {
           playSound('streak');
@@ -471,6 +474,7 @@ export function useChallengeSession({
     contrarrelojPrompt,
     lives,
     streak,
+    maxStreak,
     score,
     correctCount,
     wrongCount,

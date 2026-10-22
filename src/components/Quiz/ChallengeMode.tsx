@@ -62,6 +62,7 @@ export const ChallengeMode: React.FC<ChallengeModeProps> = ({
     contrarrelojPrompt,
     lives,
     streak,
+    maxStreak,
     score,
     correctCount,
     wrongCount,
@@ -251,7 +252,7 @@ export const ChallengeMode: React.FC<ChallengeModeProps> = ({
               <Flame className="w-3.5 h-3.5" /> Racha Máxima
             </span>
             <span className="font-headline-md text-xl sm:text-2xl text-adventure-orange mt-1">
-              x{streak}
+              x{maxStreak}
             </span>
           </div>
         </div>

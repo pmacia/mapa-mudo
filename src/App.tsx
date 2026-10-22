@@ -242,7 +242,7 @@ export default function App() {
     return unlocked;
   };
 
-  const handleCorrectAnswer = useCallback((element: GeoElement, earnedXp: number) => {
+  const handleCorrectAnswer = useCallback((element: GeoElement, earnedXp: number, sessionStreak: number) => {
     setCategoryCorrectCounts((prevCounts) => {
       const updatedCounts = {
         ...prevCounts,
@@ -253,7 +253,7 @@ export default function App() {
         const newXp = prev.xp + earnedXp;
         const newLevel = Math.floor(newXp / GAME_CONFIG.GAMEPLAY.LEVEL_XP_STEP) + 1;
         const newStreak = prev.streak + 1;
-        const newMaxStreak = Math.max(prev.maxStreak, newStreak);
+        const newMaxStreak = Math.max(prev.maxStreak, newStreak, sessionStreak);
         const newCorrect = prev.correctAnswers + 1;
         const newTotal = prev.totalAttempts + 1;
 
