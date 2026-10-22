@@ -55,7 +55,7 @@ export function useChallengeSession({
     if (filterCategory !== 'todos') {
       filtered = elements.filter((e) => e.category === filterCategory);
     }
-    return filtered.length > 0 ? filtered : elements;
+    return filtered;
   }, [elements, filterCategory]);
 
   const [questions, setQuestions] = useState<GeoElement[]>([]);
@@ -232,7 +232,7 @@ export function useChallengeSession({
 
   // Contrarreloj timer effect
   useEffect(() => {
-    if (isActive && challengeType === 'contrarreloj' && !isGameOver && !isCompleted && timeLeft > 0) {
+    if (isActive && challengeType === 'contrarreloj' && questions.length > 0 && !isGameOver && !isCompleted && timeLeft > 0) {
       timerRef.current = setInterval(() => {
         setTimeLeft((prev) => {
           if (prev <= 1) {
@@ -255,7 +255,7 @@ export function useChallengeSession({
         if (timerRef.current) clearInterval(timerRef.current);
       };
     }
-  }, [isActive, challengeType, isGameOver, isCompleted, timeLeft]);
+  }, [isActive, challengeType, questions.length, isGameOver, isCompleted, timeLeft]);
 
   // Advance to next question
   const handleNext = useCallback(() => {

@@ -133,6 +133,9 @@ export default function App() {
       return accidentFilters[cat] === true;
     });
   }, [accidentFilters]);
+  const activeSelectedElement = activeElements.some((element) => element.id === selectedElement?.id)
+    ? selectedElement
+    : null;
 
   // Handle mode changes
   const handleModeChange = (newMode: GameMode) => {
@@ -397,7 +400,7 @@ export default function App() {
   }, []);
 
   const challengeSession = useChallengeSession({
-    elements: activeElements.length > 0 ? activeElements : GEO_ELEMENTS,
+    elements: activeElements,
     challengeType,
     filterCategory: 'todos',
     isActive: isQuizMode,
@@ -483,8 +486,8 @@ export default function App() {
             {currentMode === 'explorar' ? (
               <ExplorePanel
                 className="w-full max-h-[calc(100vh-6.5rem)]"
-                elements={GEO_ELEMENTS}
-                selectedElement={selectedElement}
+                elements={activeElements}
+                selectedElement={activeSelectedElement}
                 onSelectElement={(elem) => {
                   setSelectedElement(elem);
                   if (elem) handleVisitAtlasElement(elem);
@@ -575,8 +578,8 @@ export default function App() {
             {/* Explore Panel inside Bottom Sheet */}
             <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
               <ExplorePanel
-                elements={GEO_ELEMENTS}
-                selectedElement={selectedElement}
+                elements={activeElements}
+                selectedElement={activeSelectedElement}
                 onSelectElement={(elem) => {
                   setSelectedElement(elem);
                   if (elem) {
@@ -620,7 +623,7 @@ export default function App() {
       <PrintableMapModal
         isOpen={isPrintableOpen}
         onClose={() => setIsPrintableOpen(false)}
-        elements={activeElements.length > 0 ? activeElements : GEO_ELEMENTS}
+        elements={activeElements}
       />
 
       {/* Celebration Modal for completing the Atlas exploration (65/65) */}

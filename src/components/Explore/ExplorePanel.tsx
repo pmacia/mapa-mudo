@@ -41,15 +41,15 @@ interface ExplorePanelProps {
   className?: string;
 }
 
-const CATEGORY_TABS: { id: CategoryType | 'todos'; label: string; count: number; colorClass: string }[] = [
-  { id: 'todos', label: 'Todos (65)', count: 65, colorClass: 'bg-primary text-on-primary shadow-[0_2px_0_#003ea8]' },
-  { id: 'rios', label: 'Ríos (17)', count: 17, colorClass: 'bg-surface-container text-category-rivers hover:bg-surface-container-high' },
-  { id: 'montanas', label: 'Cordilleras (13)', count: 13, colorClass: 'bg-surface-container text-category-mountains hover:bg-surface-container-high' },
-  { id: 'picos', label: 'Picos (5)', count: 5, colorClass: 'bg-surface-container text-category-peaks hover:bg-surface-container-high' },
-  { id: 'costas', label: 'Costas (11)', count: 11, colorClass: 'bg-surface-container text-category-coasts hover:bg-surface-container-high' },
-  { id: 'islas', label: 'Islas (13)', count: 13, colorClass: 'bg-surface-container text-tertiary hover:bg-surface-container-high' },
-  { id: 'unidades_relieve', label: 'Mesetas (4)', count: 4, colorClass: 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high' },
-  { id: 'mares', label: 'Mares (3)', count: 3, colorClass: 'bg-surface-container text-category-rivers hover:bg-surface-container-high' },
+const CATEGORY_TABS: { id: CategoryType | 'todos'; label: string; colorClass: string }[] = [
+  { id: 'todos', label: 'Todos', colorClass: 'bg-primary text-on-primary shadow-[0_2px_0_#003ea8]' },
+  { id: 'rios', label: 'Ríos', colorClass: 'bg-surface-container text-category-rivers hover:bg-surface-container-high' },
+  { id: 'montanas', label: 'Cordilleras', colorClass: 'bg-surface-container text-category-mountains hover:bg-surface-container-high' },
+  { id: 'picos', label: 'Picos', colorClass: 'bg-surface-container text-category-peaks hover:bg-surface-container-high' },
+  { id: 'costas', label: 'Costas', colorClass: 'bg-surface-container text-category-coasts hover:bg-surface-container-high' },
+  { id: 'islas', label: 'Islas', colorClass: 'bg-surface-container text-tertiary hover:bg-surface-container-high' },
+  { id: 'unidades_relieve', label: 'Mesetas', colorClass: 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high' },
+  { id: 'mares', label: 'Mares', colorClass: 'bg-surface-container text-category-rivers hover:bg-surface-container-high' },
 ];
 
 export const ExplorePanel: React.FC<ExplorePanelProps> = ({
@@ -77,6 +77,12 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
   }, [activeCategory]);
 
   useEffect(() => {
+    if (activeCategory !== 'todos' && !elements.some((element) => element.category === activeCategory)) {
+      onCategoryChange?.('todos');
+    }
+  }, [activeCategory, elements, onCategoryChange]);
+
+  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (filterDropdownRef.current && !filterDropdownRef.current.contains(event.target as Node)) {
         setIsFilterDropdownOpen(false);
@@ -102,9 +108,17 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
     return matchesCategory && matchesSearch;
   });
 
-  const visitedCount = visitedAtlasIds.length;
   const totalCount = elements.length;
-  const progressPercent = Math.min(100, Math.round((visitedCount / totalCount) * 100));
+  const scopedVisitedCount = elements.filter((element) => visitedAtlasIds.includes(element.id)).length;
+  const progressPercent = totalCount > 0 ? Math.round((scopedVisitedCount / totalCount) * 100) : 0;
+  const categoryTabs = CATEGORY_TABS
+    .filter((tab) => tab.id === 'todos' || elements.some((element) => element.category === tab.id))
+    .map((tab) => {
+      const count = tab.id === 'todos'
+        ? totalCount
+        : elements.filter((element) => element.category === tab.id).length;
+      return { ...tab, label: `${tab.label} (${count})` };
+    });
 
   const getCategoryBadgeClass = (category: CategoryType) => {
     switch (category) {
@@ -140,7 +154,7 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
           </div>
 
 
-          {progressPercent===100 ? (
+          {atlasStampUnlocked ? (
             <button
               onClick={onOpenStampModal}
               className="flex items-center gap-1 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white text-[10px] font-black px-2 py-0.5 rounded-lg shadow-xs cursor-pointer transition-transform ml-1"
@@ -166,10 +180,10 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
         <div className="flex flex-col gap-1.5">
           <div className="flex justify-between items-center text-on-surface-variant dark:text-slate-400">
             <span className="font-body-bold text-xs">
-              {visitedCount} de {totalCount} accidentes dominados
+              {scopedVisitedCount} de {totalCount} accidentes dominados
             </span>
             <span className="font-label-caps text-[10px] text-success-emerald font-bold">
-              {visitedCount > 0 ? `+${visitedCount} explorados` : '¡Explora!'}
+              {scopedVisitedCount > 0 ? `+${scopedVisitedCount} explorados` : '¡Explora!'}
             </span>
           </div>
           <div className="w-full h-2.5 bg-surface-container dark:bg-slate-800 rounded-full overflow-hidden p-0.5">
@@ -270,12 +284,12 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
                   setIsFilterDropdownOpen(false);
                 }}
                 className="h-full px-2.5 flex items-center gap-1.5 bg-red-50 dark:bg-red-950/40 hover:bg-red-100 dark:hover:bg-red-900/60 text-red-600 dark:text-red-400 active:scale-95 transition-all cursor-pointer"
-                title={`Eliminar filtro (${CATEGORY_TABS.find((t) => t.id === selectedCat)?.label || selectedCat}). Clic para ver todos.`}
+                title={`Eliminar filtro (${categoryTabs.find((t) => t.id === selectedCat)?.label || selectedCat}). Clic para ver todos.`}
                 aria-label="Eliminar filtro"
               >
                 <FilterX className="w-4 h-4 text-red-600 dark:text-red-400" />
                 <span className="text-[11px] font-bold max-w-[70px] truncate hidden sm:inline">
-                  {CATEGORY_TABS.find((t) => t.id === selectedCat)?.label.split(' ')[0] || selectedCat}
+                  {categoryTabs.find((t) => t.id === selectedCat)?.label.split(' ')[0] || selectedCat}
                 </span>
               </button>
               <button
@@ -307,7 +321,7 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
                 )}
               </div>
               <div className="max-h-60 overflow-y-auto py-1">
-                {CATEGORY_TABS.map((tab) => {
+                {categoryTabs.map((tab) => {
                   const isSelected = selectedCat === tab.id;
                   return (
                     <button
@@ -411,7 +425,11 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
         </div>
 
         <div className="max-h-52 overflow-y-auto scrollbar-thin flex flex-col gap-1">
-          {filteredElements.map((elem) => {
+          {filteredElements.length === 0 ? (
+            <p className="px-2.5 py-3 text-xs text-on-surface-variant">
+              No hay accidentes que coincidan con la configuración actual.
+            </p>
+          ) : filteredElements.map((elem) => {
             const isSelected = selectedElement?.id === elem.id;
             const isVisited = visitedAtlasIds.includes(elem.id);
 

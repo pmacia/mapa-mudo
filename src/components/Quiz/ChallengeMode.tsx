@@ -164,6 +164,20 @@ export const ChallengeMode: React.FC<ChallengeModeProps> = ({
   const escolarGrade = totalQuestions > 0 ? ((correctCount / totalQuestions) * 10).toFixed(1) : '10.0';
   const gradeLabel = parseFloat(escolarGrade) >= 9 ? 'SOBRESALIENTE' : parseFloat(escolarGrade) >= 7 ? 'NOTABLE' : parseFloat(escolarGrade) >= 5 ? 'APROBADO' : 'NECESITA MEJORAR';
 
+  if (totalQuestions === 0) {
+    return (
+      <div className={`w-full rounded-DEFAULT border border-slate-200 dark:border-slate-800 bg-surface-container-lowest dark:bg-slate-900 p-6 text-center ${className || ''}`}>
+        <Compass className="w-8 h-8 mx-auto text-primary" />
+        <p className="mt-3 font-headline-md text-sm text-on-surface dark:text-white">
+          No hay accidentes seleccionados para este juego.
+        </p>
+        <p className="mt-1 text-xs text-on-surface-variant dark:text-slate-400">
+          Elige los elementos que quieres estudiar en la configuración de capas.
+        </p>
+      </div>
+    );
+  }
+
   // -------------------------------------------------------------
   // SCREEN: VICTORY & RESULTS (Game Completed or Game Over)
   // -------------------------------------------------------------
