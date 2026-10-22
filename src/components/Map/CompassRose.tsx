@@ -1,254 +1,72 @@
 import React from 'react';
-import { MapTheme } from './SpainMap';
+import type { MapTheme } from './SpainMap';
 
 interface CompassRoseProps {
+  /** Se conserva para mantener la compatibilidad con los mapas existentes. */
   theme: MapTheme;
   size?: number;
   className?: string;
 }
 
 export const CompassRose: React.FC<CompassRoseProps> = ({
-  theme,
   size = 84,
   className = '',
-}) => {
-  // Theme color palettes calibrated to authentic maritime navigation charts
-  const colors = {
-    clasico: {
-      ringOuter: '#78716c',
-      ringInner: '#b45309',
-      tickColor: '#92400e',
-      northLight: '#ef4444',
-      northDark: '#b91c1c',
-      cardinalLight: '#ffffff',
-      cardinalDark: '#1e293b',
-      ordinalLight: '#fef3c7',
-      ordinalDark: '#78350f',
-      centerRing: '#d97706',
-      centerJewel: '#b91c1c',
-      textColor: '#1e293b',
-      textNorth: '#dc2626',
-    },
-    fisico_moderno: {
-      ringOuter: '#475569',
-      ringInner: '#0284c7',
-      tickColor: '#0369a1',
-      northLight: '#2563eb',
-      northDark: '#1e40af',
-      cardinalLight: '#ffffff',
-      cardinalDark: '#334155',
-      ordinalLight: '#e2e8f0',
-      ordinalDark: '#475569',
-      centerRing: '#0284c7',
-      centerJewel: '#1d4ed8',
-      textColor: '#0f172a',
-      textNorth: '#1d4ed8',
-    },
-    nocturno: {
-      ringOuter: '#334155',
-      ringInner: '#38bdf8',
-      tickColor: '#38bdf8',
-      northLight: '#38bdf8',
-      northDark: '#0284c7',
-      cardinalLight: '#94a3b8',
-      cardinalDark: '#0f172a',
-      ordinalLight: '#64748b',
-      ordinalDark: '#1e293b',
-      centerRing: '#38bdf8',
-      centerJewel: '#38bdf8',
-      textColor: '#f8fafc',
-      textNorth: '#38bdf8',
-    },
-  }[theme];
-
-  return (
-    <div
-      className={`pointer-events-none select-none transition-opacity duration-300 ${className}`}
-      title="Rosa de los vientos (Orientación Norte geográfica)"
-      style={{ width: size, height: size }}
+}) => (
+  <div
+    className={`pointer-events-none select-none shrink-0 transition-opacity duration-300 ${className}`}
+    title="Rosa de los vientos (Orientación Norte geográfica)"
+    style={{ width: size, height: size }}
+  >
+    <svg
+      viewBox="0 0 140 140"
+      width="100%"
+      height="100%"
+      preserveAspectRatio="xMidYMid meet"
+      className="block drop-shadow-md overflow-visible"
+      role="img"
+      aria-label="Rosa de los vientos minimalista: norte arriba, sur abajo, este a la derecha y oeste a la izquierda"
+      fontFamily="Arial, sans-serif"
     >
-      <svg
-        viewBox="0 0 100 100"
-        width="100%"
-        height="100%"
-        className="drop-shadow-md overflow-visible"
-      >
-        <defs>
-          <filter id="compassShadow" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="1" stdDeviation="1" floodOpacity="0.25" />
-          </filter>
-        </defs>
+      {/* Base blanca y anillo de rumbo */}
+      <circle cx="70" cy="70" r="54" fill="#ffffff" stroke="#cbd5e1" strokeWidth="2.5" />
+      <circle cx="70" cy="70" r="42" fill="none" stroke="#e2e8f0" strokeWidth="3" />
+      <circle cx="70" cy="70" r="42" fill="none" stroke="#94a3b8" strokeWidth="1.5" strokeDasharray="2 4" />
 
-        {/* 1. Outer Nautical Graduation Rings */}
-        <circle
-          cx="50"
-          cy="50"
-          r="46"
-          fill="none"
-          stroke={colors.ringOuter}
-          strokeWidth="0.8"
-          strokeDasharray="1.5 2"
-          opacity="0.65"
-        />
-        <circle
-          cx="50"
-          cy="50"
-          r="43"
-          fill="none"
-          stroke={colors.ringOuter}
-          strokeWidth="1.2"
-          opacity="0.8"
-        />
-        <circle
-          cx="50"
-          cy="50"
-          r="40.5"
-          fill="none"
-          stroke={colors.ringInner}
-          strokeWidth="0.6"
-          opacity="0.7"
-        />
+      {/* Guías en cruz */}
+      <line x1="70" y1="28" x2="70" y2="112" stroke="#e2e8f0" strokeWidth="1.5" strokeLinecap="round" />
+      <line x1="28" y1="70" x2="112" y2="70" stroke="#e2e8f0" strokeWidth="1.5" strokeLinecap="round" />
 
-        {/* Compass Cardinal Degree Ticks (Every 30 degrees) */}
-        {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((deg) => {
-          const isCardinal = deg % 90 === 0;
-          const r1 = 40.5;
-          const r2 = isCardinal ? 45.5 : 43;
-          const rad = ((deg - 90) * Math.PI) / 180;
-          const x1 = (50 + r1 * Math.cos(rad)).toFixed(2);
-          const y1 = (50 + r1 * Math.sin(rad)).toFixed(2);
-          const x2 = (50 + r2 * Math.cos(rad)).toFixed(2);
-          const y2 = (50 + r2 * Math.sin(rad)).toFixed(2);
-          return (
-            <line
-              key={deg}
-              x1={x1}
-              y1={y1}
-              x2={x2}
-              y2={y2}
-              stroke={isCardinal ? colors.textNorth : colors.tickColor}
-              strokeWidth={isCardinal ? '1.4' : '0.8'}
-              opacity={isCardinal ? '0.9' : '0.6'}
-            />
-          );
-        })}
+      {/* Rumbos secundarios: NE, SE, SO y NO */}
+      <g transform="rotate(45 70 70)">
+        <polygon points="70,40 72,70 70,72 68,70" fill="#94a3b8" />
+        <polygon points="70,100 72,70 70,68 68,70" fill="#cbd5e1" />
+        <polygon points="40,70 70,72 72,70 70,68" fill="#cbd5e1" />
+        <polygon points="100,70 70,72 68,70 70,68" fill="#94a3b8" />
+      </g>
 
-        {/* 2. Secondary Intercardinal Star Points (NE, SE, SO, NO - 45 deg) */}
-        {/* NE */}
-        <polygon points="50,50 47,47 71,29" fill={colors.ordinalLight} />
-        <polygon points="50,50 53,47 71,29" fill={colors.ordinalDark} />
-        {/* SE */}
-        <polygon points="50,50 53,47 71,71" fill={colors.ordinalLight} />
-        <polygon points="50,50 53,53 71,71" fill={colors.ordinalDark} />
-        {/* SO / SW */}
-        <polygon points="50,50 53,53 29,71" fill={colors.ordinalLight} />
-        <polygon points="50,50 47,53 29,71" fill={colors.ordinalDark} />
-        {/* NO / NW */}
-        <polygon points="50,50 47,53 29,29" fill={colors.ordinalLight} />
-        <polygon points="50,50 47,47 29,29" fill={colors.ordinalDark} />
+      {/* Este */}
+      <polygon points="70,70 106,70 70,65" fill="#3b82f6" />
+      <polygon points="70,70 106,70 70,75" fill="#1d4ed8" />
+      {/* Oeste */}
+      <polygon points="70,70 34,70 70,75" fill="#64748b" />
+      <polygon points="70,70 34,70 70,65" fill="#475569" />
+      {/* Sur */}
+      <polygon points="70,70 70,106 65,70" fill="#64748b" />
+      <polygon points="70,70 70,106 75,70" fill="#334155" />
+      {/* Norte */}
+      <polygon points="70,70 70,26 64,70" fill="#f87171" />
+      <polygon points="70,70 70,26 76,70" fill="#ef4444" />
+      <polygon points="70,18 76,28 70,25 64,28" fill="#dc2626" />
 
-        {/* 3. Primary Cardinal Star Points (N, S, E, O) with 3D Beveled Facets */}
-        {/* SUR (South) */}
-        <polygon points="50,50 46,55 50,91" fill={colors.cardinalLight} />
-        <polygon points="50,50 54,55 50,91" fill={colors.cardinalDark} />
+      {/* Núcleo central */}
+      <circle cx="70" cy="70" r="8" fill="#ffffff" stroke="#0f172a" strokeWidth="2.5" />
+      <circle cx="70" cy="70" r="4" fill="#2563eb" />
 
-        {/* ESTE (East) */}
-        <polygon points="50,50 55,46 91,50" fill={colors.cardinalLight} />
-        <polygon points="50,50 55,54 91,50" fill={colors.cardinalDark} />
-
-        {/* OESTE (West) */}
-        <polygon points="50,50 45,54 9,50" fill={colors.cardinalLight} />
-        <polygon points="50,50 45,46 9,50" fill={colors.cardinalDark} />
-
-        {/* NORTE (North arrow - distinctive crimson/fleur-de-lis motif) */}
-        <polygon points="50,50 46,45 50,8" fill={colors.northLight} />
-        <polygon points="50,50 54,45 50,8" fill={colors.northDark} />
-        {/* Fleur-de-lis / Crown decorative finial on North */}
-        <path
-          d="M50,4 L52,9 L50,8 L48,9 Z"
-          fill={colors.northDark}
-        />
-
-        {/* 4. Center Nautical Brass Hub */}
-        <circle
-          cx="50"
-          cy="50"
-          r="6.5"
-          fill={colors.centerRing}
-          stroke={colors.ringOuter}
-          strokeWidth="0.8"
-        />
-        <circle
-          cx="50"
-          cy="50"
-          r="4.5"
-          fill={colors.cardinalLight}
-          stroke={colors.centerJewel}
-          strokeWidth="0.8"
-        />
-        <circle cx="50" cy="50" r="2" fill={colors.centerJewel} />
-
-        {/* 5. Cardinal Lettering */}
-        {/* N */}
-        <text
-          x="50"
-          y="18"
-          textAnchor="middle"
-          dominantBaseline="central"
-          fill={colors.textNorth}
-          fontSize="8.5"
-          fontWeight="900"
-          fontFamily="serif"
-          className="drop-shadow-xs"
-        >
-          N
-        </text>
-
-        {/* S */}
-        <text
-          x="50"
-          y="83"
-          textAnchor="middle"
-          dominantBaseline="central"
-          fill={colors.textColor}
-          fontSize="7.5"
-          fontWeight="bold"
-          fontFamily="serif"
-          opacity="0.85"
-        >
-          S
-        </text>
-
-        {/* E */}
-        <text
-          x="83"
-          y="50.5"
-          textAnchor="middle"
-          dominantBaseline="central"
-          fill={colors.textColor}
-          fontSize="7.5"
-          fontWeight="bold"
-          fontFamily="serif"
-          opacity="0.85"
-        >
-          E
-        </text>
-
-        {/* O (Oeste) */}
-        <text
-          x="17"
-          y="50.5"
-          textAnchor="middle"
-          dominantBaseline="central"
-          fill={colors.textColor}
-          fontSize="7.5"
-          fontWeight="bold"
-          fontFamily="serif"
-          opacity="0.85"
-        >
-          O
-        </text>
-      </svg>
-    </div>
-  );
-};
+      {/* Puntos cardinales */}
+      <text x="70" y="14" textAnchor="middle" fontSize="13" fontWeight="900" fill="#dc2626">N</text>
+      <text x="70" y="128" textAnchor="middle" fontSize="11" fontWeight="800" fill="#475569">S</text>
+      <text x="127" y="74" textAnchor="middle" fontSize="11" fontWeight="800" fill="#2563eb">E</text>
+      <text x="13" y="74" textAnchor="middle" fontSize="11" fontWeight="800" fill="#475569">O</text>
+    </svg>
+  </div>
+);

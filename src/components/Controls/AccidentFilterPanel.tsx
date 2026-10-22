@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { CategoryType } from '../../types/geography';
 import { 
   Droplet, 
@@ -8,16 +8,17 @@ import {
   Palmtree, 
   Layers, 
   Check, 
+  X, 
+  Waves, 
+  Sparkles, 
+  Map as MapIcon, 
+  Building2,
   SlidersHorizontal,
+  CheckCircle2,
   Eye,
   EyeOff,
-  X,
-  Waves,
-  Sparkles,
-  Map as MapIcon,
-  Building2
+  GraduationCap
 } from 'lucide-react';
-
 export interface AccidentFilterState {
   rios: boolean;
   montanas: boolean;
@@ -30,7 +31,6 @@ export interface AccidentFilterState {
   showCommunities?: boolean;
   showProvinces?: boolean;
 }
-
 interface AccidentFilterPanelProps {
   isOpen: boolean;
   onClose: () => void;
@@ -40,7 +40,6 @@ interface AccidentFilterPanelProps {
   activeCount: number;
   totalCount: number;
 }
-
 export const AccidentFilterPanel: React.FC<AccidentFilterPanelProps> = ({
   isOpen,
   onClose,
@@ -50,172 +49,202 @@ export const AccidentFilterPanel: React.FC<AccidentFilterPanelProps> = ({
   activeCount,
   totalCount,
 }) => {
-  if (!isOpen) return null;
+  const [activePreset, setActivePreset] = useState<'todos' | 'rios' | 'relieve' | 'costas' | null>(() =>
+    filters.rios && filters.montanas && filters.picos && filters.costas &&
+    filters.mares && filters.islas && filters.unidades_relieve ? 'todos' : null
+  );
 
-  const categoriesList: { key: CategoryType; label: string; countLabel: string; icon: React.ReactNode; color: string }[] = [
+  const applyPreset = (preset: 'todos' | 'rios' | 'relieve' | 'costas') => {
+    onApplyPreset(preset);
+    setActivePreset(preset);
+  };
+
+  const presetButtonClass = (preset: 'todos' | 'rios' | 'relieve' | 'costas') =>
+    `flex items-center gap-1.5 px-3 py-1.5 rounded-DEFAULT font-body-bold text-xs active:translate-y-0.5 transition-all cursor-pointer ${
+      activePreset === preset
+        ? 'bg-primary text-on-primary shadow-[0_2px_0_#003ea8]'
+        : 'bg-surface-container dark:bg-slate-700 text-on-surface dark:text-white hover:bg-surface-container-high shadow-[0_2px_0_#cbd5e1] dark:shadow-none'
+    }`;
+
+  if (!isOpen) return null;
+  const categoriesList: { 
+    key: CategoryType; 
+    label: string; 
+    countLabel: string; 
+    icon: React.ReactNode; 
+    badgeClass: string;
+    borderClass: string;
+  }[] = [
     {
       key: 'rios',
       label: 'Ríos de España',
-      countLabel: '17 ríos',
-      icon: <Droplet className="w-5 h-5 text-sky-500" />,
-      color: 'border-sky-300 dark:border-sky-700 bg-sky-50/90 dark:bg-sky-950/70 text-sky-950 dark:text-sky-200',
+      countLabel: '17 ríos (Tajo, Ebro, Duero...)',
+      icon: <Droplet className="w-5 h-5 text-category-rivers" />,
+      badgeClass: 'bg-category-rivers/15 text-category-rivers',
+      borderClass: 'border-category-rivers/40',
     },
     {
       key: 'montanas',
       label: 'Cordilleras y Relieve',
-      countLabel: '13 cordilleras/sierras',
-      icon: <Mountain className="w-5 h-5 text-amber-600" />,
-      color: 'border-amber-300 dark:border-amber-700 bg-amber-50/90 dark:bg-amber-950/70 text-amber-950 dark:text-amber-200',
+      countLabel: '13 cordilleras y sierras',
+      icon: <Mountain className="w-5 h-5 text-category-mountains" />,
+      badgeClass: 'bg-category-mountains/15 text-category-mountains',
+      borderClass: 'border-category-mountains/40',
     },
     {
       key: 'picos',
       label: 'Picos y Cumbres',
       countLabel: 'Teide, Mulhacén, Aneto...',
-      icon: <Triangle className="w-5 h-5 text-red-500" />,
-      color: 'border-red-300 dark:border-red-700 bg-red-50/90 dark:bg-red-950/70 text-red-950 dark:text-red-200',
+      icon: <Triangle className="w-5 h-5 text-category-peaks" />,
+      badgeClass: 'bg-category-peaks/15 text-category-peaks',
+      borderClass: 'border-category-peaks/40',
     },
     {
       key: 'costas',
       label: 'Cabos, Golfos y Estrechos',
       countLabel: '11 accidentes costeros',
-      icon: <Compass className="w-5 h-5 text-teal-600" />,
-      color: 'border-teal-300 dark:border-teal-700 bg-teal-50/90 dark:bg-teal-950/70 text-teal-950 dark:text-teal-200',
+      icon: <Compass className="w-5 h-5 text-category-coasts" />,
+      badgeClass: 'bg-category-coasts/15 text-category-coasts',
+      borderClass: 'border-category-coasts/40',
     },
     {
       key: 'mares',
       label: 'Mares y Océanos',
       countLabel: 'Atlántico, Cantábrico, Mediterráneo',
-      icon: <Waves className="w-5 h-5 text-blue-500" />,
-      color: 'border-blue-300 dark:border-blue-700 bg-blue-50/90 dark:bg-blue-950/70 text-blue-950 dark:text-blue-200',
+      icon: <Waves className="w-5 h-5 text-primary" />,
+      badgeClass: 'bg-primary/15 text-primary',
+      borderClass: 'border-primary/40',
     },
     {
       key: 'islas',
       label: 'Islas Baleares y Canarias',
-      countLabel: '13 islas (inc. Cabrera y La Graciosa)',
-      icon: <Palmtree className="w-5 h-5 text-emerald-600" />,
-      color: 'border-emerald-300 dark:border-emerald-700 bg-emerald-50/90 dark:bg-emerald-950/70 text-emerald-950 dark:text-emerald-200',
+      countLabel: '13 islas (inc. La Graciosa y Cabrera)',
+      icon: <Palmtree className="w-5 h-5 text-tertiary" />,
+      badgeClass: 'bg-tertiary/15 text-tertiary',
+      borderClass: 'border-tertiary/40',
     },
     {
       key: 'unidades_relieve',
       label: 'Mesetas y Depresiones',
       countLabel: 'Submesetas y Depresiones Ebro/Guadalquivir',
-      icon: <Layers className="w-5 h-5 text-purple-600" />,
-      color: 'border-purple-300 dark:border-purple-700 bg-purple-50/90 dark:bg-purple-950/70 text-purple-950 dark:text-purple-200',
+      icon: <Layers className="w-5 h-5 text-purple-600 dark:text-purple-400" />,
+      badgeClass: 'bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300',
+      borderClass: 'border-purple-300 dark:border-purple-800',
     },
   ];
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-sm animate-fadeIn">
       <div 
-        className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh]"
+        className="bg-surface-container-lowest dark:bg-slate-900 w-full max-w-3xl rounded-DEFAULT sm:rounded-lg shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[92vh]"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Modal Header */}
-        <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 rounded-xl">
-              <Layers className="w-5 h-5" />
+        {/* HEADER Y RESUMEN CURRICULAR */}
+        <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-800 bg-surface-container-low dark:bg-slate-850 flex items-start justify-between gap-3">
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1 bg-primary/10 text-primary px-2.5 py-0.5 rounded-full font-label-caps text-[10px] uppercase font-bold">
+                <SlidersHorizontal className="w-3.5 h-3.5" />
+                Personalización Curricular PDI
+              </span>
+              <span className="text-on-surface-variant font-label-caps text-[10px] uppercase">
+                • LOMLOE 1º ESO
+              </span>
             </div>
-            <div>
-              <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
-                Capas y Selección de Accidentes
-              </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Configura qué accidentes geográficos se muestran en el mapa y entran en los retos
-              </p>
-            </div>
+            <h2 className="font-headline-md text-base sm:text-xl text-on-surface dark:text-white font-extrabold leading-tight">
+              Herramientas Didácticas: Capas del Mapa y Modo de Estudio
+            </h2>
+            <p className="font-body-sm text-xs text-on-surface-variant dark:text-slate-400">
+              Personaliza qué elementos físicos, hidrográficos y costeros deseas proyectar o practicar en el mapa mudo interactivo.
+            </p>
           </div>
-
           <button
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="w-9 h-9 rounded-full bg-surface-container hover:bg-surface-container-high dark:bg-slate-800 flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer shrink-0"
+            title="Cerrar panel de capas"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
-
         {/* Content Body */}
-        <div className="p-4 sm:p-6 overflow-y-auto space-y-5">
-          {/* Active summary & Quick Presets */}
-          <div className="bg-blue-50/80 dark:bg-slate-800/90 p-3.5 rounded-xl border border-blue-200/80 dark:border-slate-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div>
-              <span className="text-xs uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider">
-                Estado Actual
+        <div className="p-4 sm:p-6 overflow-y-auto space-y-5 scrollbar-thin">
+          {/* Presets Didácticos de Acceso Rápido */}
+          <div className="bg-surface-container-low dark:bg-slate-800/80 p-3.5 rounded-DEFAULT shadow-[0_2px_0_#cbd5e1] dark:shadow-none flex flex-col gap-2">
+            <div className="flex justify-between items-center">
+              <span className="font-label-caps text-[10px] text-on-surface-variant uppercase font-bold tracking-wider">
+                Presets Recomendados de Aula ({activeCount} de {totalCount} accidentes activos)
               </span>
-              <div className="text-sm font-extrabold text-slate-900 dark:text-white mt-0.5">
-                {activeCount} de {totalCount} accidentes seleccionados
-              </div>
             </div>
-
-            {/* Presets */}
-            <div className="flex items-center gap-1.5 flex-wrap text-xs">
+            <div className="flex flex-wrap items-center gap-2">
               <button
-                onClick={() => onApplyPreset('todos')}
-                className="px-2.5 py-1.5 bg-white dark:bg-slate-900 hover:bg-blue-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-lg font-bold transition-colors cursor-pointer border border-slate-200 dark:border-slate-700 shadow-sm"
+                onClick={() => applyPreset('todos')}
+                aria-pressed={activePreset === 'todos'}
+                className={presetButtonClass('todos')}
               >
-                ⭐ Todo ESO
+                <Check className="w-3.5 h-3.5" />
+                <span>Oficial 1º ESO (Todos)</span>
               </button>
               <button
-                onClick={() => onApplyPreset('rios')}
-                className="px-2.5 py-1.5 bg-white dark:bg-slate-900 hover:bg-sky-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-lg font-bold transition-colors cursor-pointer border border-slate-200 dark:border-slate-700 shadow-sm"
+                onClick={() => applyPreset('rios')}
+                aria-pressed={activePreset === 'rios'}
+                className={presetButtonClass('rios')}
               >
-                💧 Solo Ríos
+                <Droplet className="w-3.5 h-3.5 text-category-rivers" />
+                <span>Ríos y Vertientes</span>
               </button>
               <button
-                onClick={() => onApplyPreset('relieve')}
-                className="px-2.5 py-1.5 bg-white dark:bg-slate-900 hover:bg-amber-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-lg font-bold transition-colors cursor-pointer border border-slate-200 dark:border-slate-700 shadow-sm"
+                onClick={() => applyPreset('relieve')}
+                aria-pressed={activePreset === 'relieve'}
+                className={presetButtonClass('relieve')}
               >
-                🏔️ Relieve
+                <Mountain className="w-3.5 h-3.5 text-category-mountains" />
+                <span>Relieve Peninsular</span>
               </button>
               <button
-                onClick={() => onApplyPreset('costas')}
-                className="px-2.5 py-1.5 bg-white dark:bg-slate-900 hover:bg-teal-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-lg font-bold transition-colors cursor-pointer border border-slate-200 dark:border-slate-700 shadow-sm"
+                onClick={() => applyPreset('costas')}
+                aria-pressed={activePreset === 'costas'}
+                className={presetButtonClass('costas')}
               >
-                ⚓ Costas
+                <Compass className="w-3.5 h-3.5 text-category-coasts" />
+                <span>Costas e Islas</span>
               </button>
             </div>
           </div>
-
-          {/* Category Cards Grid */}
-          <div>
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2.5">
-              Tipos de accidentes para ver y jugar
-            </h3>
+          {/* SECCIÓN 1: Capas Temáticas Curriculares */}
+          <div className="space-y-2.5">
+            <span className="font-label-caps text-[10px] text-on-surface-variant uppercase font-extrabold tracking-wider">
+              Capas Temáticas del Currículo
+            </span>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {categoriesList.map((cat) => {
                 const isActive = filters[cat.key];
-
                 return (
                   <button
                     key={cat.key}
-                    onClick={() => onToggleFilter(cat.key)}
-                    className={`p-3.5 rounded-xl border text-xs font-bold transition-all flex items-center justify-between gap-2 text-left cursor-pointer ${
+                    onClick={() => (setActivePreset(null), onToggleFilter(cat.key))}
+                    className={`p-3 rounded-DEFAULT border text-left flex items-center justify-between gap-2.5 transition-all cursor-pointer ${
                       isActive
-                        ? cat.color + ' shadow-sm'
-                        : 'bg-slate-50 dark:bg-slate-800/40 text-slate-400 border-slate-200 dark:border-slate-800 opacity-60 hover:opacity-90'
+                        ? `${cat.borderClass} bg-surface-container-lowest dark:bg-slate-800 shadow-[0_2px_0_#cbd5e1]`
+                        : 'bg-surface-container-low/60 dark:bg-slate-800/40 text-slate-400 border-transparent opacity-60 hover:opacity-90'
                     }`}
                   >
-                    <div className="flex items-center gap-2.5">
-                      <div className="p-2 rounded-lg bg-white/70 dark:bg-slate-800/80 shadow-xs">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg ${cat.badgeClass}`}>
                         {cat.icon}
                       </div>
-                      <div>
-                        <div className="font-bold text-sm text-slate-900 dark:text-white">
+                      <div className="flex flex-col">
+                        <span className="font-headline-md text-xs sm:text-sm font-bold text-on-surface dark:text-white leading-tight">
                           {cat.label}
-                        </div>
-                        <div className="text-[11px] opacity-70 font-normal">
+                        </span>
+                        <span className="font-body-sm text-[11px] text-on-surface-variant dark:text-slate-400">
                           {cat.countLabel}
-                        </div>
+                        </span>
                       </div>
                     </div>
-
-                    <div
-                      className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border transition-colors ${
-                        isActive
-                          ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                          : 'border-slate-300 dark:border-slate-600'
-                      }`}
-                    >
+                    <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border transition-all ${
+                      isActive 
+                        ? 'bg-primary text-on-primary border-primary shadow-xs' 
+                        : 'border-slate-300 dark:border-slate-600'
+                    }`}>
                       {isActive && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                     </div>
                   </button>
@@ -223,148 +252,112 @@ export const AccidentFilterPanel: React.FC<AccidentFilterPanelProps> = ({
               })}
             </div>
           </div>
-
-          {/* Capas Base y División Política */}
-          <div className="pt-3 border-t border-slate-200 dark:border-slate-800 space-y-3">
-            <div>
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                Capas de Territorio y Visualización
-              </h3>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                Ajusta el nivel de detalle geográfico desde el contorno puro hasta la división provincial
-              </p>
-            </div>
-
-            {/* Capa 0 Info Card */}
-            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400">
-                  <MapIcon className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="font-extrabold text-slate-900 dark:text-white">
-                    Capa 0: Contorno Geográfico Base
-                  </div>
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400 font-normal">
-                    España, Portugal, Sur de Francia, Costa Norte de África, Baleares y Canarias
-                  </div>
-                </div>
-              </div>
-              <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300">
-                Base Activa
-              </span>
-            </div>
-
+          {/* SECCIÓN 2: Base Cartográfica y Capas de Territorio */}
+          <div className="space-y-2.5 pt-3 border-t border-slate-200 dark:border-slate-800">
+            <span className="font-label-caps text-[10px] text-on-surface-variant uppercase font-extrabold tracking-wider">
+              Base Cartográfica y División Política
+            </span>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {/* Capa 1: Comunidades Autónomas Toggle */}
+              {/* Comunidades Autónomas */}
               <button
                 onClick={() => onToggleFilter('showCommunities')}
-                className={`p-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-between gap-2 cursor-pointer ${
-                  filters.showCommunities !== false
-                    ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-950 dark:text-amber-200 border-amber-300 dark:border-amber-800'
-                    : 'bg-slate-50 dark:bg-slate-800/40 text-slate-400 border-slate-200 dark:border-slate-800 opacity-70 hover:opacity-100'
+                className={`p-3 rounded-DEFAULT border text-left flex items-center justify-between gap-2.5 transition-all cursor-pointer ${
+                  filters.showCommunities
+                    ? 'border-primary/40 bg-surface-container-lowest dark:bg-slate-800 shadow-[0_2px_0_#cbd5e1]'
+                    : 'bg-surface-container-low/60 dark:bg-slate-800/40 text-slate-400 border-transparent opacity-60'
                 }`}
               >
-                <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-lg bg-white/80 dark:bg-slate-800/80">
-                    <Layers className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                    <MapIcon className="w-5 h-5" />
                   </div>
-                  <div className="text-left">
-                    <div className="font-bold text-xs sm:text-sm">
-                      Capa 1: Comunidades
-                    </div>
-                    <div className="text-[10px] sm:text-[11px] opacity-75 font-normal">
-                      Límites de las 17 CC.AA.
-                    </div>
+                  <div className="flex flex-col">
+                    <span className="font-headline-md text-xs sm:text-sm font-bold text-on-surface dark:text-white">
+                      Comunidades Autónomas
+                    </span>
+                    <span className="font-body-sm text-[11px] text-on-surface-variant dark:text-slate-400">
+                      17 CC.AA. y ciudades autónomas
+                    </span>
                   </div>
                 </div>
-
-                <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 font-bold border border-slate-200 dark:border-slate-700 shadow-xs shrink-0">
-                  {filters.showCommunities !== false ? 'Visible' : 'Oculto'}
-                </span>
+                <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border transition-all ${
+                  filters.showCommunities ? 'bg-primary text-on-primary border-primary shadow-xs' : 'border-slate-300 dark:border-slate-600'
+                }`}>
+                  {filters.showCommunities && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                </div>
               </button>
-
-              {/* Capa 2: Provincias Toggle */}
+              {/* Provincias */}
               <button
                 onClick={() => onToggleFilter('showProvinces')}
-                className={`p-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-between gap-2 cursor-pointer ${
-                  filters.showProvinces !== false
-                    ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-950 dark:text-blue-200 border-blue-300 dark:border-blue-800'
-                    : 'bg-slate-50 dark:bg-slate-800/40 text-slate-400 border-slate-200 dark:border-slate-800 opacity-70 hover:opacity-100'
+                className={`p-3 rounded-DEFAULT border text-left flex items-center justify-between gap-2.5 transition-all cursor-pointer ${
+                  filters.showProvinces
+                    ? 'border-primary/40 bg-surface-container-lowest dark:bg-slate-800 shadow-[0_2px_0_#cbd5e1]'
+                    : 'bg-surface-container-low/60 dark:bg-slate-800/40 text-slate-400 border-transparent opacity-60'
                 }`}
               >
-                <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-lg bg-white/80 dark:bg-slate-800/80">
-                    <Building2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                    <Building2 className="w-5 h-5" />
                   </div>
-                  <div className="text-left">
-                    <div className="font-bold text-xs sm:text-sm">
-                      Capa 2: Provincias
-                    </div>
-                    <div className="text-[10px] sm:text-[11px] opacity-75 font-normal">
-                      División de las 50 provincias
-                    </div>
+                  <div className="flex flex-col">
+                    <span className="font-headline-md text-xs sm:text-sm font-bold text-on-surface dark:text-white">
+                      Provincias de España
+                    </span>
+                    <span className="font-body-sm text-[11px] text-on-surface-variant dark:text-slate-400">
+                      50 límites provinciales oficiales
+                    </span>
                   </div>
                 </div>
-
-                <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 font-bold border border-slate-200 dark:border-slate-700 shadow-xs shrink-0">
-                  {filters.showProvinces !== false ? 'Visible' : 'Oculto'}
-                </span>
+                <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border transition-all ${
+                  filters.showProvinces ? 'bg-primary text-on-primary border-primary shadow-xs' : 'border-slate-300 dark:border-slate-600'
+                }`}>
+                  {filters.showProvinces && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                </div>
               </button>
             </div>
-
-            {/* Map labels toggle */}
+          </div>
+          {/* SECCIÓN 3: Opciones de Aprendizaje y PDI (Etiquetas y Nombres) */}
+          <div className="space-y-2.5 pt-3 border-t border-slate-200 dark:border-slate-800">
+            <span className="font-label-caps text-[10px] text-on-surface-variant uppercase font-extrabold tracking-wider">
+              Opciones de Aprendizaje y Examen
+            </span>
             <button
               onClick={() => onToggleFilter('showLabels')}
-              className={`w-full p-3.5 rounded-xl border text-xs font-bold transition-all flex items-center justify-between gap-2 cursor-pointer ${
+              className={`w-full p-3 rounded-DEFAULT border text-left flex items-center justify-between gap-3 transition-all cursor-pointer ${
                 filters.showLabels
-                  ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-900 dark:text-indigo-200 border-indigo-300 dark:border-indigo-800'
-                  : 'bg-amber-100/70 dark:bg-amber-950/70 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-800'
+                  ? 'border-emerald-400 bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-950 dark:text-emerald-200 shadow-[0_2px_0_#a7f3d0]'
+                  : 'border-slate-300 dark:border-slate-700 bg-surface-container-low dark:bg-slate-800 text-on-surface dark:text-white'
               }`}
             >
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-white/70 dark:bg-slate-800/80">
-                  {filters.showLabels ? (
-                    <Eye className="w-5 h-5 text-indigo-600" />
-                  ) : (
-                    <EyeOff className="w-5 h-5 text-amber-600" />
-                  )}
+                <div className={`p-2 rounded-lg ${filters.showLabels ? 'bg-emerald-100 text-emerald-700' : 'bg-surface-container text-slate-500'}`}>
+                  {filters.showLabels ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
                 </div>
-                <div className="text-left">
-                  <div className="font-bold text-sm">
-                    {filters.showLabels ? 'Rótulos de Accidentes: Visibles' : 'Modo Mapa Mudo 100%'}
-                  </div>
-                  <div className="text-[11px] opacity-75 font-normal">
-                    {filters.showLabels
-                      ? 'Los nombres de los accidentes se muestran directamente sobre el mapa.'
-                      : 'Sin nombres de accidentes: ideal para memorizar, practicar y examinarse.'}
-                  </div>
+                <div className="flex flex-col">
+                  <span className="font-headline-md text-xs sm:text-sm font-bold">
+                    {filters.showLabels ? 'Etiquetas y Topónimos Visibles' : 'Modo Mapa Mudo Escolar Puro (Sin nombres)'}
+                  </span>
+                  <span className="font-body-sm text-[11px] opacity-80">
+                    {filters.showLabels ? 'Muestra nombres de ríos, montañas y cabos para estudio' : 'Oculta nombres para evaluar memoria geográfica'}
+                  </span>
                 </div>
               </div>
-
-              <span className="text-xs uppercase font-mono px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 font-bold border border-slate-200 dark:border-slate-700 shadow-xs">
+              <div className={`px-3 py-1 rounded-full text-xs font-bold ${
+                filters.showLabels ? 'bg-emerald-600 text-white' : 'bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+              }`}>
                 {filters.showLabels ? 'Activado' : 'Mudo'}
-              </span>
+              </div>
             </button>
           </div>
         </div>
-
-        {/* Modal Footer */}
-        <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex items-center justify-between">
-          <div className="text-xs text-slate-500 dark:text-slate-400">
-            {activeCount === 0 ? (
-              <span className="text-rose-500 font-semibold">⚠️ Selecciona al menos 1 categoría</span>
-            ) : (
-              <span>Listo para jugar con {activeCount} elementos</span>
-            )}
-          </div>
-
+        {/* Footer with Apply button */}
+        <div className="p-4 sm:p-5 border-t border-slate-200 dark:border-slate-800 bg-surface-container-low dark:bg-slate-850 flex justify-end">
           <button
             onClick={onClose}
-            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md transition-colors flex items-center gap-2 cursor-pointer"
+            className="w-full sm:w-auto px-6 py-2.5 bg-primary text-on-primary rounded-DEFAULT font-headline-md text-sm shadow-[0_3px_0_#003ea8] active:translate-y-0.5 transition-all cursor-pointer flex items-center justify-center gap-2"
           >
-            <Check className="w-4 h-4" />
-            <span>Aplicar y Ver Mapa</span>
+            <Check className="w-4 h-4 stroke-[3]" />
+            <span>Aplicar y Volver al Mapa</span>
           </button>
         </div>
       </div>

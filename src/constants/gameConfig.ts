@@ -25,7 +25,7 @@ export const GAME_CONFIG = {
   // Tiempos y duraciones en segundos / milisegundos
   TIMERS: {
     CONTRARRELOJ_INITIAL_SECONDS: 60,
-    CONTRARRELOJ_TIME_BONUS_SECONDS: 5, // +5s por cada respuesta acertada en modo 60s
+    CONTRARRELOJ_TIME_BONUS_SECONDS: 2, // +2s por cada respuesta acertada en modo 60s
     CONTRARRELOJ_WARNING_SECONDS: 10, // Umbral para alerta visual de tiempo agotándose
     
     AUTO_ADVANCE_COUNTDOWN_SECONDS: 2, // Cuenta atrás en modo de avance automático

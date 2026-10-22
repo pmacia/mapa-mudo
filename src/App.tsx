@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { GeoElement, GameMode, PlayerStats, CategoryType } from './types/geography';
 import { GEO_ELEMENTS } from './data/geographyData';
 import { SpainMap, MapTheme } from './components/Map/SpainMap';
@@ -19,6 +19,7 @@ import { GameManualModal } from './components/Manual/GameManualModal';
 import { playSound } from './utils/audio';
 import { List, X, ChevronDown, ChevronUp } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { MobileBottomNav } from './components/Navigation/MobileBottomNav';
 import { GAME_CONFIG } from './constants/gameConfig';
 
 const STORAGE_KEY_STATS = 'geoespana_player_stats_v2';
@@ -241,52 +242,55 @@ export default function App() {
     return unlocked;
   };
 
-  const handleCorrectAnswer = (element: GeoElement, earnedXp: number) => {
-    const updatedCounts = {
-      ...categoryCorrectCounts,
-      [element.category]: (categoryCorrectCounts[element.category] || 0) + 1,
-    };
-    setCategoryCorrectCounts(updatedCounts);
-
-    setStats((prev) => {
-      const newXp = prev.xp + earnedXp;
-      const newLevel = Math.floor(newXp / GAME_CONFIG.GAMEPLAY.LEVEL_XP_STEP) + 1;
-      const newStreak = prev.streak + 1;
-      const newMaxStreak = Math.max(prev.maxStreak, newStreak);
-      const newCorrect = prev.correctAnswers + 1;
-      const newTotal = prev.totalAttempts + 1;
-
-      const tempStats: PlayerStats = {
-        ...prev,
-        xp: newXp,
-        level: newLevel,
-        streak: newStreak,
-        maxStreak: newMaxStreak,
-        correctAnswers: newCorrect,
-        totalAttempts: newTotal,
+  const handleCorrectAnswer = useCallback((element: GeoElement, earnedXp: number) => {
+    setCategoryCorrectCounts((prevCounts) => {
+      const updatedCounts = {
+        ...prevCounts,
+        [element.category]: (prevCounts[element.category] || 0) + 1,
       };
 
-      const updatedBadges = checkBadgeUnlocks(tempStats, updatedCounts);
-      const isNewBadgeUnlocked = updatedBadges.length > prev.unlockedBadges.length;
-      if (isNewBadgeUnlocked) {
-        playSound('levelup');
-        confetti({ particleCount: 160, spread: 85, origin: { y: 0.5 } });
-      }
+      setStats((prev) => {
+        const newXp = prev.xp + earnedXp;
+        const newLevel = Math.floor(newXp / GAME_CONFIG.GAMEPLAY.LEVEL_XP_STEP) + 1;
+        const newStreak = prev.streak + 1;
+        const newMaxStreak = Math.max(prev.maxStreak, newStreak);
+        const newCorrect = prev.correctAnswers + 1;
+        const newTotal = prev.totalAttempts + 1;
 
-      return {
-        ...tempStats,
-        unlockedBadges: updatedBadges,
-      };
+        const tempStats: PlayerStats = {
+          ...prev,
+          xp: newXp,
+          level: newLevel,
+          streak: newStreak,
+          maxStreak: newMaxStreak,
+          correctAnswers: newCorrect,
+          totalAttempts: newTotal,
+        };
+
+        const updatedBadges = checkBadgeUnlocks(tempStats, updatedCounts);
+        const isNewBadgeUnlocked = updatedBadges.length > prev.unlockedBadges.length;
+        if (isNewBadgeUnlocked) {
+          playSound('levelup');
+          confetti({ particleCount: 160, spread: 85, origin: { y: 0.5 } });
+        }
+
+        return {
+          ...tempStats,
+          unlockedBadges: updatedBadges,
+        };
+      });
+
+      return updatedCounts;
     });
-  };
+  }, []);
 
-  const handleWrongAnswer = () => {
+  const handleWrongAnswer = useCallback(() => {
     setStats((prev) => ({
       ...prev,
       streak: 0,
       totalAttempts: prev.totalAttempts + 1,
     }));
-  };
+  }, []);
 
   // Gamification: Track exploration of accidents in Atlas mode
   const handleVisitAtlasElement = (element: GeoElement) => {
@@ -348,9 +352,8 @@ export default function App() {
       setSelectedElement(element);
       handleVisitAtlasElement(element);
       playSound('click');
-    } else {
+    } else if (currentMode === 'reto_localizar') {
       if (
-        challengeType !== 'identificar' &&
         challengeSession.currentQuestion &&
         !challengeSession.feedback &&
         !challengeSession.isGameOver &&
@@ -359,10 +362,24 @@ export default function App() {
         const isCorrect = element.id === challengeSession.currentQuestion.id;
         challengeSession.handleAnswer(isCorrect, element);
       }
+    } else if (currentMode === 'contrarreloj') {
+      if (
+        challengeSession.currentQuestion &&
+        !challengeSession.feedback &&
+        !challengeSession.isGameOver &&
+        !challengeSession.isCompleted
+      ) {
+        if (element.id === challengeSession.currentQuestion.id) {
+          challengeSession.handleContrarrelojAnswer(true);
+        } else {
+          challengeSession.handleContrarrelojAnswer(false);
+        }
+      }
     }
   };
 
   // Authoritative single game session for quiz modes
+  const isQuizMode = currentMode !== 'explorar';
   const challengeType: ChallengeType =
     currentMode === 'reto_localizar'
       ? 'localizar'
@@ -370,19 +387,31 @@ export default function App() {
       ? 'identificar'
       : 'contrarreloj';
 
+  const onSetTargetHighlight = useCallback((id: string | null) => {
+    setTargetHighlightId(id);
+  }, []);
+
+  const onSetFeedback = useCallback((id: string | null, status: 'correct' | 'wrong' | null) => {
+    setFeedbackElementId(id);
+    setFeedbackStatus(status);
+  }, []);
+
   const challengeSession = useChallengeSession({
     elements: activeElements.length > 0 ? activeElements : GEO_ELEMENTS,
     challengeType,
     filterCategory: 'todos',
+    isActive: isQuizMode,
     onCorrectAnswer: handleCorrectAnswer,
     onWrongAnswer: handleWrongAnswer,
-    onSetTargetHighlight: setTargetHighlightId,
-    onSetFeedback: (id, status) => {
-      setFeedbackElementId(id);
-      setFeedbackStatus(status);
-    },
+    onSetTargetHighlight,
+    onSetFeedback,
     roundSize: GAME_CONFIG.GAMEPLAY.DEFAULT_ROUND_SIZE,
   });
+
+  const isGameFinished = challengeSession.isGameOver || challengeSession.isCompleted;
+  const activeTargetHighlightId = !isGameFinished && currentMode !== 'explorar' ? targetHighlightId : null;
+  const activeFeedbackElementId = !isGameFinished && currentMode !== 'explorar' ? feedbackElementId : null;
+  const activeFeedbackStatus = !isGameFinished && currentMode !== 'explorar' ? feedbackStatus : null;
 
   return (
     <div
@@ -406,26 +435,23 @@ export default function App() {
         onToggleSound={() => setSoundEnabled(!soundEnabled)}
         isCollapsed={isHeaderCollapsed}
         onToggleCollapse={() => setIsHeaderCollapsed((prev) => !prev)}
+        onSelectElement={handleMapElementClick}
       />
 
       {/* Main App Container */}
       <main
-        className={`flex-1 max-w-7xl w-full mx-auto flex flex-col gap-4 pb-20 lg:pb-6 transition-all duration-300 ${
-          isHeaderCollapsed ? 'p-2 sm:p-3 md:p-4' : 'p-3 sm:p-4 md:p-6'
-        }`}
+        className="flex-1 w-full max-w-[1720px] mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-5 pb-28 lg:pb-8 transition-all duration-300"
       >
-        {/* Central Workspace: Real Map + Side Panel */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-          {/* Main Map Column (Full width on mobile, prominent on desktop) */}
+        {/* Central Workspace: Real Map + Companion Dock */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 items-start">
+          {/* Main Map Column (Full width on mobile, 8 columns on desktop) */}
           <div
             className={`flex flex-col ${
-              currentMode === 'explorar' ? 'lg:col-span-7 xl:col-span-8' : 'lg:col-span-8 xl:col-span-9'
+              currentMode === 'explorar' ? 'lg:col-span-7 xl:col-span-8' : 'lg:col-span-8 xl:col-span-8'
             }`}
           >
             <div
-              className={`w-full aspect-[1000/720] relative rounded-2xl overflow-hidden shadow-lg border border-slate-300 dark:border-slate-800 transition-all duration-300 ${
-                isHeaderCollapsed ? 'max-h-[82vh]' : 'max-h-[76vh]'
-              }`}
+              className="w-full aspect-[1000/720] relative rounded-DEFAULT lg:rounded-2xl overflow-hidden shadow-[0_4px_0_#cbd5e1] dark:shadow-none border border-slate-200 dark:border-slate-800 transition-all duration-300 bg-map-water-light"
             >
               <SpainMap
                 elements={GEO_ELEMENTS}
@@ -433,9 +459,9 @@ export default function App() {
                 theme={theme}
                 selectedElement={selectedElement}
                 onSelectElement={setSelectedElement}
-                targetHighlightId={targetHighlightId}
-                feedbackElementId={feedbackElementId}
-                feedbackStatus={feedbackStatus}
+                targetHighlightId={activeTargetHighlightId}
+                feedbackElementId={activeFeedbackElementId}
+                feedbackStatus={activeFeedbackStatus}
                 onElementClick={handleMapElementClick}
                 onElementHover={handleVisitAtlasElement}
                 visitedAtlasIds={stats.visitedAtlasElements}
@@ -448,23 +474,15 @@ export default function App() {
             </div>
           </div>
 
-          {/* Right Column (Desktop only: sticky companion with independent scroll) */}
+          {/* Right Column (Desktop sticky companion dock with independent scroll) */}
           <div
             className={`hidden lg:flex flex-col ${
-              currentMode === 'explorar' ? 'lg:col-span-5 xl:col-span-4' : 'lg:col-span-4 xl:col-span-3'
-            } lg:sticky transition-all duration-300 ${
-              isHeaderCollapsed
-                ? 'lg:top-14 lg:max-h-[calc(100dvh-4.75rem)] lg:max-h-[calc(100vh-4.75rem)]'
-                : 'lg:top-20 lg:max-h-[calc(100dvh-6.25rem)] lg:max-h-[calc(100vh-6.25rem)]'
-            }`}
+              currentMode === 'explorar' ? 'lg:col-span-5 xl:col-span-4' : 'lg:col-span-4 xl:col-span-4'
+            } lg:sticky lg:top-20 transition-all duration-300 max-h-[calc(100vh-6.5rem)]`}
           >
             {currentMode === 'explorar' ? (
               <ExplorePanel
-                className={`w-full ${
-                  isHeaderCollapsed
-                    ? 'lg:max-h-[calc(100dvh-4.75rem)] lg:max-h-[calc(100vh-4.75rem)]'
-                    : 'lg:max-h-[calc(100dvh-6.25rem)] lg:max-h-[calc(100vh-6.25rem)]'
-                }`}
+                className="w-full max-h-[calc(100vh-6.5rem)]"
                 elements={GEO_ELEMENTS}
                 selectedElement={selectedElement}
                 onSelectElement={(elem) => {
@@ -478,16 +496,15 @@ export default function App() {
                 atlasStampUnlocked={stats.atlasStampUnlocked}
                 onOpenStampModal={() => setIsStampCelebrationOpen(true)}
                 onResetAtlas={handleResetAtlas}
+                onStartDailyChallenge={() => handleModeChange('reto_localizar')}
               />
             ) : isDesktop ? (
               <ChallengeMode
-                className={`w-full ${
-                  isHeaderCollapsed
-                    ? 'lg:max-h-[calc(100dvh-4.75rem)] lg:max-h-[calc(100vh-4.75rem)]'
-                    : 'lg:max-h-[calc(100dvh-6.25rem)] lg:max-h-[calc(100vh-6.25rem)]'
-                }`}
+                className="w-full max-h-[calc(100vh-6.5rem)]"
                 session={challengeSession}
                 challengeType={challengeType}
+                onSwitchToAtlas={() => handleModeChange('explorar')}
+                onOpenPrintable={() => setIsPrintableOpen(true)}
               />
             ) : null}
           </div>
@@ -498,6 +515,8 @@ export default function App() {
               <ChallengeMode
                 session={challengeSession}
                 challengeType={challengeType}
+                onSwitchToAtlas={() => handleModeChange('explorar')}
+                onOpenPrintable={() => setIsPrintableOpen(true)}
               />
             </div>
           )}
@@ -506,10 +525,10 @@ export default function App() {
 
       {/* Floating Bottom Button for Mobile (In Explore Mode) */}
       {currentMode === 'explorar' && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 lg:hidden">
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-30 lg:hidden">
           <button
             onClick={() => setIsMobileDrawerOpen(true)}
-            className="flex items-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-bold text-xs shadow-xl active:scale-95 transition-transform border border-blue-400/40 cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2.5 bg-primary text-on-primary rounded-full font-headline-md text-xs shadow-[0_3px_0_#003ea8] active:translate-y-0.5 transition-all cursor-pointer"
           >
             <List className="w-4 h-4" />
             <span>Accidentes ({activeElements.length})</span>
@@ -517,6 +536,14 @@ export default function App() {
           </button>
         </div>
       )}
+
+      {/* Mobile Bottom Navigation Bar (Persistent touch dock) */}
+      <MobileBottomNav
+        currentMode={currentMode}
+        onModeChange={handleModeChange}
+        onOpenLayers={() => setIsAccidentFilterOpen(true)}
+        onOpenAchievements={() => setIsAchievementsOpen(true)}
+      />
 
       {/* Mobile Bottom Sheet Drawer for Explore Panel */}
       {isMobileDrawerOpen && currentMode === 'explorar' && (

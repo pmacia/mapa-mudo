@@ -1,12 +1,158 @@
 @import "tailwindcss";
 
+@theme {
+  --color-primary: #004ac6;
+  --color-primary-container: #2563eb;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #eeefff;
+  --color-primary-fixed: #dbe1ff;
+  --color-primary-fixed-dim: #b4c5ff;
+  --color-on-primary-fixed: #00174b;
+  --color-on-primary-fixed-variant: #003ea8;
+  --color-inverse-primary: #b4c5ff;
+
+  --color-secondary: #855300;
+  --color-secondary-container: #fea619;
+  --color-on-secondary: #ffffff;
+  --color-on-secondary-container: #684000;
+  --color-secondary-fixed: #ffddb8;
+  --color-secondary-fixed-dim: #ffb95f;
+  --color-on-secondary-fixed: #2a1700;
+  --color-on-secondary-fixed-variant: #653e00;
+
+  --color-tertiary: #632ecd;
+  --color-tertiary-container: #7d4ce7;
+  --color-on-tertiary: #ffffff;
+  --color-on-tertiary-container: #f6edff;
+  --color-tertiary-fixed: #e9ddff;
+  --color-tertiary-fixed-dim: #d0bcff;
+  --color-on-tertiary-fixed: #23005c;
+  --color-on-tertiary-fixed-variant: #5516be;
+
+  --color-surface: #f8f9ff;
+  --color-surface-dim: #cbdbf5;
+  --color-surface-bright: #f8f9ff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #eff4ff;
+  --color-surface-container: #e5eeff;
+  --color-surface-container-high: #dce9ff;
+  --color-surface-container-highest: #d3e4fe;
+  --color-surface-variant: #d3e4fe;
+  --color-surface-tint: #0053db;
+
+  --color-on-surface: #0b1c30;
+  --color-on-surface-variant: #434655;
+  --color-inverse-surface: #213145;
+  --color-inverse-on-surface: #eaf1ff;
+  --color-outline: #737686;
+  --color-outline-variant: #c3c6d7;
+
+  --color-background: #f8f9ff;
+  --color-on-background: #0b1c30;
+
+  --color-error: #ba1a1a;
+  --color-error-container: #ffdad6;
+  --color-on-error: #ffffff;
+  --color-on-error-container: #93000a;
+
+  --color-success-emerald: #10B981;
+  --color-adventure-orange: #F97316;
+  --color-danger-rose: #EF4444;
+
+  --color-map-water-light: #E0F2FE;
+  --color-map-land-light: #FEF3C7;
+
+  --color-category-rivers: #0284C7;
+  --color-category-mountains: #D97706;
+  --color-category-peaks: #DC2626;
+  --color-category-coasts: #0D9488;
+
+  --font-display-lg: 'Plus Jakarta Sans', sans-serif;
+  --font-headline-md: 'Plus Jakarta Sans', sans-serif;
+  --font-headline-md-mobile: 'Plus Jakarta Sans', sans-serif;
+  --font-title-sm: 'Plus Jakarta Sans', sans-serif;
+  --font-label-caps: 'Plus Jakarta Sans', sans-serif;
+  --font-stat-lg: 'Plus Jakarta Sans', sans-serif;
+  --font-body-base: 'Inter', sans-serif;
+  --font-body-bold: 'Inter', sans-serif;
+  --font-body-sm: 'Inter', sans-serif;
+
+  --radius-DEFAULT: 1rem;
+  --radius-lg: 2rem;
+  --radius-xl: 3rem;
+  --radius-full: 9999px;
+
+  --spacing-space-xs: 0.25rem;
+  --spacing-space-sm: 0.5rem;
+  --spacing-space-md: 0.75rem;
+  --spacing-space-lg: 1rem;
+  --spacing-space-xl: 1.5rem;
+  --spacing-margin: 0.75rem;
+  --spacing-margin-tablet: 1rem;
+  --spacing-margin-desktop: 1.5rem;
+  --spacing-gutter: 1rem;
+  --spacing-gutter-desktop: 1.5rem;
+}
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
   body {
-    @apply antialiased selection:bg-blue-500 selection:text-white;
+    @apply antialiased selection:bg-blue-600 selection:text-white font-sans;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    font-family: var(--font-body-base);
   }
+}
+
+/* Custom Stitch Utility Classes */
+.font-display-lg {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.font-headline-md {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.font-headline-md-mobile {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.font-title-sm {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+}
+.font-label-caps {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+.font-stat-lg {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.font-body-base {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+}
+.font-body-bold {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+}
+.font-body-sm {
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
 @keyframes fadeIn {

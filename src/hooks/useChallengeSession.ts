@@ -10,6 +10,7 @@ export interface ChallengeSessionOptions {
   elements: GeoElement[];
   challengeType: ChallengeType;
   filterCategory?: CategoryType | 'todos';
+  isActive?: boolean;
   onCorrectAnswer?: (element: GeoElement, earnedXp: number) => void;
   onWrongAnswer?: () => void;
   onSetTargetHighlight?: (id: string | null) => void;
@@ -24,6 +25,7 @@ export function useChallengeSession({
   elements,
   challengeType,
   filterCategory = 'todos',
+  isActive = true,
   onCorrectAnswer,
   onWrongAnswer,
   onSetTargetHighlight,
@@ -31,6 +33,22 @@ export function useChallengeSession({
   onTourCompleted,
   roundSize = GAME_CONFIG.GAMEPLAY.DEFAULT_ROUND_SIZE,
 }: ChallengeSessionOptions) {
+  // Stable refs for external callback functions to prevent circular re-renders and game resets
+  const onSetTargetHighlightRef = useRef(onSetTargetHighlight);
+  onSetTargetHighlightRef.current = onSetTargetHighlight;
+
+  const onSetFeedbackRef = useRef(onSetFeedback);
+  onSetFeedbackRef.current = onSetFeedback;
+
+  const onCorrectAnswerRef = useRef(onCorrectAnswer);
+  onCorrectAnswerRef.current = onCorrectAnswer;
+
+  const onWrongAnswerRef = useRef(onWrongAnswer);
+  onWrongAnswerRef.current = onWrongAnswer;
+
+  const onTourCompletedRef = useRef(onTourCompleted);
+  onTourCompletedRef.current = onTourCompleted;
+
   // Pool of candidate elements
   const pool = useMemo(() => {
     let filtered = elements;
@@ -69,6 +87,11 @@ export function useChallengeSession({
 
   const currentQuestion = questions[currentIndex] || null;
 
+  const [contrarrelojPrompt, setContrarrelojPrompt] = useState<{
+    promptName: string;
+    isMatch: boolean;
+  } | null>(null);
+
   // Helper to generate 4 multiple-choice options for "identificar"
   // Picks distractors from the SAME category first to avoid any confusion between points/peaks/ranges
   const generateOptionsFor = useCallback((target: GeoElement, allItems: GeoElement[]) => {
@@ -92,10 +115,37 @@ export function useChallengeSession({
     setOptions(allFour);
   }, []);
 
-  // Start/Restart Game
+  // Helper to generate rapid True/False question for "contrarreloj"
+  const setupContrarrelojFor = useCallback((target: GeoElement, allItems: GeoElement[]) => {
+    const isMatch = Math.random() < 0.5;
+    if (isMatch) {
+      setContrarrelojPrompt({ promptName: target.name, isMatch: true });
+    } else {
+      const sameCategoryWrongs = allItems.filter(
+        (i) => i.id !== target.id && i.category === target.category
+      );
+      const candidates = sameCategoryWrongs.length > 0
+        ? sameCategoryWrongs
+        : allItems.filter((i) => i.id !== target.id);
+      const randomWrong = candidates[Math.floor(Math.random() * candidates.length)] || target;
+      setContrarrelojPrompt({ promptName: randomWrong.name, isMatch: false });
+    }
+  }, []);
+
   // Start/Restart Game
   const startNewGame = useCallback(() => {
     if (autoAdvanceRef.current) clearTimeout(autoAdvanceRef.current);
+    if (timerRef.current) clearInterval(timerRef.current);
+
+    if (!isActive) {
+      setQuestions([]);
+      setCurrentIndex(0);
+      setContrarrelojPrompt(null);
+      onSetTargetHighlightRef.current?.(null);
+      onSetFeedbackRef.current?.(null, null);
+      return;
+    }
+
     const shuffled = [...pool].sort(() => Math.random() - 0.5);
     
     // In "contrarreloj" (60s), use the FULL pool of accidents so there are no repeats!
@@ -122,32 +172,72 @@ export function useChallengeSession({
     setTourBonusAwarded(null);
     setTimeLeft(GAME_CONFIG.TIMERS.CONTRARRELOJ_INITIAL_SECONDS);
 
-    if (onSetFeedback) onSetFeedback(null, null);
+    onSetFeedbackRef.current?.(null, null);
 
     const first = selectedRound[0] || null;
     if (first) {
       if (challengeType === 'identificar') {
-        if (onSetTargetHighlight) onSetTargetHighlight(first.id);
+        onSetTargetHighlightRef.current?.(first.id);
         generateOptionsFor(first, pool);
+      } else if (challengeType === 'contrarreloj') {
+        onSetTargetHighlightRef.current?.(first.id);
+        setupContrarrelojFor(first, pool);
       } else {
-        if (onSetTargetHighlight) onSetTargetHighlight(null);
+        // En "localizar", el alumno debe encontrar el accidente sin baliza
+        onSetTargetHighlightRef.current?.(null);
       }
     }
-  }, [pool, challengeType, roundSize, generateOptionsFor, onSetFeedback, onSetTargetHighlight]);
+  }, [isActive, pool, challengeType, roundSize, generateOptionsFor, setupContrarrelojFor]);
 
-  // Restart whenever challengeType or filterCategory changes
+  // Restart only when challengeType, filterCategory, or active status transition
+  const prevActiveRef = useRef(isActive);
+  const prevTypeRef = useRef(challengeType);
+  const prevCatRef = useRef(filterCategory);
+
   useEffect(() => {
-    startNewGame();
-  }, [challengeType, filterCategory]);
+    const typeChanged = prevTypeRef.current !== challengeType;
+    const catChanged = prevCatRef.current !== filterCategory;
+    const becameActive = isActive && !prevActiveRef.current;
+    const becameInactive = !isActive && prevActiveRef.current;
+
+    prevTypeRef.current = challengeType;
+    prevCatRef.current = filterCategory;
+    prevActiveRef.current = isActive;
+
+    if (becameInactive) {
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (autoAdvanceRef.current) clearTimeout(autoAdvanceRef.current);
+      onSetTargetHighlightRef.current?.(null);
+      onSetFeedbackRef.current?.(null, null);
+      setQuestions([]);
+      return;
+    }
+
+    if (typeChanged || catChanged || becameActive) {
+      startNewGame();
+    }
+  }, [challengeType, filterCategory, isActive, startNewGame]);
+
+  // When game completes or game over occurs, immediately remove any active map beacons / highlights
+  useEffect(() => {
+    if (isGameOver || isCompleted) {
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (autoAdvanceRef.current) clearTimeout(autoAdvanceRef.current);
+      onSetTargetHighlightRef.current?.(null);
+      onSetFeedbackRef.current?.(null, null);
+    }
+  }, [isGameOver, isCompleted]);
 
   // Contrarreloj timer effect
   useEffect(() => {
-    if (challengeType === 'contrarreloj' && !isGameOver && !isCompleted && timeLeft > 0) {
+    if (isActive && challengeType === 'contrarreloj' && !isGameOver && !isCompleted && timeLeft > 0) {
       timerRef.current = setInterval(() => {
         setTimeLeft((prev) => {
           if (prev <= 1) {
             clearInterval(timerRef.current!);
             setIsGameOver(true);
+            onSetTargetHighlightRef.current?.(null);
+            onSetFeedbackRef.current?.(null, null);
             // Confetis al completar con acierto el modo 60s
             if (correctCountRef.current > 0) {
               playSound('levelup');
@@ -163,26 +253,26 @@ export function useChallengeSession({
         if (timerRef.current) clearInterval(timerRef.current);
       };
     }
-  }, [challengeType, isGameOver, isCompleted, timeLeft]);
+  }, [isActive, challengeType, isGameOver, isCompleted, timeLeft]);
 
   // Advance to next question
   const handleNext = useCallback(() => {
     if (autoAdvanceRef.current) clearTimeout(autoAdvanceRef.current);
     setFeedback(null);
     setShowHint(false);
-    if (onSetFeedback) onSetFeedback(null, null);
+    onSetFeedbackRef.current?.(null, null);
 
     // If lives ran out, transition to Game Over after user acknowledged feedback
     if (lives <= 0 && challengeType !== 'contrarreloj') {
       setIsGameOver(true);
-      if (onSetTargetHighlight) onSetTargetHighlight(null);
+      onSetTargetHighlightRef.current?.(null);
       return;
     }
 
     const nextIdx = currentIndex + 1;
     if (nextIdx >= questions.length) {
       setIsCompleted(true);
-      if (onSetTargetHighlight) onSetTargetHighlight(null);
+      onSetTargetHighlightRef.current?.(null);
 
       // Confetis y celebración SOLO si se completa con acierto (al menos el 50% de aciertos)
       const passed = correctCountRef.current >= Math.ceil(questions.length * GAME_CONFIG.GAMEPLAY.MIN_PASSING_RATIO);
@@ -194,7 +284,7 @@ export function useChallengeSession({
         if (challengeType === 'localizar') {
           const bonus = GAME_CONFIG.POINTS.TOUR_COMPLETION_BONUS_XP;
           setTourBonusAwarded(bonus);
-          if (onTourCompleted) onTourCompleted(bonus);
+          onTourCompletedRef.current?.(bonus);
         }
       } else {
         playSound('wrong');
@@ -206,10 +296,13 @@ export function useChallengeSession({
     const nextElem = questions[nextIdx];
 
     if (challengeType === 'identificar' && nextElem) {
-      if (onSetTargetHighlight) onSetTargetHighlight(nextElem.id);
+      onSetTargetHighlightRef.current?.(nextElem.id);
       generateOptionsFor(nextElem, pool);
+    } else if (challengeType === 'contrarreloj' && nextElem) {
+      onSetTargetHighlightRef.current?.(nextElem.id);
+      setupContrarrelojFor(nextElem, pool);
     } else {
-      if (onSetTargetHighlight) onSetTargetHighlight(null);
+      onSetTargetHighlightRef.current?.(null);
     }
   }, [
     currentIndex,
@@ -217,15 +310,13 @@ export function useChallengeSession({
     lives,
     challengeType,
     generateOptionsFor,
+    setupContrarrelojFor,
     pool,
-    onSetFeedback,
-    onSetTargetHighlight,
-    onTourCompleted,
   ]);
 
   // Evaluate Answer
   const handleAnswer = useCallback(
-    (isCorrect: boolean, clickedItem?: GeoElement) => {
+    (isCorrect: boolean, clickedItem?: GeoElement, customMessage?: string) => {
       if (!currentQuestion || feedback !== null || isGameOver || isCompleted) return;
 
       setResultsHistory((prev) => {
@@ -259,12 +350,12 @@ export function useChallengeSession({
         setCorrectCount((prev) => prev + 1);
         correctCountRef.current += 1;
 
-        // In 60s mode (contrarreloj), award +5s bonus time for every correct answer
+        // In 60s mode (contrarreloj), award extra time for each correct answer
         if (challengeType === 'contrarreloj') {
           setTimeLeft((prev) => prev + GAME_CONFIG.TIMERS.CONTRARRELOJ_TIME_BONUS_SECONDS);
         }
 
-        if (onSetFeedback) onSetFeedback(currentQuestion.id, 'correct');
+        onSetFeedbackRef.current?.(currentQuestion.id, 'correct');
 
         const hintNotice = showHint
           ? ` (${points} XP por usar pista)`
@@ -275,11 +366,11 @@ export function useChallengeSession({
 
         setFeedback({
           isCorrect: true,
-          message: `¡Genial! Has acertado: ${currentQuestion.name}.${hintNotice}${timeBonusNotice}`,
+          message: customMessage || `¡Genial! Has acertado: ${currentQuestion.name}.${hintNotice}${timeBonusNotice}`,
           clickedName: clickedItem?.name,
         });
 
-        if (onCorrectAnswer) onCorrectAnswer(currentQuestion, points);
+        onCorrectAnswerRef.current?.(currentQuestion, points);
 
         if (newStreak % GAME_CONFIG.GAMEPLAY.STREAK_CELEBRATION_INTERVAL === 0) {
           playSound('streak');
@@ -305,17 +396,17 @@ export function useChallengeSession({
 
         const targetId = currentQuestion.id;
         const clickedId = clickedItem?.id || null;
-        if (onSetFeedback) onSetFeedback(clickedId || targetId, 'wrong');
+        onSetFeedbackRef.current?.(clickedId || targetId, 'wrong');
 
         setFeedback({
           isCorrect: false,
-          message: clickedItem
+          message: customMessage || (clickedItem
             ? `¡Vaya! Has pulsado en ${clickedItem.name}. La respuesta correcta era ${currentQuestion.name}.`
-            : `¡Respuesta incorrecta! El accidente correcto era ${currentQuestion.name}.`,
+            : `¡Respuesta incorrecta! El accidente correcto era ${currentQuestion.name}.`),
           clickedName: clickedItem?.name,
         });
 
-        if (onWrongAnswer) onWrongAnswer();
+        onWrongAnswerRef.current?.();
 
         // In 60s mode (contrarreloj), advance quickly on error so timer isn't wasted
         if (challengeType === 'contrarreloj') {
@@ -335,12 +426,27 @@ export function useChallengeSession({
       lives,
       challengeType,
       showHint,
-      onSetFeedback,
-      onCorrectAnswer,
-      onWrongAnswer,
       handleNext,
     ]
   );
+
+  const handleContrarrelojAnswer = useCallback((userSaidYes: boolean) => {
+    if (!currentQuestion || !contrarrelojPrompt || feedback !== null || isGameOver || isCompleted) return;
+    const isCorrect = userSaidYes === contrarrelojPrompt.isMatch;
+
+    let customMessage = '';
+    if (isCorrect) {
+      customMessage = contrarrelojPrompt.isMatch
+        ? `¡Correcto! Es el ${currentQuestion.name}. (+${GAME_CONFIG.POINTS.CONTRARRELOJ_BASE} XP, +${GAME_CONFIG.TIMERS.CONTRARRELOJ_TIME_BONUS_SECONDS}s)`
+        : `¡Bien visto! No es el ${contrarrelojPrompt.promptName}, sino el ${currentQuestion.name}. (+${GAME_CONFIG.POINTS.CONTRARRELOJ_BASE} XP, +${GAME_CONFIG.TIMERS.CONTRARRELOJ_TIME_BONUS_SECONDS}s)`;
+    } else {
+      customMessage = contrarrelojPrompt.isMatch
+        ? `¡Vaya! Sí que era el ${currentQuestion.name}.`
+        : `¡Fallaste! No era el ${contrarrelojPrompt.promptName}, sino el ${currentQuestion.name}.`;
+    }
+
+    handleAnswer(isCorrect, currentQuestion, customMessage);
+  }, [currentQuestion, contrarrelojPrompt, feedback, isGameOver, isCompleted, handleAnswer]);
 
   const handleHint = useCallback(() => {
     setShowHint(true);
@@ -362,6 +468,7 @@ export function useChallengeSession({
     currentQuestion,
     totalQuestions: questions.length,
     options,
+    contrarrelojPrompt,
     lives,
     streak,
     score,
@@ -376,6 +483,7 @@ export function useChallengeSession({
     tourBonusAwarded,
     timeLeft,
     handleAnswer,
+    handleContrarrelojAnswer,
     handleNext,
     handleRestart: startNewGame,
     handleHint,

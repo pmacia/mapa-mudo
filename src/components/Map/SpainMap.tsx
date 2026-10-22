@@ -1,6 +1,6 @@
 import React, { useState, useRef, useMemo } from 'react';
 import { GeoElement, CategoryType } from '../../types/geography';
-import { LAYERED_SPAIN_MAP, SvgMapPath } from '../../data/spainMapSvgData';
+import { LAYERED_SPAIN_MAP, SvgMapPath } from '../../data/spainBaseMapData';
 import { CompassRose } from './CompassRose';
 import { ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 
@@ -195,16 +195,20 @@ export const SpainMap: React.FC<SpainMapProps> = ({
     }
   };
 
-  // Filter elements by layer visibility, but ALWAYS ensure targetHighlightId and feedbackElementId are visible
+  // In 'explorar' mode, challenge target highlights and feedback markers must never be shown
+  const effectiveTargetHighlightId = currentMode !== 'explorar' ? targetHighlightId : null;
+  const effectiveFeedbackElementId = currentMode !== 'explorar' ? feedbackElementId : null;
+
+  // Filter elements by layer visibility, but ALWAYS ensure targetHighlightId and feedbackElementId are visible in quiz modes
   const visibleElements = elements.filter((elem) => {
     const isLayerActive = layers[elem.category as keyof MapLayers] ?? true;
-    const isTarget = targetHighlightId === elem.id;
-    const isFeedback = feedbackElementId === elem.id;
+    const isTarget = effectiveTargetHighlightId === elem.id;
+    const isFeedback = effectiveFeedbackElementId === elem.id;
     return isLayerActive || isTarget || isFeedback;
   });
 
-  const targetHighlightElement = targetHighlightId
-    ? elements.find((e) => e.id === targetHighlightId)
+  const targetHighlightElement = effectiveTargetHighlightId
+    ? elements.find((e) => e.id === effectiveTargetHighlightId)
     : null;
 
   // Optional flags preserve the previous appearance when callers omit them.
@@ -224,6 +228,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
       : isLand ? themeStyles.landBg : isCoast ? themeStyles.landBorder : part.fill;
     const stroke = part.stroke === 'none' ? 'none'
       : boundaryLayer ? themeStyles.communityStroke
+      : (isCoast || part.stroke === '#000000') ? themeStyles.landBorder
       : part.stroke === '#87cdde' ? themeStyles.seaBg : part.stroke;
     return <path key={`${part.id}-${index}`} d={part.d} fill={fill} stroke={stroke}
       strokeWidth={part.strokeWidth} fillRule={part.fillRule}
@@ -246,63 +251,34 @@ export const SpainMap: React.FC<SpainMapProps> = ({
         setHoveredElement(null);
       }}
     >
-      {/* Floating Atlas Explorer Progress Banner (In Explorer Mode) */}
-      {currentMode === 'explorar' && visitedAtlasIds && (
-        <div className="absolute bottom-4 right-4 z-20 flex items-center gap-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-3 py-1.5 rounded-xl shadow-md border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-800 dark:text-slate-100">
-          <div className="flex items-center gap-1.5">
-            <span className="text-amber-500">🧭</span>
-            <span className="hidden sm:inline">Atlas:</span>
-            <span className="text-blue-600 dark:text-blue-400 font-extrabold font-mono">
-              {visitedAtlasIds.length}/65
-            </span>
-            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-normal">
-              ({visitedAtlasIds.length * 10} pts)
-            </span>
-          </div>
 
-          {atlasStampUnlocked ? (
-            <button
-              onClick={onOpenStampModal}
-              className="flex items-center gap-1 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white text-[10px] font-black px-2 py-0.5 rounded-lg shadow-xs cursor-pointer transition-transform ml-1"
-              title="¡Sello Real Conseguido! Pulsa para ver"
-            >
-              <span>🎖️ Sello Real</span>
-            </button>
-          ) : (
-            <div
-              className="text-[10px] text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/70 border border-amber-300 dark:border-amber-800 px-2 py-0.5 rounded-lg ml-1 font-semibold"
-              title="Visita los 65 accidentes para ganar el Sello Real"
-            >
-              🎖️ Sello a los 65
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Zoom / Pan Controls Overlay */}
-      <div className="absolute top-4 right-4 z-20 flex flex-col gap-1.5 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md p-1.5 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
+      {/* Zoom / Pan Controls Overlay (Tactile 3D buttons) */}
+      <div className="absolute top-3 right-3 z-20 flex flex-col gap-2">
         <button
           onClick={() => handleZoom(0.32)}
+          aria-label="Acercar mapa"
           title="Acercar mapa (+)"
-          className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+          className="w-10 h-10 rounded-full bg-surface-container-lowest dark:bg-slate-800 text-on-surface dark:text-white flex items-center justify-center shadow-[0_3px_0_#d3e4fe] dark:shadow-none active:translate-y-0.5 active:scale-95 transition-all cursor-pointer"
         >
-          <ZoomIn className="w-5 h-5" />
+          <ZoomIn className="w-5 h-5 text-primary" />
         </button>
         <button
           onClick={() => handleZoom(-0.32)}
+          aria-label="Alejar mapa"
           title="Alejar mapa (-)"
           disabled={zoomLevel <= 1}
-          className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-700 dark:text-slate-200 disabled:opacity-30 transition-colors cursor-pointer"
+          className="w-10 h-10 rounded-full bg-surface-container-lowest dark:bg-slate-800 text-on-surface dark:text-white flex items-center justify-center shadow-[0_3px_0_#d3e4fe] dark:shadow-none active:translate-y-0.5 active:scale-95 disabled:opacity-30 transition-all cursor-pointer"
         >
-          <ZoomOut className="w-5 h-5" />
+          <ZoomOut className="w-5 h-5 text-on-surface-variant" />
         </button>
-        {zoomLevel != 1.32 && (
+        {zoomLevel !== 1.32 && (
           <button
             onClick={handleResetZoom}
-            title="Centrar mapa"
-            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-blue-600 dark:text-blue-400 transition-colors cursor-pointer"
+            aria-label="Recentrar mapa"
+            title="Recentrar mapa"
+            className="w-10 h-10 rounded-full bg-primary-fixed dark:bg-blue-950 text-on-primary-fixed dark:text-blue-300 flex items-center justify-center shadow-[0_3px_0_#b4c5ff] dark:shadow-none active:translate-y-0.5 active:scale-95 transition-all cursor-pointer"
           >
-            <RotateCcw className="w-5 h-5" />
+            <RotateCcw className="w-4 h-4 text-primary dark:text-blue-400" />
           </button>
         )}
       </div>
@@ -362,8 +338,8 @@ export const SpainMap: React.FC<SpainMapProps> = ({
             .map((elem) => {
               const isSelected = selectedElement?.id === elem.id;
               const isHovered = hoveredElement?.id === elem.id;
-              const isTargetHighlight = targetHighlightId === elem.id;
-              const isFeedback = feedbackElementId === elem.id;
+              const isTargetHighlight = effectiveTargetHighlightId === elem.id;
+              const isFeedback = effectiveFeedbackElementId === elem.id;
 
               return (
                 <g key={elem.id} className="cursor-pointer" onClick={(e) => handleItemClick(elem, e)}>
@@ -430,8 +406,8 @@ export const SpainMap: React.FC<SpainMapProps> = ({
             .map((elem) => {
               const isSelected = selectedElement?.id === elem.id;
               const isHovered = hoveredElement?.id === elem.id;
-              const isTargetHighlight = targetHighlightId === elem.id;
-              const isFeedback = feedbackElementId === elem.id;
+              const isTargetHighlight = effectiveTargetHighlightId === elem.id;
+              const isFeedback = effectiveFeedbackElementId === elem.id;
 
               return (
                 <g key={elem.id} className="cursor-pointer" onClick={(e) => handleItemClick(elem, e)}>
@@ -517,8 +493,8 @@ export const SpainMap: React.FC<SpainMapProps> = ({
             const markerMoved = Math.hypot(markerPosition.x - elem.mapX, markerPosition.y - elem.mapY) > 1;
             const isSelected = selectedElement?.id === elem.id;
             const isHovered = hoveredElement?.id === elem.id;
-            const isTargetHighlight = targetHighlightId === elem.id;
-            const isFeedback = feedbackElementId === elem.id;
+            const isTargetHighlight = effectiveTargetHighlightId === elem.id;
+            const isFeedback = effectiveFeedbackElementId === elem.id;
 
             const categoryColors: Record<CategoryType, string> = {
               picos: '#ef4444',
@@ -710,10 +686,12 @@ export const SpainMap: React.FC<SpainMapProps> = ({
             );
           })}
 
-        {/* 4. DEDICATED HIGH-CONTRAST TARGET BEACON (For "Identificar" Challenge Mode) */}
-        {targetHighlightElement && (() => {
+        {/* 4. DEDICATED HIGH-CONTRAST TARGET BEACON (For "Identificar" & "Contrarreloj" Challenge Modes) */}
+        {currentMode !== 'explorar' && targetHighlightElement && (() => {
           let beaconText = '¿QUÉ ES?';
-          if (targetHighlightElement.category === 'rios') beaconText = '¿QUÉ RÍO ES?';
+          if (currentMode === 'contrarreloj') {
+            beaconText = '¿ES ESTE?';
+          } else if (targetHighlightElement.category === 'rios') beaconText = '¿QUÉ RÍO ES?';
           else if (targetHighlightElement.category === 'montanas') beaconText = '¿QUÉ CORDILLERA ES?';
           else if (targetHighlightElement.category === 'picos') beaconText = '¿QUÉ PICO ES?';
           else if (targetHighlightElement.category === 'islas') beaconText = '¿QUÉ ISLA ES?';
@@ -762,7 +740,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
               <circle cx="0" cy="0" r="5" fill="#ffffff" stroke="#e11d48" strokeWidth="2.5" />
 
               {/* Bouncing pointer pin with high-contrast category-specific badge */}
-              <g display={layers.showLabels && !blankMode ? undefined : "none"} className="animate-bounce" style={{ animationDuration: '0.9s' }}>
+              <g className="animate-bounce" style={{ animationDuration: '0.9s' }}>
                 <g transform="translate(0, -22)">
                   <rect
                     x={-badgeWidth / 2}
