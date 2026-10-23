@@ -381,7 +381,7 @@ export const ChallengeMode: React.FC<ChallengeModeProps> = ({
           <div className="w-full bg-primary text-on-primary rounded-DEFAULT p-4 shadow-[0_4px_0_#003ea8] flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <span className="font-label-caps text-[10px] text-primary-fixed uppercase tracking-wider font-extrabold">
-                Identificación Relámpago • {currentQuestion.subCategory || currentQuestion.category}
+                Identificacón Relámpago • {currentQuestion.subCategory || currentQuestion.category}
               </span>
               <span className="text-[10px] bg-primary-container px-2 py-0.5 rounded-full font-bold">
                 #{currentIndex + 1}

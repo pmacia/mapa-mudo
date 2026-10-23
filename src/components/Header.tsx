@@ -376,7 +376,7 @@ export const Header: React.FC<HeaderProps> = ({
           {/* ACTION BUTTON: Didactic Manual */}
           <button
             onClick={onOpenManual}
-            className="hidden md:flex w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-surface-container-lowest dark:bg-slate-800 text-on-surface items-center justify-center hover:bg-surface-container active:scale-95 transition-all shadow-[0_2px_0_#cbd5e1] dark:shadow-none cursor-pointer"
+            className="flex w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-surface-container-lowest dark:bg-slate-800 text-on-surface items-center justify-center hover:bg-surface-container active:scale-95 transition-all shadow-[0_2px_0_#cbd5e1] dark:shadow-none cursor-pointer"
             title="Manual didáctico y guía del profesor"
           >
             <BookOpen className="w-4 h-4 text-slate-600 dark:text-slate-300" />
