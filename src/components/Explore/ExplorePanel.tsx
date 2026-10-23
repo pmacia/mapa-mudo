@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { GeoElement, CategoryType } from '../../types/geography';
-import { CATEGORY_INFO } from '../../data/geographyData';
+import { CATEGORY_INFO, GEO_ELEMENTS } from '../../data/geographyData';
 import { speakSpanish } from '../../utils/audio';
 import { 
   Search, 
@@ -165,9 +165,9 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
           ) : (
             <div
               className="text-[10px] text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/70 border border-amber-300 dark:border-amber-800 px-2 py-0.5 rounded-lg ml-1 font-semibold"
-              title="Visita los 65 accidentes para ganar el Sello Real"
+              title={`Visita los ${GEO_ELEMENTS.length} accidentes para ganar el Sello Real`}
             >
-              🎖️ Sello a los 65
+              🎖️ Sello a los {GEO_ELEMENTS.length}
             </div>
           )}
 

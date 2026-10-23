@@ -1,7 +1,8 @@
 import React from 'react';
-import { BADGES } from '../../data/geographyData';
+import { BADGES, GEO_ELEMENTS } from '../../data/geographyData';
 import { PlayerStats } from '../../types/geography';
 import { Trophy, Flame, Target, Award, X, Sparkles } from 'lucide-react';
+import { GAME_CONFIG } from '../../constants/gameConfig';
 
 interface AchievementsModalProps {
   isOpen: boolean;
@@ -15,6 +16,9 @@ export const AchievementsModal: React.FC<AchievementsModalProps> = ({
   stats,
 }) => {
   if (!isOpen) return null;
+
+  const atlasTotal = GEO_ELEMENTS.length;
+  const atlasExplorationXp = atlasTotal * GAME_CONFIG.POINTS.ATLAS_DISCOVERY_XP;
 
   const getRankTitle = (xp: number) => {
     if (xp >= 1000) return 'Catedrático de Geografía Ibérica';
@@ -107,7 +111,7 @@ export const AchievementsModal: React.FC<AchievementsModalProps> = ({
                 )}
               </div>
               <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
-                Visita los 65 accidentes geográficos de España con el ratón en el Modo Atlas para conseguir el Sello Real y 650 puntos de exploración.
+                Visita los {atlasTotal} accidentes geográficos de España con el ratón en el Modo Atlas para conseguir el Sello Real y {atlasExplorationXp} puntos de exploración.
               </p>
 
               <div className="mt-2.5 flex items-center gap-3">
@@ -117,13 +121,13 @@ export const AchievementsModal: React.FC<AchievementsModalProps> = ({
                     style={{
                       width: `${Math.min(
                         100,
-                        Math.round(((stats.visitedAtlasElements?.length || 0) / 65) * 100)
+                        Math.round(((stats.visitedAtlasElements?.length || 0) / atlasTotal) * 100)
                       )}%`,
                     }}
                   />
                 </div>
                 <span className="text-xs font-mono font-black text-amber-800 dark:text-amber-300 shrink-0">
-                  {stats.visitedAtlasElements?.length || 0} / 65
+                  {stats.visitedAtlasElements?.length || 0} / {atlasTotal}
                 </span>
               </div>
             </div>

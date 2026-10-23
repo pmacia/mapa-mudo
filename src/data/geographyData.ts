@@ -1,5 +1,43 @@
 import { GeoElement, Badge, CategoryType } from '../types/geography';
-import { ACCIDENTS_VECTOR_DATA } from './geographyAccidentsData';
+import { ACCIDENTS_VECTOR_DATA as SOURCE_ACCIDENTS_VECTOR_DATA } from './geographyAccidentsData';
+
+const shiftIberianNorthwestThird = (path: string) =>
+  path.replace(/(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)/g, (pair, xValue: string, yValue: string) => {
+    const x = Number(xValue);
+    const weight = Math.max(0, Math.min(1, (735 - x) / 70));
+    return weight === 0 ? pair : `${xValue} ${(Number(yValue) - 24 * weight).toFixed(3)}`;
+  });
+
+const ACCIDENTS_VECTOR_DATA = {
+  ...SOURCE_ACCIDENTS_VECTOR_DATA,
+  mountainRanges: {
+    ...SOURCE_ACCIDENTS_VECTOR_DATA.mountainRanges,
+    costero_catalanas: 'M 933 136 L 926 148 L 912 163 L 897 177 L 878 191 L 852 204 L 829 216 L 805 219 L 826 207 L 847 194 L 866 178 L 884 162 L 899 147 L 908 136 Z',
+    central: 'M 466 270 C 485 258 504 246 520 242 C 534 238 544 242 554 245 C 565 249 574 241 584 234 C 607 219 635 207 660 202 L 647 225 L 632 230 L 616 236 L 600 243 L 584 247 L 568 254 L 552 258 L 536 264 L 520 268 L 503 273 L 487 277 L 472 278 Z',
+    iberico: shiftIberianNorthwestThird(SOURCE_ACCIDENTS_VECTOR_DATA.mountainRanges.iberico),
+    macizo_galaico: 'M 423 83 L 429 66 L 445 56 L 451 40 L 461 47 L 466 59 L 463 73 L 458 84 L 454 96 L 450 106 L 440 113 L 430 114 L 422 107 L 419 96 Z',
+    montes_vascos: 'M 666 77 C 666 73 670 70 674 70 L 690 70 C 696 70 699 74 695 79 L 689 85 C 687 87 688 89 692 89 L 699 89 C 704 89 703 93 699 95 L 690 99 Q 687 101 685 105 L 681 110 C 679 114 676 112 674 108 L 668 97 Q 667 94 663 92 L 657 89 C 653 87 654 84 658 81 Z',
+    montes_leon: 'M 466 100 L 475 91 L 488 87 L 501 88 L 514 93 L 524 101 L 530 110 L 528 117 L 519 123 L 506 123 L 493 118 L 480 113 L 471 107 Z',
+    montes_toledo: 'M 550 305 L 560 301 L 575 302 L 590 298 L 605 301 L 620 298 L 635 299 L 648 296 L 655 301 L 651 306 L 638 309 L 623 308 L 608 312 L 592 309 L 577 313 L 562 311 L 550 310 Z',
+    sierra_morena: 'M 488 393 L 505 389 L 523 386 L 541 382 L 559 379 L 577 377 L 595 375 L 613 373 L 630 370 L 646 367 L 655 370 L 651 377 L 636 380 L 619 384 L 602 388 L 585 392 L 568 396 L 550 401 L 532 404 L 514 405 L 498 403 Z',
+    beticas: 'M 548 448 L 575 432 L 600 418 L 625 407 L 650 399 L 675 393 L 700 389 L 725 389 L 740 386 L 752 373 L 770 355 L 785 345 L 798 343 L 804 348 L 800 362 L 790 378 L 777 390 L 760 414 L 750 430 L 730 445 L 710 460 L 690 472 L 670 480 L 650 489 L 630 488 L 610 493 L 590 500 L 570 506 L 550 510 L 540 504 Z',
+    subbetica: 'M 575 448 L 593 438 L 613 428 L 633 419 L 653 412 L 673 406 L 693 402 L 713 398 L 733 392 L 752 381 L 770 366 L 782 354 L 789 357 L 784 369 L 773 381 L 760 391 L 746 399 L 733 405 L 713 411 L 693 417 L 673 423 L 653 430 L 633 437 L 613 444 L 593 453 L 575 464 Z',
+    penibetica: 'M 552 492 L 560 483 L 580 477 L 602 471 L 624 465 L 646 460 L 668 454 L 690 447 L 708 440 L 720 433 L 728 434 L 728 441 L 718 448 L 702 456 L 682 464 L 660 471 L 638 477 L 616 482 L 594 487 L 574 494 L 558 501 Z',
+    sierra_nevada: 'M 631 457 L 638 453 L 647 455 L 655 452 L 664 456 L 674 461 L 680 468 L 676 474 L 666 473 L 657 477 L 647 474 L 638 470 L 632 464 Z',
+  },
+  rangeCenters: {
+    ...SOURCE_ACCIDENTS_VECTOR_DATA.rangeCenters,
+    costero_catalanas: { x: 874, y: 183 },
+    macizo_galaico: { x: 434, y: 100 },
+    montes_vascos: { x: 684, y: 84 },
+    montes_leon: { x: 511, y: 90 },
+    montes_toledo: { x: 610, y: 304 },
+    sierra_morena: { x: 570, y: 390 },
+    beticas: { x: 700, y: 380 },
+    subbetica: { x: 670, y: 412 },
+    penibetica: { x: 660, y: 484 },
+  },
+};
 
 export const GEO_ELEMENTS: GeoElement[] = [
   // ==========================================
@@ -34,6 +72,34 @@ export const GEO_ELEMENTS: GeoElement[] = [
     curiosity: 'Es el refugio natural del oso pardo cantábrico y del urogallo, especies emblemáticas protegidas.',
   },
   {
+    id: 'montes-leon',
+    name: 'Montes de León',
+    category: 'montanas',
+    subCategory: 'Sistema Montañoso',
+    difficulty: 'medio',
+    elevationOrLength: 'Teleno: 2.188 m',
+    mapX: ACCIDENTS_VECTOR_DATA.rangeCenters.montes_leon.x,
+    mapY: ACCIDENTS_VECTOR_DATA.rangeCenters.montes_leon.y,
+    svgType: 'polygon',
+    svgPath: ACCIDENTS_VECTOR_DATA.mountainRanges.montes_leon,
+    description: 'Conjunto montañoso del noroeste de Castilla y León, al sur de la Cordillera Cantábrica, entre Galicia y la Meseta.',
+    curiosity: 'El Teleno fue una montaña sagrada para los astures y conserva antiguas explotaciones auríferas romanas en sus laderas.',
+  },
+  {
+    id: 'montes-vascos',
+    name: 'Montes Vascos',
+    category: 'montanas',
+    subCategory: 'Sistema Montañoso',
+    difficulty: 'medio',
+    elevationOrLength: 'Aitxuri: 1.551 m',
+    mapX: ACCIDENTS_VECTOR_DATA.rangeCenters.montes_vascos.x,
+    mapY: ACCIDENTS_VECTOR_DATA.rangeCenters.montes_vascos.y,
+    svgType: 'polygon',
+    svgPath: ACCIDENTS_VECTOR_DATA.mountainRanges.montes_vascos,
+    description: 'Conjunto de sierras del País Vasco y Navarra que enlaza la Cordillera Cantábrica con los Pirineos y separa la costa cantábrica de la cuenca del Ebro.',
+    curiosity: 'El Aitxuri, en la sierra de Aizkorri, es una de sus cumbres más elevadas.',
+  },
+  {
     id: 'pirineos',
     name: 'Pirineos',
     category: 'montanas',
@@ -49,7 +115,7 @@ export const GEO_ELEMENTS: GeoElement[] = [
   },
   {
     id: 'cordilleras-costero-catalanas',
-    name: 'Cordilleras Costero-Catalanas',
+    name: 'Cordillera Costero-Catalana',
     category: 'montanas',
     subCategory: 'Sistema Montañoso',
     difficulty: 'medio',
@@ -1011,9 +1077,9 @@ export const BADGES: Badge[] = [
   {
     id: 'sello-atlas',
     title: 'Sello Cartógrafo Real',
-    description: '¡Has explorado los 65 accidentes geográficos de España en el Modo Atlas!',
+    description: `¡Has explorado los ${GEO_ELEMENTS.length} accidentes geográficos de España en el Modo Atlas!`,
     icon: '🎖️',
-    conditionDesc: 'Visita los 65 accidentes en el Atlas',
+    conditionDesc: `Visita los ${GEO_ELEMENTS.length} accidentes en el Atlas`,
   },
 ];
 

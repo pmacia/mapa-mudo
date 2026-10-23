@@ -340,9 +340,18 @@ export const SpainMap: React.FC<SpainMapProps> = ({
               const isHovered = hoveredElement?.id === elem.id;
               const isTargetHighlight = effectiveTargetHighlightId === elem.id;
               const isFeedback = effectiveFeedbackElementId === elem.id;
+              const isAggregateRange = elem.id === 'cordilleras-beticas';
+              const isNestedRange = elem.id === 'sierra-nevada';
+              const positionAdjustment = elem.id === 'sistema-central'
+                ? 'translate(15 0)'
+                : elem.id === 'montes-de-toledo'
+                ? 'translate(-15 0)'
+                : elem.id === 'cordillera-cantabrica'
+                ? 'translate(0 -12)'
+                : undefined;
 
               return (
-                <g key={elem.id} className="cursor-pointer" onClick={(e) => handleItemClick(elem, e)}>
+                <g key={elem.id} transform={positionAdjustment} className="cursor-pointer" onClick={(e) => handleItemClick(elem, e)}>
                   {/* Mountain Range Polygon */}
                   <path
                     d={elem.svgPath}
@@ -357,9 +366,13 @@ export const SpainMap: React.FC<SpainMapProps> = ({
                         ? '#f59e0b'
                         : isHovered
                         ? '#ea580c'
+                        : isAggregateRange
+                        ? themeStyles.reliefHigh
+                        : isNestedRange
+                        ? 'transparent'
                         : themeStyles.reliefHigh
                     }
-                    opacity={isTargetHighlight ? 0.9 : isSelected || isHovered ? 0.85 : 0.65}
+                      opacity={isTargetHighlight ? 0.9 : isSelected || isHovered ? 0.85 : isAggregateRange ? 0.28 : isNestedRange ? 1 : 0.65}
                     stroke={isTargetHighlight ? '#be123c' : isSelected || isHovered ? '#78350f' : themeStyles.reliefStroke}
                     strokeWidth={isTargetHighlight ? 3.5 : isSelected || isHovered ? 2.5 : 1.4}
                     strokeLinejoin="round"
@@ -369,15 +382,17 @@ export const SpainMap: React.FC<SpainMapProps> = ({
                   />
 
                   {/* Stylized mountain ridges */}
-                  <path
-                    d={elem.svgPath}
-                    fill="none"
-                    stroke="#ffffff"
-                    strokeWidth="1.2"
-                    strokeDasharray="4 6"
-                    opacity={0.5}
-                    pointerEvents="none"
-                  />
+                  {!isAggregateRange && !isNestedRange && (
+                    <path
+                      d={elem.svgPath}
+                      fill="none"
+                      stroke="#ffffff"
+                      strokeWidth="1.2"
+                      strokeDasharray="4 6"
+                      opacity={0.5}
+                      pointerEvents="none"
+                    />
+                  )}
 
                   {/* Mountain Name Label */}
                   {layers.showLabels && !blankMode && (

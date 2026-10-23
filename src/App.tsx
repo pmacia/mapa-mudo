@@ -27,7 +27,7 @@ const STORAGE_KEY_STATS = 'geoespana_player_stats_v2';
 export default function App() {
   // Game mode
   const [currentMode, setCurrentMode] = useState<GameMode>('explorar');
-  const [selectedElement, setSelectedElement] = useState<GeoElement | null>(GEO_ELEMENTS[0]);
+  const [selectedElement, setSelectedElement] = useState<GeoElement | null>(null);
 
   // Quiz interactive state
   const [targetHighlightId, setTargetHighlightId] = useState<string | null>(null);
@@ -307,7 +307,7 @@ export default function App() {
 
     const newVisited = [...currentVisited, element.id];
     const earnedXp = GAME_CONFIG.POINTS.ATLAS_DISCOVERY_XP;
-    const isCompleted = newVisited.length >= GEO_ELEMENTS.length; // 65/65
+    const isCompleted = newVisited.length >= GEO_ELEMENTS.length;
 
     if (isCompleted) {
       playSound('stamp');
@@ -626,7 +626,7 @@ export default function App() {
         elements={activeElements}
       />
 
-      {/* Celebration Modal for completing the Atlas exploration (65/65) */}
+      {/* Celebration modal for completing the full atlas. */}
       <AtlasStampCelebrationModal
         isOpen={isStampCelebrationOpen}
         onClose={() => setIsStampCelebrationOpen(false)}

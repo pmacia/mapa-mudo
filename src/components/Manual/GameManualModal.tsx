@@ -22,6 +22,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { GAME_CONFIG } from '../../constants/gameConfig';
+import { GEO_ELEMENTS } from '../../data/geographyData';
 
 interface GameManualModalProps {
   isOpen: boolean;
@@ -158,7 +159,7 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
                       </li>
                       <li className="flex items-center gap-1.5">
                         <Sparkles className="w-3.5 h-3.5 text-purple-500" />
-                        <strong>Sello de Oro:</strong> Completa los 65 accidentes para sellar tu Pasaporte.
+                        <strong>Sello de Oro:</strong> Completa los {GEO_ELEMENTS.length} accidentes para sellar tu Pasaporte.
                       </li>
                     </ul>
                   </div>
@@ -361,7 +362,7 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
                       </td>
                       <td className="p-3 text-emerald-600 dark:text-emerald-400 font-bold">+{GAME_CONFIG.POINTS.ATLAS_DISCOVERY_XP} XP</td>
                       <td className="p-3 text-slate-400">—</td>
-                      <td className="p-3 text-purple-600 dark:text-purple-400 font-bold">+{GAME_CONFIG.POINTS.ATLAS_STAMP_BONUS_XP} XP al completar 65/65</td>
+                      <td className="p-3 text-purple-600 dark:text-purple-400 font-bold">+{GAME_CONFIG.POINTS.ATLAS_STAMP_BONUS_XP} XP al completar {GEO_ELEMENTS.length}/{GEO_ELEMENTS.length}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -440,7 +441,7 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
                     { icon: '🏖️', title: 'Centinela Costero', desc: `Identifica ${GAME_CONFIG.BADGE_REQUIREMENTS.COSTAS_COUNT} cabos, golfos o rías del litoral` },
                     { icon: '🏝️', title: 'Navegante Insular', desc: `Domina Baleares y Canarias con ${GAME_CONFIG.BADGE_REQUIREMENTS.ISLAS_COUNT} aciertos de islas` },
                     { icon: '⚡', title: 'Racha Imparable', desc: `Consigue una racha continua de ${GAME_CONFIG.BADGE_REQUIREMENTS.STREAK_COUNT} aciertos sin fallos` },
-                    { icon: '📜', title: 'Sello del Explorador', desc: 'Explora los 65 accidentes geográficos en el Atlas' },
+                    { icon: '📜', title: 'Sello del Explorador', desc: `Explora los ${GEO_ELEMENTS.length} accidentes geográficos en el Atlas` },
                   ].map((b, i) => (
                     <div key={i} className="p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 flex items-start gap-3">
                       <span className="text-2xl">{b.icon}</span>
@@ -530,7 +531,7 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
 
               {/* Physical Accident Layers */}
               <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Capas de Accidentes Geográficos Físicos (65 elementos)</h4>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Capas de Accidentes Geográficos Físicos ({GEO_ELEMENTS.length} elementos)</h4>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                   <div className="p-2.5 bg-blue-50 dark:bg-blue-950/40 rounded-xl border border-blue-200 dark:border-blue-900/40 font-medium">
                     🌊 <strong>Ríos</strong> (Ebro, Duero, Tajo, Guadiana, Guadalquivir, Miño, Júcar, Segura...)

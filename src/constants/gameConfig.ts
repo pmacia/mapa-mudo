@@ -18,7 +18,7 @@ export const GAME_CONFIG = {
     CONTRARRELOJ_WRONG_PENALTY: 5, // Deducción de puntos en fallo en modo 60s (sin bajar de 0)
     
     ATLAS_DISCOVERY_XP: 10, // XP por cada accidente consultado por primera vez en el Atlas
-    ATLAS_STAMP_BONUS_XP: 100, // Bonus al completar los 65 accidentes del Atlas
+    ATLAS_STAMP_BONUS_XP: 100, // Bonus al completar todos los accidentes del Atlas
     TOUR_COMPLETION_BONUS_XP: 150, // Bonus al superar la ronda de ¿Dónde está?
   },
 

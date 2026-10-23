@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Award, Compass, Sparkles, X, CheckCircle, Trophy } from 'lucide-react';
 import { playSound } from '../../utils/audio';
 import confetti from 'canvas-confetti';
+import { GEO_ELEMENTS } from '../../data/geographyData';
+import { GAME_CONFIG } from '../../constants/gameConfig';
 
 interface AtlasStampCelebrationModalProps {
   isOpen: boolean;
@@ -35,6 +37,9 @@ export const AtlasStampCelebrationModal: React.FC<AtlasStampCelebrationModalProp
   }, [isOpen]);
 
   if (!isOpen) return null;
+
+  const atlasTotal = GEO_ELEMENTS.length;
+  const atlasExplorationXp = atlasTotal * GAME_CONFIG.POINTS.ATLAS_DISCOVERY_XP;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fadeIn">
@@ -105,7 +110,7 @@ export const AtlasStampCelebrationModal: React.FC<AtlasStampCelebrationModalProp
                 ATLAS DE ESPAÑA
               </div>
               <div className="text-[9px] font-black bg-amber-900/60 text-amber-200 px-2 py-0.5 rounded-full mt-1">
-                65 / 65
+                {atlasTotal} / {atlasTotal}
               </div>
             </div>
           </div>
@@ -125,10 +130,10 @@ export const AtlasStampCelebrationModal: React.FC<AtlasStampCelebrationModalProp
         <div className="w-full bg-white dark:bg-slate-800/90 rounded-2xl border border-amber-200 dark:border-slate-700 p-4 shadow-xs flex flex-col gap-2.5">
           <div className="flex items-center justify-between text-xs border-b border-slate-100 dark:border-slate-700/60 pb-2">
             <span className="text-slate-500 dark:text-slate-400 font-medium">
-              Exploración Atlas (10 pts × 65):
+              Exploración Atlas ({GAME_CONFIG.POINTS.ATLAS_DISCOVERY_XP} pts × {atlasTotal}):
             </span>
             <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-              +650 XP
+              +{atlasExplorationXp} XP
             </span>
           </div>
 
