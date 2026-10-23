@@ -132,8 +132,9 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
           {/* SECTION 1: MODOS DE JUEGO */}
           {activeSection === 'modos' && (
             <div className="space-y-6 animate-fadeIn">
-              <div className="border-b border-slate-200 dark:border-slate-800 pb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                <div>
+              <div className="border-b border-slate-200 dark:border-slate-800 pb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                {/* Añadimos min-w-0 para que el contenedor de texto respete los límites del Flexbox */}
+                <div className="min-w-0">
                   <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                     <Compass className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                     Cuatro Modos de Aprendizaje Adaptativo
@@ -142,7 +143,9 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
                     Diseñados para un aprendizaje progresivo: desde la exploración libre con locución hasta el desafío de alta velocidad.
                   </p>
                 </div>
-                <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 self-start sm:self-auto border border-blue-200 dark:border-blue-900">
+                
+                {/* Añadimos shrink-0 y whitespace-nowrap para proteger el tamaño de la cápsula */}
+                <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 self-start sm:self-auto border border-blue-200 dark:border-blue-900 shrink-0 whitespace-nowrap">
                   {GEO_ELEMENTS.length} Accidentes Evaluables
                 </span>
               </div>
@@ -802,7 +805,7 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
                     </p>
                   </div>
 
-                  <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-950/40 rounded-xl border border-blue-200 dark:border-blue-900">
+                  <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-950/40 rounded-2xl border border-blue-200 dark:border-blue-900">
                     <span className="text-xs text-blue-700 dark:text-blue-300 font-semibold block">
                       Arquitectura Modular y Sin Dependencias Externas
                     </span>
