@@ -308,33 +308,33 @@ export const ChallengeMode: React.FC<ChallengeModeProps> = ({
   // -------------------------------------------------------------
   // SCREEN: MODO 60S CONTRARRELOJ
   // -------------------------------------------------------------
-  if (challengeType === 'contrarreloj') {
+    if (challengeType === 'contrarreloj') {
     return (
       <div className={`w-full flex flex-col gap-3 ${className || ''}`}>
         {/* Critical Adrenaline Heads-Up Display */}
-        <section className="w-full bg-surface-container-lowest dark:bg-slate-900 rounded-DEFAULT p-3 sm:p-4 shadow-[0_4px_0_#c3c6d7] dark:shadow-none border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
+        <section className="w-full bg-surface-container-lowest dark:bg-slate-900 rounded-DEFAULT p-3 sm:p-4 portrait:p-2 shadow-[0_4px_0_#c3c6d7] portrait:shadow-[0_1px_0_#c3c6d7] dark:shadow-none border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
           {/* Gigantic Pulsing Critical Timer */}
-          <div className="flex items-center gap-3 bg-error-container/80 dark:bg-red-950/60 px-4 py-2 rounded-DEFAULT shadow-[0_3px_0_#93000a] animate-pulse">
-            <div className="w-10 h-10 rounded-full bg-danger-rose text-on-error flex items-center justify-center shadow-[0_2px_0_#ba1a1a]">
-              <Timer className="w-6 h-6" />
+          <div className="flex items-center gap-3 portrait:gap-1.5 bg-error-container/80 dark:bg-red-950/60 px-4 py-2 portrait:px-2 portrait:py-1 rounded-DEFAULT portrait:rounded-md shadow-[0_3px_0_#93000a] portrait:shadow-[0_2px_0_#93000a] animate-pulse portrait:shrink-0">
+            <div className="w-10 h-10 portrait:w-6 portrait:h-6 rounded-full bg-danger-rose text-on-error flex items-center justify-center shadow-[0_2px_0_#ba1a1a] portrait:shadow-[0_1px_0_#ba1a1a]">
+              <Timer className="w-6 h-6 portrait:w-3.5 portrait:h-3.5" />
             </div>
             <div className="flex flex-col leading-none">
-              <span className="font-label-caps text-[9px] text-on-error-container uppercase tracking-wider font-extrabold">
+              <span className="font-label-caps text-[9px] text-on-error-container uppercase tracking-wider font-extrabold portrait:hidden">
                 ¡Ritmo Crítico!
               </span>
-              <span className="font-display-lg text-2xl font-black text-danger-rose tracking-tight">
+              <span className="font-display-lg text-2xl portrait:text-base font-black text-danger-rose tracking-tight">
                 00:{timeLeft < 10 ? `0${timeLeft}` : timeLeft}s
               </span>
             </div>
           </div>
 
           {/* Telemetry Chips */}
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 portrait:gap-1 flex-wrap portrait:justify-end portrait:flex-1">
             {/* Aciertos */}
-            <div className="flex items-center gap-1.5 bg-surface-container-low dark:bg-slate-800 px-3 py-1.5 rounded-DEFAULT shadow-[0_2px_0_#cbd5e1]">
-              <CheckCircle2 className="w-5 h-5 text-success-emerald" />
+            <div title="Aciertos" className="flex items-center gap-1.5 portrait:gap-1 bg-surface-container-low dark:bg-slate-800 px-3 py-1.5 portrait:px-1.5 portrait:py-1 rounded-DEFAULT portrait:rounded-md shadow-[0_2px_0_#cbd5e1] portrait:shadow-[0_1px_0_#cbd5e1]">
+              <CheckCircle2 className="w-5 h-5 portrait:w-3.5 portrait:h-3.5 text-success-emerald portrait:shrink-0" />
               <div className="flex flex-col leading-none">
-                <span className="font-label-caps text-[8px] text-on-surface-variant uppercase">Aciertos</span>
+                <span className="font-label-caps text-[8px] text-on-surface-variant uppercase portrait:hidden">Aciertos</span>
                 <span className="font-stat-lg text-xs font-black text-on-surface dark:text-white">
                   {correctCount}
                 </span>
@@ -342,10 +342,10 @@ export const ChallengeMode: React.FC<ChallengeModeProps> = ({
             </div>
 
             {/* Fallos */}
-            <div className="flex items-center gap-1.5 bg-surface-container-low dark:bg-slate-800 px-3 py-1.5 rounded-DEFAULT shadow-[0_2px_0_#cbd5e1]">
-              <XCircle className="w-5 h-5 text-danger-rose" />
+            <div title="Fallos" className="flex items-center gap-1.5 portrait:gap-1 bg-surface-container-low dark:bg-slate-800 px-3 py-1.5 portrait:px-1.5 portrait:py-1 rounded-DEFAULT portrait:rounded-md shadow-[0_2px_0_#cbd5e1] portrait:shadow-[0_1px_0_#cbd5e1]">
+              <XCircle className="w-5 h-5 portrait:w-3.5 portrait:h-3.5 text-danger-rose portrait:shrink-0" />
               <div className="flex flex-col leading-none">
-                <span className="font-label-caps text-[8px] text-on-surface-variant uppercase">Fallos</span>
+                <span className="font-label-caps text-[8px] text-on-surface-variant uppercase portrait:hidden">Fallos</span>
                 <span className="font-stat-lg text-xs font-black text-on-surface dark:text-white">
                   {wrongCount}
                 </span>
@@ -353,23 +353,23 @@ export const ChallengeMode: React.FC<ChallengeModeProps> = ({
             </div>
 
             {/* Score */}
-            <div className="flex items-center gap-1.5 bg-surface-container-low dark:bg-slate-800 px-3 py-1.5 rounded-DEFAULT shadow-[0_2px_0_#cbd5e1]">
-              <Trophy className="w-5 h-5 text-secondary-container" />
+            <div title="Puntos de experiencia acumulados" className="flex items-center gap-1.5 portrait:gap-1 bg-surface-container-low dark:bg-slate-800 px-3 py-1.5 portrait:px-1.5 portrait:py-1 rounded-DEFAULT portrait:rounded-md shadow-[0_2px_0_#cbd5e1] portrait:shadow-[0_1px_0_#cbd5e1]">
+              <Trophy className="w-5 h-5 portrait:w-3.5 portrait:h-3.5 text-secondary-container portrait:shrink-0" />
               <div className="flex flex-col leading-none">
-                <span className="font-label-caps text-[8px] text-on-surface-variant uppercase">Puntos</span>
-                <span className="font-stat-lg text-xs font-black text-on-surface dark:text-white">
-                  {score} XP
+                <span className="font-label-caps text-[8px] text-on-surface-variant uppercase portrait:hidden">Puntos</span>
+                <span className="font-stat-lg text-xs font-black text-on-surface dark:text-white portrait:whitespace-nowrap">
+                  {score}<span className="portrait:hidden"> XP</span>
                 </span>
               </div>
             </div>
 
             {/* Multiplier Flame */}
-            <div className="flex items-center gap-1.5 bg-secondary-fixed dark:bg-amber-950/80 px-3 py-1.5 rounded-DEFAULT shadow-[0_3px_0_#855300]">
-              <Flame className="w-5 h-5 text-adventure-orange animate-bounce" />
+            <div title="Racha de aciertos consecutivos" className="flex items-center gap-1.5 portrait:gap-1 bg-secondary-fixed dark:bg-amber-950/80 px-3 py-1.5 portrait:px-1.5 portrait:py-1 rounded-DEFAULT portrait:rounded-md shadow-[0_3px_0_#855300] portrait:shadow-[0_2px_0_#855300]">
+              <Flame className="w-5 h-5 portrait:w-3.5 portrait:h-3.5 text-adventure-orange animate-bounce portrait:shrink-0" />
               <div className="flex flex-col leading-none">
-                <span className="font-label-caps text-[8px] text-on-secondary-fixed-variant uppercase">Racha</span>
-                <span className="font-headline-md text-xs font-bold text-on-secondary-fixed">
-                  x{streak || 1} ACTIVO
+                <span className="font-label-caps text-[8px] text-on-secondary-fixed-variant uppercase portrait:hidden">Racha</span>
+                <span className="font-headline-md text-xs font-bold text-on-secondary-fixed portrait:whitespace-nowrap">
+                  x{streak || 1}<span className="portrait:hidden"> ACTIVO</span>
                 </span>
               </div>
             </div>
@@ -378,8 +378,8 @@ export const ChallengeMode: React.FC<ChallengeModeProps> = ({
 
         {/* Rapid Identification Question Banner */}
         {currentQuestion && (
-          <div className="w-full bg-primary text-on-primary rounded-DEFAULT p-4 shadow-[0_4px_0_#003ea8] flex flex-col gap-2">
-            <div className="flex items-center justify-between">
+          <div className="w-full bg-primary text-on-primary rounded-DEFAULT p-4 shadow-[0_4px_0_#003ea8] portrait:shadow-[0_2px_0_#003ea8] flex flex-col gap-2">
+            <div className="flex items-center justify-between portrait:hidden">
               <span className="font-label-caps text-[10px] text-primary-fixed uppercase tracking-wider font-extrabold">
                 Identificacón Relámpago • {currentQuestion.subCategory || currentQuestion.category}
               </span>
@@ -387,10 +387,10 @@ export const ChallengeMode: React.FC<ChallengeModeProps> = ({
                 #{currentIndex + 1}
               </span>
             </div>
-            <h2 className="font-display-lg text-lg sm:text-xl text-white font-extrabold leading-snug">
-              ¿Es este el <span className="text-secondary-fixed underline decoration-secondary-container decoration-4">{contrarrelojPrompt?.promptName || currentQuestion.name}</span>?
+            <h2 className="font-display-lg text-lg sm:text-xl text-white font-extrabold leading-snug portrait:leading-tight portrait:text-center">
+              ¿Es este el <span className="text-secondary-fixed underline decoration-secondary-container decoration-4 portrait:decoration-2">{contrarrelojPrompt?.promptName || currentQuestion.name}</span>?
             </h2>
-            <p className="text-xs text-primary-fixed">
+            <p className="text-xs text-primary-fixed portrait:hidden">
               Mira el indicador señalado en el mapa mudo y responde rápidamente:
             </p>
           </div>
@@ -398,24 +398,27 @@ export const ChallengeMode: React.FC<ChallengeModeProps> = ({
 
         {/* Dual Massive Tactile Buttons (Sí / No) */}
         {currentQuestion && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 portrait:grid-cols-2 gap-3 portrait:gap-2 mt-1 portrait:mt-0.5">
             {/* SÍ, ES CORRECTO */}
             <button
               onClick={() => handleContrarrelojAnswer(true)}
               disabled={feedback !== null}
-              className="w-full min-h-[90px] rounded-DEFAULT bg-success-emerald text-on-primary flex flex-col items-center justify-center p-3 shadow-[0_6px_0_#047857] hover:bg-emerald-600 active:translate-y-1.5 active:shadow-[0_1px_0_#047857] transition-all cursor-pointer group disabled:opacity-60"
+              className="w-full min-h-[90px] portrait:min-h-[44px] rounded-DEFAULT portrait:rounded-lg bg-success-emerald text-on-primary flex flex-col portrait:flex-row items-center justify-center p-3 portrait:px-2 portrait:py-1.5 shadow-[0_6px_0_#047857] portrait:shadow-[0_3px_0_#047857] hover:bg-emerald-600 active:translate-y-1.5 portrait:active:translate-y-1 active:shadow-[0_1px_0_#047857] transition-all cursor-pointer group disabled:opacity-60"
             >
-              <div className="flex items-center gap-3">
-                <CheckCircle2 className="w-8 h-8 font-bold group-hover:scale-110 transition-transform" />
+              <div className="flex items-center gap-3 portrait:gap-1.5">
+                <CheckCircle2 className="w-8 h-8 portrait:w-4 portrait:h-4 font-bold group-hover:scale-110 transition-transform portrait:shrink-0" />
                 <div className="flex flex-col text-left">
-                  <span className="font-display-lg text-lg sm:text-xl font-black">SÍ, ES</span>
-                  <span className="font-label-caps text-[9px] uppercase tracking-wider text-emerald-100">
+                  <span className="font-display-lg text-lg sm:text-xl portrait:text-xs font-black">
+                    <span className="portrait:hidden">SÍ, ES</span>
+                    <span className="hidden portrait:inline">Verdadero</span>
+                  </span>
+                  <span className="font-label-caps text-[9px] uppercase tracking-wider text-emerald-100 portrait:hidden">
                     Respuesta Verdadera
                   </span>
                 </div>
               </div>
-              <div className="mt-1 bg-emerald-800/40 px-2.5 py-0.5 rounded-full text-[10px] font-body-bold text-white">
-                [ ← Flecha Izquierda ]
+              <div className="mt-1 portrait:hidden bg-emerald-800/40 px-2.5 py-0.5 rounded-full text-[10px] font-body-bold text-white">
+                [  Flecha Izquierda ]
               </div>
             </button>
 
@@ -423,19 +426,22 @@ export const ChallengeMode: React.FC<ChallengeModeProps> = ({
             <button
               onClick={() => handleContrarrelojAnswer(false)}
               disabled={feedback !== null}
-              className="w-full min-h-[90px] rounded-DEFAULT bg-danger-rose text-on-error flex flex-col items-center justify-center p-3 shadow-[0_6px_0_#991b1b] hover:bg-rose-600 active:translate-y-1.5 active:shadow-[0_1px_0_#991b1b] transition-all cursor-pointer group disabled:opacity-60"
+              className="w-full min-h-[90px] portrait:min-h-[44px] rounded-DEFAULT portrait:rounded-lg bg-danger-rose text-on-error flex flex-col portrait:flex-row items-center justify-center p-3 portrait:px-2 portrait:py-1.5 shadow-[0_6px_0_#991b1b] portrait:shadow-[0_3px_0_#991b1b] hover:bg-rose-600 active:translate-y-1.5 portrait:active:translate-y-1 active:shadow-[0_1px_0_#991b1b] transition-all cursor-pointer group disabled:opacity-60"
             >
-              <div className="flex items-center gap-3">
-                <XCircle className="w-8 h-8 font-bold group-hover:scale-110 transition-transform" />
+              <div className="flex items-center gap-3 portrait:gap-1.5">
+                <XCircle className="w-8 h-8 portrait:w-4 portrait:h-4 font-bold group-hover:scale-110 transition-transform portrait:shrink-0" />
                 <div className="flex flex-col text-left">
-                  <span className="font-display-lg text-lg sm:text-xl font-black">NO ES</span>
-                  <span className="font-label-caps text-[9px] uppercase tracking-wider text-rose-100">
+                  <span className="font-display-lg text-lg sm:text-xl portrait:text-xs font-black">
+                    <span className="portrait:hidden">NO ES</span>
+                    <span className="hidden portrait:inline">Falso</span>
+                  </span>
+                  <span className="font-label-caps text-[9px] uppercase tracking-wider text-rose-100 portrait:hidden">
                     Respuesta Falsa
                   </span>
                 </div>
               </div>
-              <div className="mt-1 bg-rose-950/40 px-2.5 py-0.5 rounded-full text-[10px] font-body-bold text-white">
-                [ → Flecha Derecha ]
+              <div className="mt-1 portrait:hidden bg-rose-950/40 px-2.5 py-0.5 rounded-full text-[10px] font-body-bold text-white">
+                [  Flecha Derecha ]
               </div>
             </button>
           </div>
@@ -443,29 +449,31 @@ export const ChallengeMode: React.FC<ChallengeModeProps> = ({
 
         {/* Fast Feedback Notification for Contrarreloj */}
         {feedback && (
-          <div className={`p-3 rounded-DEFAULT border flex items-center justify-between gap-2.5 animate-fadeIn shadow-sm ${
+          <div className={`p-3 portrait:py-1 portrait:px-2 rounded-DEFAULT portrait:rounded-lg border flex items-center justify-between gap-2.5 portrait:gap-1.5 animate-fadeIn shadow-sm portrait:shadow-xs ${
             feedback.isCorrect
               ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200'
               : 'bg-rose-50 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800 text-rose-900 dark:text-rose-200'
           }`}>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 portrait:gap-1.5">
               {feedback.isCorrect ? (
-                <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <CheckCircle2 className="w-5 h-5 portrait:w-3.5 portrait:h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
               ) : (
-                <XCircle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0" />
+                <XCircle className="w-5 h-5 portrait:w-3.5 portrait:h-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
               )}
-              <span className="font-headline-md text-xs sm:text-sm font-bold">
+              <span className="font-headline-md text-xs sm:text-sm portrait:text-[11px] font-bold">
                 {feedback.message}
               </span>
             </div>
-            <span className="text-[10px] uppercase font-bold opacity-75 shrink-0">
-              ⚡ Siguiente
+            <span className="text-[10px] portrait:text-[8px] uppercase font-bold opacity-75 shrink-0">
+               Siguiente
             </span>
           </div>
         )}
       </div>
     );
   }
+
+
 
   // -------------------------------------------------------------
   // SCREEN: MODO QUIZ CURRICULAR (Test con opciones A, B, C, D)

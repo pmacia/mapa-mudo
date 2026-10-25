@@ -443,10 +443,10 @@ export default function App() {
 
       {/* Main App Container */}
       <main
-        className="flex-1 w-full max-w-[1720px] mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-5 pb-28 lg:pb-8 transition-all duration-300"
+        className="flex-1 w-full max-w-[1720px] mx-auto px-2.5 sm:px-6 lg:px-8 py-2 sm:py-5 pb-20 sm:pb-28 lg:pb-8 transition-all duration-300"
       >
         {/* Central Workspace: Real Map + Companion Dock */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 sm:gap-4 lg:gap-6 items-start">
           {/* Main Map Column (Full width on mobile, 8 columns on desktop) */}
           <div
             className={`flex flex-col ${
@@ -514,7 +514,7 @@ export default function App() {
 
           {/* Mobile Bottom Challenge Banner (When in Quiz mode on mobile) */}
           {!isDesktop && currentMode !== 'explorar' && (
-            <div className="lg:hidden mt-2">
+            <div className="lg:hidden mt-1 sm:mt-2">
               <ChallengeMode
                 session={challengeSession}
                 challengeType={challengeType}
