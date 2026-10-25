@@ -2,8 +2,7 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
-
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { GeoElement, GameMode, PlayerStats, CategoryType } from './types/geography';
 import { GEO_ELEMENTS } from './data/geographyData';
 import { SpainMap, MapTheme } from './components/Map/SpainMap';
@@ -21,19 +20,15 @@ import { List, X, ChevronDown, ChevronUp } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { MobileBottomNav } from './components/Navigation/MobileBottomNav';
 import { GAME_CONFIG } from './constants/gameConfig';
-
 const STORAGE_KEY_STATS = 'geoespana_player_stats_v2';
-
 export default function App() {
   // Game mode
   const [currentMode, setCurrentMode] = useState<GameMode>('explorar');
   const [selectedElement, setSelectedElement] = useState<GeoElement | null>(null);
-
   // Quiz interactive state
   const [targetHighlightId, setTargetHighlightId] = useState<string | null>(null);
   const [feedbackElementId, setFeedbackElementId] = useState<string | null>(null);
   const [feedbackStatus, setFeedbackStatus] = useState<'correct' | 'wrong' | null>(null);
-
   // Responsive device detection to prevent duplicate mounted ChallengeMode instances
   const [isDesktop, setIsDesktop] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -41,7 +36,6 @@ export default function App() {
     }
     return true;
   });
-
   useEffect(() => {
     const handleResize = () => {
       setIsDesktop(window.innerWidth >= GAME_CONFIG.UI.DESKTOP_BREAKPOINT_PX);
@@ -49,7 +43,6 @@ export default function App() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-
   // Accident Filter & Selection State (Active on Map & in Games)
   const [accidentFilters, setAccidentFilters] = useState<AccidentFilterState>({
     rios: true,
@@ -63,12 +56,10 @@ export default function App() {
     showCommunities: true,
     showProvinces: true,
   });
-
   const [theme, setTheme] = useState<MapTheme>('clasico');
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false);
   const [exploreCategory, setExploreCategory] = useState<CategoryType | 'todos'>('todos');
-
   // Synchronize dark mode class with document and html
   useEffect(() => {
     if (theme === 'nocturno') {
@@ -77,15 +68,52 @@ export default function App() {
       document.documentElement.classList.remove('dark');
     }
   }, [theme]);
-
   // Modals & Drawers
   const [isAccidentFilterOpen, setIsAccidentFilterOpen] = useState(false);
   const [isAchievementsOpen, setIsAchievementsOpen] = useState(false);
   const [isPrintableOpen, setIsPrintableOpen] = useState(false);
   const [isManualOpen, setIsManualOpen] = useState(false);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
-  const [isStampCelebrationOpen, setIsStampCelebrationOpen] = useState(false);
+  const [isPortraitExplore, setIsPortraitExplore] = useState(false);
+  const [sheetBounds, setSheetBounds] = useState({ top: 80, bottom: 80, collapsedTop: 400, collapsedHeight: 200 });
+  const workspaceRef = useRef<HTMLElement>(null);
+  const mapFrameRef = useRef<HTMLDivElement>(null);
+  const bottomNavRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 1023px) and (orientation: portrait)');
+    const updateLayout = () => {
+      setIsPortraitExplore(media.matches);
+      const nav = bottomNavRef.current?.firstElementChild;
+      const navRect = nav?.getBoundingClientRect();
+      const top = Math.max(0, workspaceRef.current?.getBoundingClientRect().top ?? 0);
+      const bottom = navRect && navRect.height > 0
+        ? Math.max(0, window.innerHeight - navRect.top) : 0;
+      const availableBottom = window.innerHeight - bottom;
+      const mapBottom = mapFrameRef.current?.getBoundingClientRect().bottom ?? top;
+      const collapsedTop = Math.max(top, Math.min(mapBottom + 8, availableBottom - 96));
+      const collapsedHeight = Math.max(0, availableBottom - collapsedTop);
+      setSheetBounds(prev => prev.top === top && prev.bottom === bottom &&
+        prev.collapsedTop === collapsedTop && prev.collapsedHeight === collapsedHeight
+        ? prev : { top, bottom, collapsedTop, collapsedHeight });
+    };
+    updateLayout();
+    const observer = new ResizeObserver(updateLayout);
+    if (bottomNavRef.current?.firstElementChild) observer.observe(bottomNavRef.current.firstElementChild);
+    if (workspaceRef.current?.previousElementSibling) observer.observe(workspaceRef.current.previousElementSibling);
+    if (mapFrameRef.current) observer.observe(mapFrameRef.current);
+    media.addEventListener('change', updateLayout);
+    window.addEventListener('resize', updateLayout);
+    window.addEventListener('scroll', updateLayout, { passive: true });
+    return () => {
+      observer.disconnect();
+      media.removeEventListener('change', updateLayout);
+      window.removeEventListener('resize', updateLayout);
+      window.removeEventListener('scroll', updateLayout);
+    };
+  }, []);
+
+  const [isStampCelebrationOpen, setIsStampCelebrationOpen] = useState(false);
   // Player stats
   const [stats, setStats] = useState<PlayerStats>(() => {
     try {
@@ -114,9 +142,7 @@ export default function App() {
       atlasStampUnlocked: false,
     };
   });
-
   const [categoryCorrectCounts, setCategoryCorrectCounts] = useState<Record<string, number>>({});
-
   // Persist stats
   useEffect(() => {
     try {
@@ -125,7 +151,6 @@ export default function App() {
       // Ignore
     }
   }, [stats]);
-
   // Filtered elements active for both Map and Game challenges
   const activeElements = useMemo(() => {
     return GEO_ELEMENTS.filter((elem) => {
@@ -136,7 +161,6 @@ export default function App() {
   const activeSelectedElement = activeElements.some((element) => element.id === selectedElement?.id)
     ? selectedElement
     : null;
-
   // Handle mode changes
   const handleModeChange = (newMode: GameMode) => {
     setCurrentMode(newMode);
@@ -145,7 +169,6 @@ export default function App() {
     setFeedbackElementId(null);
     setFeedbackStatus(null);
     setIsMobileDrawerOpen(false);
-
     // In quiz challenge, automatically toggle off labels for authentic "mapa mudo" test
     if (newMode === 'reto_localizar' || newMode === 'contrarreloj') {
       setAccidentFilters((prev) => ({ ...prev, showLabels: false }));
@@ -153,14 +176,12 @@ export default function App() {
       setAccidentFilters((prev) => ({ ...prev, showLabels: true }));
     }
   };
-
   const handleToggleAccidentFilter = (key: keyof AccidentFilterState) => {
     setAccidentFilters((prev) => ({
       ...prev,
       [key]: !prev[key],
     }));
   };
-
   const handleApplyPreset = (preset: 'todos' | 'rios' | 'relieve' | 'costas') => {
     playSound('click');
     if (preset === 'todos') {
@@ -209,14 +230,12 @@ export default function App() {
       }));
     }
   };
-
   // Check badges unlock
   const checkBadgeUnlocks = (
     updatedStats: PlayerStats,
     newCounts: Record<string, number>
   ): string[] => {
     const unlocked = [...updatedStats.unlockedBadges];
-
     if (!unlocked.includes('primer-paso') && updatedStats.correctAnswers >= 1) {
       unlocked.push('primer-paso');
     }
@@ -241,17 +260,14 @@ export default function App() {
     if (!unlocked.includes('geografo-maestro') && updatedStats.xp >= GAME_CONFIG.BADGE_REQUIREMENTS.MASTER_XP) {
       unlocked.push('geografo-maestro');
     }
-
     return unlocked;
   };
-
   const handleCorrectAnswer = useCallback((element: GeoElement, earnedXp: number, sessionStreak: number) => {
     setCategoryCorrectCounts((prevCounts) => {
       const updatedCounts = {
         ...prevCounts,
         [element.category]: (prevCounts[element.category] || 0) + 1,
       };
-
       setStats((prev) => {
         const newXp = prev.xp + earnedXp;
         const newLevel = Math.floor(newXp / GAME_CONFIG.GAMEPLAY.LEVEL_XP_STEP) + 1;
@@ -259,7 +275,6 @@ export default function App() {
         const newMaxStreak = Math.max(prev.maxStreak, newStreak, sessionStreak);
         const newCorrect = prev.correctAnswers + 1;
         const newTotal = prev.totalAttempts + 1;
-
         const tempStats: PlayerStats = {
           ...prev,
           xp: newXp,
@@ -269,24 +284,20 @@ export default function App() {
           correctAnswers: newCorrect,
           totalAttempts: newTotal,
         };
-
         const updatedBadges = checkBadgeUnlocks(tempStats, updatedCounts);
         const isNewBadgeUnlocked = updatedBadges.length > prev.unlockedBadges.length;
         if (isNewBadgeUnlocked) {
           playSound('levelup');
           confetti({ particleCount: 160, spread: 85, origin: { y: 0.5 } });
         }
-
         return {
           ...tempStats,
           unlockedBadges: updatedBadges,
         };
       });
-
       return updatedCounts;
     });
   }, []);
-
   const handleWrongAnswer = useCallback(() => {
     setStats((prev) => ({
       ...prev,
@@ -294,27 +305,22 @@ export default function App() {
       totalAttempts: prev.totalAttempts + 1,
     }));
   }, []);
-
   // Gamification: Track exploration of accidents in Atlas mode
   const handleVisitAtlasElement = (element: GeoElement) => {
     if (currentMode !== 'explorar') return;
-
     const currentVisited = stats.visitedAtlasElements || [];
     if (currentVisited.includes(element.id)) {
       // Already visited, no duplicate points
       return;
     }
-
     const newVisited = [...currentVisited, element.id];
     const earnedXp = GAME_CONFIG.POINTS.ATLAS_DISCOVERY_XP;
     const isCompleted = newVisited.length >= GEO_ELEMENTS.length;
-
     if (isCompleted) {
       playSound('stamp');
     } else {
       playSound('discover');
     }
-
     setStats((prev) => {
       const bonusXp = isCompleted && !prev.atlasStampUnlocked ? GAME_CONFIG.POINTS.ATLAS_STAMP_BONUS_XP : 0;
       const newXp = prev.xp + earnedXp + bonusXp;
@@ -323,7 +329,6 @@ export default function App() {
       if (isCompleted && !updatedBadges.includes('sello-atlas')) {
         updatedBadges.push('sello-atlas');
       }
-
       return {
         ...prev,
         xp: newXp,
@@ -333,12 +338,10 @@ export default function App() {
         unlockedBadges: updatedBadges,
       };
     });
-
     if (isCompleted && !stats.atlasStampUnlocked) {
       setIsStampCelebrationOpen(true);
     }
   };
-
   // Reset Atlas exploration progress to allow re-discovering accidents and obtaining stamp again
   const handleResetAtlas = () => {
     setStats((prev) => ({
@@ -349,7 +352,6 @@ export default function App() {
     }));
     playSound('click');
   };
-
   const handleMapElementClick = (element: GeoElement) => {
     if (currentMode === 'explorar') {
       setSelectedElement(element);
@@ -380,7 +382,6 @@ export default function App() {
       }
     }
   };
-
   // Authoritative single game session for quiz modes
   const isQuizMode = currentMode !== 'explorar';
   const challengeType: ChallengeType =
@@ -389,16 +390,13 @@ export default function App() {
       : currentMode === 'reto_identificar'
       ? 'identificar'
       : 'contrarreloj';
-
   const onSetTargetHighlight = useCallback((id: string | null) => {
     setTargetHighlightId(id);
   }, []);
-
   const onSetFeedback = useCallback((id: string | null, status: 'correct' | 'wrong' | null) => {
     setFeedbackElementId(id);
     setFeedbackStatus(status);
   }, []);
-
   const challengeSession = useChallengeSession({
     elements: activeElements,
     challengeType,
@@ -410,12 +408,10 @@ export default function App() {
     onSetFeedback,
     roundSize: GAME_CONFIG.GAMEPLAY.DEFAULT_ROUND_SIZE,
   });
-
   const isGameFinished = challengeSession.isGameOver || challengeSession.isCompleted;
   const activeTargetHighlightId = !isGameFinished && currentMode !== 'explorar' ? targetHighlightId : null;
   const activeFeedbackElementId = !isGameFinished && currentMode !== 'explorar' ? feedbackElementId : null;
   const activeFeedbackStatus = !isGameFinished && currentMode !== 'explorar' ? feedbackStatus : null;
-
   return (
     <div
       className={`min-h-screen ${
@@ -440,9 +436,9 @@ export default function App() {
         onToggleCollapse={() => setIsHeaderCollapsed((prev) => !prev)}
         onSelectElement={handleMapElementClick}
       />
-
       {/* Main App Container */}
       <main
+      ref={workspaceRef}
         className="flex-1 w-full max-w-[1720px] mx-auto px-2.5 sm:px-6 lg:px-8 py-2 sm:py-5 pb-20 sm:pb-28 lg:pb-8 transition-all duration-300"
       >
         {/* Central Workspace: Real Map + Companion Dock */}
@@ -454,6 +450,7 @@ export default function App() {
             }`}
           >
             <div
+              ref={mapFrameRef}
               className="w-full aspect-[1000/720] relative rounded-DEFAULT lg:rounded-2xl overflow-hidden shadow-[0_4px_0_#cbd5e1] dark:shadow-none border border-slate-200 dark:border-slate-800 transition-all duration-300 bg-map-water-light"
             >
               <SpainMap
@@ -476,7 +473,6 @@ export default function App() {
               />
             </div>
           </div>
-
           {/* Right Column (Desktop sticky companion dock with independent scroll) */}
           <div
             className={`hidden lg:flex flex-col ${
@@ -511,8 +507,59 @@ export default function App() {
               />
             ) : null}
           </div>
-
-          {/* Mobile Bottom Challenge Banner (When in Quiz mode on mobile) */}
+  
+        {/* Portrait exploration: always visible, with two positions. */}
+        {isPortraitExplore && currentMode === 'explorar' && (
+          <div aria-hidden="true" style={{ height: sheetBounds.collapsedHeight }} />
+        )}
+        {isPortraitExplore && currentMode === 'explorar' && (
+          <section
+            aria-label="Panel de exploración"
+            className="fixed inset-x-2.5 z-30 flex min-h-0 flex-col overflow-hidden rounded-t-2xl border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900 transition-[top,bottom] duration-[350ms] ease-in-out motion-reduce:transition-none"
+            style={{
+              top: isMobileDrawerOpen ? sheetBounds.top : sheetBounds.collapsedTop,
+              bottom: sheetBounds.bottom,
+            }}
+          >
+            <div className="flex shrink-0 items-center justify-between gap-2 border-b border-slate-200 p-3 dark:border-slate-800">
+              <span className="text-xs font-bold">Accidentes ({activeElements.length})</span>
+              <button
+                type="button"
+                onClick={() => setIsMobileDrawerOpen(prev => !prev)}
+                aria-expanded={isMobileDrawerOpen}
+                aria-controls="portrait-explore-content"
+                aria-label={isMobileDrawerOpen ? 'Bajar ficha y ver el mapa' : 'Subir ficha de exploración'}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700"
+              >
+                {isMobileDrawerOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+              </button>
+            </div>
+            <div id="portrait-explore-content" className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3">
+            <ExplorePanel
+              className="h-full min-h-0 w-full"
+                elements={activeElements}
+                selectedElement={activeSelectedElement}
+                onSelectElement={(elem) => {
+                  setSelectedElement(elem);
+                  if (elem) {
+                    handleVisitAtlasElement(elem);
+                    playSound('click');
+                    // Return to the lower position so the selected element is visible on the map
+                    setIsMobileDrawerOpen(false);
+                  }
+                }}
+                activeCategory={exploreCategory}
+                onCategoryChange={setExploreCategory}
+                visitedAtlasIds={stats.visitedAtlasElements}
+                atlasStampUnlocked={stats.atlasStampUnlocked}
+                onOpenStampModal={() => setIsStampCelebrationOpen(true)}
+                onResetAtlas={handleResetAtlas}
+              onStartDailyChallenge={() => handleModeChange('reto_localizar')}
+              />
+            </div>
+          </section>
+        )}
+        {/* Mobile Bottom Challenge Banner (When in Quiz mode on mobile) */}
           {!isDesktop && currentMode !== 'explorar' && (
             <div className="lg:hidden mt-1 sm:mt-2">
               <ChallengeMode
@@ -525,9 +572,8 @@ export default function App() {
           )}
         </div>
       </main>
-
       {/* Floating Bottom Button for Mobile (In Explore Mode) */}
-      {currentMode === 'explorar' && (
+      {!isPortraitExplore && currentMode === 'explorar' && (
         <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-30 lg:hidden">
           <button
             onClick={() => setIsMobileDrawerOpen(true)}
@@ -539,17 +585,17 @@ export default function App() {
           </button>
         </div>
       )}
-
       {/* Mobile Bottom Navigation Bar (Persistent touch dock) */}
-      <MobileBottomNav
+      <div ref={bottomNavRef}>
+    <MobileBottomNav
         currentMode={currentMode}
         onModeChange={handleModeChange}
         onOpenLayers={() => setIsAccidentFilterOpen(true)}
         onOpenAchievements={() => setIsAchievementsOpen(true)}
       />
-
+    </div>
       {/* Mobile Bottom Sheet Drawer for Explore Panel */}
-      {isMobileDrawerOpen && currentMode === 'explorar' && (
+      {!isPortraitExplore && isMobileDrawerOpen && currentMode === 'explorar' && (
         <div 
           className="fixed inset-0 z-50 lg:hidden flex flex-col justify-end bg-black/60 backdrop-blur-xs animate-fadeIn"
           onClick={() => setIsMobileDrawerOpen(false)}
@@ -566,7 +612,6 @@ export default function App() {
                   Accidentes Geográficos ({activeElements.length})
                 </span>
               </div> */}
-
               <button
                 onClick={() => setIsMobileDrawerOpen(false)}
                 className="flex items-center gap-1 px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-bold cursor-pointer"
@@ -574,7 +619,6 @@ export default function App() {
                 <ChevronDown className="w-3.5 h-3.5" />
               </button>
             </div>
-
             {/* Explore Panel inside Bottom Sheet */}
             <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
               <ExplorePanel
@@ -600,7 +644,6 @@ export default function App() {
           </div>
         </div>
       )}
-
       {/* Unified Accident & Layer Selection Modal */}
       <AccidentFilterPanel
         isOpen={isAccidentFilterOpen}
@@ -611,21 +654,18 @@ export default function App() {
         activeCount={activeElements.length}
         totalCount={GEO_ELEMENTS.length}
       />
-
       {/* Achievements Modal */}
       <AchievementsModal
         isOpen={isAchievementsOpen}
         onClose={() => setIsAchievementsOpen(false)}
         stats={stats}
       />
-
       {/* Printable Sheet Generator Modal */}
       <PrintableMapModal
         isOpen={isPrintableOpen}
         onClose={() => setIsPrintableOpen(false)}
         elements={activeElements}
       />
-
       {/* Celebration modal for completing the full atlas. */}
       <AtlasStampCelebrationModal
         isOpen={isStampCelebrationOpen}
@@ -633,7 +673,6 @@ export default function App() {
         onOpenAchievements={() => setIsAchievementsOpen(true)}
         totalExplored={stats.visitedAtlasElements?.length || 0}
       />
-
       {/* Game Manual & Didactic Guide Modal */}
       <GameManualModal
         isOpen={isManualOpen}
