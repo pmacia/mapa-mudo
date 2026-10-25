@@ -1,3 +1,4 @@
+import { downloadGeographyConfiguration } from './utils/exportGeography';
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -278,6 +279,23 @@ export default function App() {
     setDraftElement((prev) => (prev ? { ...prev, ...updated } : null));
     setHasUnsavedChanges(true);
   }, []);
+
+  const handleExportConfiguration = () => {
+    if (hasUnsavedChanges && draftElement && !window.confirm(
+      'Hay cambios pendientes. ¿Quieres guardarlos y exportar toda la configuración?'
+    )) return;
+    try {
+      const snapshot = hasUnsavedChanges && draftElement
+        ? geoElements.some(e => e.id === draftElement.id)
+          ? geoElements.map(e => e.id === draftElement.id ? draftElement : e)
+          : [draftElement, ...geoElements]
+        : geoElements;
+      downloadGeographyConfiguration(snapshot);
+      if (hasUnsavedChanges && draftElement) handleSaveDraft();
+    } catch (error) {
+      window.alert(`No se pudo exportar: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  };
 
   const handleSaveDraft = useCallback(() => {
     if (!draftElement) return;
@@ -648,6 +666,7 @@ export default function App() {
         onSelectElement={handleMapElementClick}
         isVectorEditMode={isVectorEditMode}
         onSaveVectorEdit={handleSaveDraft}
+        onExportConfiguration={handleExportConfiguration}
         onCancelVectorEdit={handleExitEditMode}
         hasUnsavedChanges={hasUnsavedChanges}
         editingElementName={draftElement?.name}

@@ -22,6 +22,7 @@ import {
   Palette,
   Check,
   Save,
+  Download,
   Pencil,
   PanelRightClose,
   PanelRightOpen
@@ -49,6 +50,7 @@ interface HeaderProps {
   isEditorPanelCollapsed?: boolean;
   onToggleEditorPanelCollapse?: () => void;
   onSaveVectorEdit?: () => void;
+  onExportConfiguration?: () => void;
   onCancelVectorEdit?: () => void;
   hasUnsavedChanges?: boolean;
   editingElementName?: string;
@@ -75,6 +77,7 @@ export const Header: React.FC<HeaderProps> = ({
   isEditorPanelCollapsed = false,
   onToggleEditorPanelCollapse,
   onSaveVectorEdit,
+  onExportConfiguration,
   onCancelVectorEdit,
   hasUnsavedChanges = false,
   editingElementName,
@@ -156,6 +159,14 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Only Guardar and Cancelar buttons */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            {onExportConfiguration && (
+              <button type="button" onClick={onExportConfiguration}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-colors cursor-pointer"
+                title="Descargar los dos archivos de configuración en ZIP" aria-label="Exportar configuración">
+                <Download className="w-4 h-4" />
+                <span>Exportar</span>
+              </button>
+            )}
             <button
               onClick={onSaveVectorEdit}
               disabled={!hasUnsavedChanges}
