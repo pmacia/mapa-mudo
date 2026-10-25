@@ -26,7 +26,6 @@ import {
   ChevronDown,
   Check
 } from 'lucide-react';
-
 interface ExplorePanelProps {
   elements: GeoElement[];
   selectedElement: GeoElement | null;
@@ -40,7 +39,6 @@ interface ExplorePanelProps {
   onStartDailyChallenge?: () => void;
   className?: string;
 }
-
 const CATEGORY_TABS: { id: CategoryType | 'todos'; label: string; colorClass: string }[] = [
   { id: 'todos', label: 'Todos', colorClass: 'bg-primary text-on-primary shadow-[0_2px_0_#003ea8]' },
   { id: 'rios', label: 'Ríos', colorClass: 'bg-surface-container text-category-rivers hover:bg-surface-container-high' },
@@ -51,7 +49,6 @@ const CATEGORY_TABS: { id: CategoryType | 'todos'; label: string; colorClass: st
   { id: 'unidades_relieve', label: 'Mesetas', colorClass: 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high' },
   { id: 'mares', label: 'Mares', colorClass: 'bg-surface-container text-category-rivers hover:bg-surface-container-high' },
 ];
-
 export const ExplorePanel: React.FC<ExplorePanelProps> = ({
   elements,
   selectedElement,
@@ -71,17 +68,14 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
   const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const filterDropdownRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     setSelectedCat(activeCategory);
   }, [activeCategory]);
-
   useEffect(() => {
     if (activeCategory !== 'todos' && !elements.some((element) => element.category === activeCategory)) {
       onCategoryChange?.('todos');
     }
   }, [activeCategory, elements, onCategoryChange]);
-
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (filterDropdownRef.current && !filterDropdownRef.current.contains(event.target as Node)) {
@@ -91,14 +85,12 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
   const handleCategorySelect = (cat: CategoryType | 'todos') => {
     setSelectedCat(cat);
     if (onCategoryChange) {
       onCategoryChange(cat);
     }
   };
-
   const filteredElements = elements.filter((elem) => {
     const matchesCategory = selectedCat === 'todos' || elem.category === selectedCat;
     const matchesSearch =
@@ -107,7 +99,6 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
       elem.description.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesCategory && matchesSearch;
   });
-
   const totalCount = elements.length;
   const scopedVisitedCount = elements.filter((element) => visitedAtlasIds.includes(element.id)).length;
   const progressPercent = totalCount > 0 ? Math.round((scopedVisitedCount / totalCount) * 100) : 0;
@@ -119,7 +110,6 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
         : elements.filter((element) => element.category === tab.id).length;
       return { ...tab, label: `${tab.label} (${count})` };
     });
-
   const getCategoryBadgeClass = (category: CategoryType) => {
     switch (category) {
       case 'rios':
@@ -138,7 +128,6 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
         return 'bg-surface-container text-on-surface-variant border-outline-variant';
     }
   };
-
   return (
     <aside className={`w-full flex flex-col gap-3.5 overflow-y-auto scrollbar-thin ${className || ''}`}>
       {/* 1. Official Curriculum Status Card */}
@@ -152,8 +141,6 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
               1º ESO Geografía Física
             </h2>
           </div>
-
-
           {atlasStampUnlocked ? (
             <button
               onClick={onOpenStampModal}
@@ -170,13 +157,10 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
               🎖️ Sello a los {GEO_ELEMENTS.length}
             </div>
           )}
-
           <div className="w-10 h-10 rounded-full bg-surface-container-high dark:bg-slate-800 flex items-center justify-center text-primary dark:text-blue-400 font-headline-md text-xs font-black shadow-xs shrink-0">
             {progressPercent}%
           </div>
-
         </div>
-
         <div className="flex flex-col gap-1.5">
           <div className="flex justify-between items-center text-on-surface-variant dark:text-slate-400">
             <span className="font-body-bold text-xs">
@@ -194,10 +178,9 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
           </div>
         </div>
       </div>
-
       {/* 2. Reto del Día Banner (Gamified Motivation Card) */}
       {!isDailyChallengeDismissed && (
-        <div className="w-full shrink-0 bg-gradient-to-br from-tertiary-container via-tertiary to-primary p-4 rounded-DEFAULT text-on-tertiary shadow-md relative overflow-hidden">
+        <div className="hidden lg:block w-full shrink-0 bg-gradient-to-br from-tertiary-container via-tertiary to-primary p-4 rounded-DEFAULT text-on-tertiary shadow-md relative overflow-hidden">
           <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-surface-bright/10 rounded-full blur-xl pointer-events-none" />
           <div className="relative z-10 flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
@@ -239,7 +222,6 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
           </div>
         </div>
       )}
-
       {/* 3. Smart Search Input & Category Filter Dropdown */}
       <div className="w-full flex items-center gap-2">
         <div className="relative flex-1">
@@ -261,7 +243,6 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
             </button>
           )}
         </div>
-
         {/* Filter Dropdown to the right of search */}
         <div className="relative shrink-0" ref={filterDropdownRef}>
           {selectedCat === 'todos' ? (
@@ -303,7 +284,6 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
               </button>
             </div>
           )}
-
           {isFilterDropdownOpen && (
             <div className="absolute right-0 top-11 w-56 bg-surface-container-lowest dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-DEFAULT shadow-xl py-1.5 z-50 animate-fadeIn">
               <div className="px-3 py-1 text-[10px] font-label-caps text-on-surface-variant uppercase font-bold border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
@@ -346,7 +326,6 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
           )}
         </div>
       </div>
-
       {/* 4. Selected Accident Didactic Inspection Card */}
       {selectedElement && (
         <div className="w-full bg-surface-container-lowest dark:bg-slate-900 rounded-DEFAULT p-4 shadow-sm border-2 border-primary/40 dark:border-blue-500/40 flex flex-col gap-2.5 animate-fadeIn">
@@ -389,18 +368,15 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
               </button>
             </div>
           </div>
-
           <p className="font-body-base text-xs text-on-surface-variant dark:text-slate-300 leading-relaxed">
             {selectedElement.description}
           </p>
-
           {selectedElement.elevationOrLength && (
             <div className="flex items-center gap-1 text-xs font-body-bold text-on-surface dark:text-white bg-surface-container dark:bg-slate-800 px-2.5 py-1 rounded-DEFAULT w-fit">
               <span>📏 Medida:</span>
               <span className="text-primary font-bold">{selectedElement.elevationOrLength}</span>
             </div>
           )}
-
           {selectedElement.curiosity && (
             <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 p-2.5 rounded-DEFAULT text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2">
               <Sparkles className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
@@ -412,7 +388,6 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
           )}
         </div>
       )}
-
       {/* 5. Directory list of matching accidents for quick location */}
       <div className="w-full bg-surface-container-lowest dark:bg-slate-900 rounded-DEFAULT p-3 shadow-sm border border-slate-200/80 dark:border-slate-800 flex flex-col gap-1.5" ref={listRef}>
         <div className="flex justify-between items-center px-1 pb-1 border-b border-slate-100 dark:border-slate-800">
@@ -423,7 +398,6 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
             Toca para centrar en mapa
           </span>
         </div>
-
         <div className="max-h-52 overflow-y-auto scrollbar-thin flex flex-col gap-1">
           {filteredElements.length === 0 ? (
             <p className="px-2.5 py-3 text-xs text-on-surface-variant">
@@ -432,7 +406,6 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
           ) : filteredElements.map((elem) => {
             const isSelected = selectedElement?.id === elem.id;
             const isVisited = visitedAtlasIds.includes(elem.id);
-
             return (
               <button
                 key={elem.id}

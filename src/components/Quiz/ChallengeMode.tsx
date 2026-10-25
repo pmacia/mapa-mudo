@@ -409,8 +409,7 @@ export const ChallengeMode: React.FC<ChallengeModeProps> = ({
                 <CheckCircle2 className="w-8 h-8 portrait:w-4 portrait:h-4 font-bold group-hover:scale-110 transition-transform portrait:shrink-0" />
                 <div className="flex flex-col text-left">
                   <span className="font-display-lg text-lg sm:text-xl portrait:text-xs font-black">
-                    <span className="portrait:hidden">SÍ, ES</span>
-                    <span className="hidden portrait:inline">Verdadero</span>
+                    SÍ, ES
                   </span>
                   <span className="font-label-caps text-[9px] uppercase tracking-wider text-emerald-100 portrait:hidden">
                     Respuesta Verdadera
@@ -432,8 +431,7 @@ export const ChallengeMode: React.FC<ChallengeModeProps> = ({
                 <XCircle className="w-8 h-8 portrait:w-4 portrait:h-4 font-bold group-hover:scale-110 transition-transform portrait:shrink-0" />
                 <div className="flex flex-col text-left">
                   <span className="font-display-lg text-lg sm:text-xl portrait:text-xs font-black">
-                    <span className="portrait:hidden">NO ES</span>
-                    <span className="hidden portrait:inline">Falso</span>
+                    NO ES
                   </span>
                   <span className="font-label-caps text-[9px] uppercase tracking-wider text-rose-100 portrait:hidden">
                     Respuesta Falsa
