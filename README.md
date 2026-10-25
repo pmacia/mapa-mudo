@@ -15,7 +15,7 @@
 ## 📸 Vista Previa de la Aplicación (v2.0)
 
 <p align="center">
-  <img src="./src/assets/images/geoespana_v2_screenshot_1792741200232.jpg" alt="Captura de pantalla de GeoEspaña Junior v2: Mapa mudo interactivo y panel pedagógico" width="100%" style="border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);" />
+  <img src="./src/assets/images/geoespana_v2_screenshot.jpg" alt="Captura de pantalla de GeoEspaña Junior v2: Mapa mudo interactivo y panel pedagógico" width="100%" style="border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);" />
 </p>
 
 *Interfaz principal de GeoEspaña Junior v2.0: mapa físico vectorial con rosa de los vientos minimalista, balizas de identificación, buscador con filtro compacto y panel companion con métricas didácticas.*
