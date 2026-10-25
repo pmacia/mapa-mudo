@@ -2,7 +2,8 @@ import React, { useState, useRef, useMemo } from 'react';
 import { GeoElement, CategoryType } from '../../types/geography';
 import { LAYERED_SPAIN_MAP, SvgMapPath } from '../../data/spainBaseMapData';
 import { CompassRose } from './CompassRose';
-import { ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
+import { ZoomIn, ZoomOut, RotateCcw, Pencil, PanelRightOpen, PanelRightClose } from 'lucide-react';
+import { VectorEditOverlay } from './VectorEditOverlay';
 
 // Geographic coordinates remain unchanged. Only the displayed selector may move.
 // The layout uses every feature, so toggling layers never moves another selector.
@@ -67,6 +68,13 @@ interface SpainMapProps {
   currentMode?: string;
   isInteractive?: boolean;
   blankMode?: boolean; // When true, labels and hints are strictly hidden (authentic mapa mudo)
+  // Vector Editor props:
+  isVectorEditMode?: boolean;
+  onToggleVectorEditMode?: () => void;
+  editingElement?: GeoElement | null;
+  onUpdateElementGeometry?: (updated: Partial<GeoElement>) => void;
+  isEditorPanelCollapsed?: boolean;
+  onToggleEditorPanelCollapse?: () => void;
 }
 
 export const SpainMap: React.FC<SpainMapProps> = ({
@@ -86,6 +94,12 @@ export const SpainMap: React.FC<SpainMapProps> = ({
   currentMode = 'explorar',
   isInteractive = true,
   blankMode = false,
+  isVectorEditMode = false,
+  onToggleVectorEditMode,
+  editingElement,
+  onUpdateElementGeometry,
+  isEditorPanelCollapsed = false,
+  onToggleEditorPanelCollapse,
 }) => {
   const [hoveredElement, setHoveredElement] = useState<GeoElement | null>(null);
   const [zoomLevel, setZoomLevel] = useState<number>(1.32);
@@ -93,6 +107,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
+  const svgElementRef = useRef<SVGSVGElement | null>(null);
 
   const markerPositions = useMemo(() => getSeparatedMarkerPositions(elements), [elements]);
 
@@ -173,6 +188,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
   };
 
   const handleElementHover = (elem: GeoElement) => {
+    if (isVectorEditMode) return;
     setHoveredElement(elem);
     if (onElementHover) {
       onElementHover(elem);
@@ -288,8 +304,27 @@ export const SpainMap: React.FC<SpainMapProps> = ({
         <CompassRose theme={theme} size={84} />
       </div>      
 
+      {/* Vector Editor Toggle & Panel Toggle Buttons (Desktop & Tablet only, located in bottom-right corner) */}
+      <div className="absolute bottom-4 right-4 z-20 hidden md:flex items-center gap-2">
+
+        <button
+          onClick={onToggleVectorEditMode}
+          aria-label={isVectorEditMode ? 'Desactivar modo edición vectorial' : 'Activar modo edición vectorial'}
+          title={isVectorEditMode ? 'Desactivar modo edición vectorial' : 'Modo edición vectorial de accidentes'}
+          className={`w-11 h-11 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+            isVectorEditMode
+              ? 'bg-amber-500 text-white shadow-[0_3px_0_#b45309] ring-2 ring-amber-400 ring-offset-2 dark:ring-offset-slate-900 active:translate-y-0.5'
+              : 'bg-surface-container-lowest dark:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-[0_3px_0_#d3e4fe] dark:shadow-none hover:bg-slate-100 dark:hover:bg-slate-700 active:translate-y-0.5 active:scale-95'
+          }`}
+        >
+          <Pencil className={`w-5 h-5 ${isVectorEditMode ? 'text-white' : 'text-amber-500 dark:text-amber-400'}`} />
+        </button>
+
+      </div>
+
       {/* SVG Map Canvas */}
       <svg
+        ref={svgElementRef}
         viewBox={LAYERED_SPAIN_MAP.viewBox}
         className="w-full h-full transition-transform duration-100 ease-out"
         style={{
@@ -323,7 +358,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
           fill={themeStyles.textPrimary} fontSize="11" fontWeight="bold" opacity="0.6">
           <text x="440" y="295" textAnchor="middle" transform="rotate(-80 440 295)">PORTUGAL</text>
           <text x="820" y="50">FRANCIA</text>
-          <text x="860" y="590">NORTE DE ÁFRICA</text>
+          <text x="820" y="590">NORTE DE ÁFRICA</text>
           <text x="165" y="545">ISLAS CANARIAS</text>
         </g>}
 
@@ -785,12 +820,22 @@ export const SpainMap: React.FC<SpainMapProps> = ({
             </g>
           );
         })()}
+
+        {/* Vector Editing Interactive Overlay */}
+        {isVectorEditMode && editingElement && onUpdateElementGeometry && (
+          <VectorEditOverlay
+            element={editingElement}
+            onUpdateElementGeometry={onUpdateElementGeometry}
+            svgRef={svgElementRef}
+            zoomLevel={zoomLevel}
+          />
+        )}
       </svg>
 
-      {/* Floating Hover Tooltip */}
-      {hoveredElement && layers.showLabels && !blankMode && (
+      {/* Floating Hover Tooltip (Disabled during vector edit mode) */}
+      {hoveredElement && layers.showLabels && !blankMode && !isVectorEditMode && (
         <div
-          className="pointer-events-none absolute bottom-4 right-4 z-30 flex items-center gap-3 bg-slate-900/95 text-white px-4 py-2.5 rounded-xl shadow-xl backdrop-blur-md border border-slate-700 animate-fadeIn"
+          className="pointer-events-none absolute bottom-18 right-4 z-30 flex items-center gap-3 bg-slate-900/95 text-white px-4 py-2.5 rounded-xl shadow-xl backdrop-blur-md border border-slate-700 animate-fadeIn"
         >
           <div className="flex flex-col">
             <span className="text-xs uppercase tracking-wider text-amber-400 font-semibold flex items-center gap-2">

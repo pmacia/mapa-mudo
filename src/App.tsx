@@ -4,7 +4,6 @@
  */
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { GeoElement, GameMode, PlayerStats, CategoryType } from './types/geography';
-import { GEO_ELEMENTS } from './data/geographyData';
 import { SpainMap, MapTheme } from './components/Map/SpainMap';
 import { ChallengeMode } from './components/Quiz/ChallengeMode';
 import { useChallengeSession, ChallengeType } from './hooks/useChallengeSession';
@@ -20,8 +19,30 @@ import { List, X, ChevronDown, ChevronUp } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { MobileBottomNav } from './components/Navigation/MobileBottomNav';
 import { GAME_CONFIG } from './constants/gameConfig';
+import { useCustomElements } from './hooks/useCustomElements';
+import { VectorEditorPanel } from './components/Editor/VectorEditorPanel';
+import { UnsavedChangesModal } from './components/Editor/UnsavedChangesModal';
 const STORAGE_KEY_STATS = 'geoespana_player_stats_v2';
 export default function App() {
+  // Persistent custom elements store with full CRUD
+  const {
+    elements: geoElements,
+    saveElement,
+    deleteElement,
+    duplicateElement,
+    createNewElement,
+    resetToDefaults,
+  } = useCustomElements();
+
+  // Vector Editor State (Desktop & Tablet only)
+  const [isVectorEditMode, setIsVectorEditMode] = useState(false);
+  const [editingElementId, setEditingElementId] = useState<string | null>(null);
+  const [draftElement, setDraftElement] = useState<GeoElement | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isUnsavedModalOpen, setIsUnsavedModalOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+  const [isEditorPanelCollapsed, setIsEditorPanelCollapsed] = useState(false);
+
   // Game mode
   const [currentMode, setCurrentMode] = useState<GameMode>('explorar');
   const [selectedElement, setSelectedElement] = useState<GeoElement | null>(null);
@@ -151,18 +172,204 @@ export default function App() {
       // Ignore
     }
   }, [stats]);
+  // In vector edit mode, the draft geometry replaces the saved element on the map in real time
+  const displayedElements = useMemo(() => {
+    if (!isVectorEditMode || !draftElement) return geoElements;
+    return geoElements.map((e) => (e.id === draftElement.id ? draftElement : e));
+  }, [geoElements, isVectorEditMode, draftElement]);
+
   // Filtered elements active for both Map and Game challenges
   const activeElements = useMemo(() => {
-    return GEO_ELEMENTS.filter((elem) => {
+    return displayedElements.filter((elem) => {
       const cat = elem.category as keyof AccidentFilterState;
       return accidentFilters[cat] === true;
     });
-  }, [accidentFilters]);
+  }, [displayedElements, accidentFilters]);
+
   const activeSelectedElement = activeElements.some((element) => element.id === selectedElement?.id)
     ? selectedElement
     : null;
+
+  // Vector Editor Action Handlers
+  const performSelectElementForEdit = useCallback((elem: GeoElement) => {
+    setEditingElementId(elem.id);
+    setDraftElement({ ...elem });
+    setSelectedElement(elem);
+    setHasUnsavedChanges(false);
+  }, []);
+
+  const handleSelectElementForEdit = useCallback(
+    (elem: GeoElement) => {
+      if (editingElementId === elem.id) return;
+      if (hasUnsavedChanges) {
+        setPendingAction(() => () => performSelectElementForEdit(elem));
+        setIsUnsavedModalOpen(true);
+      } else {
+        performSelectElementForEdit(elem);
+      }
+    },
+    [editingElementId, hasUnsavedChanges, performSelectElementForEdit]
+  );
+
+  const handleToggleVectorEditMode = useCallback(() => {
+    if (isVectorEditMode) {
+      if (hasUnsavedChanges) {
+        setPendingAction(() => () => {
+          setIsVectorEditMode(false);
+          setDraftElement(null);
+          setEditingElementId(null);
+          setHasUnsavedChanges(false);
+          setIsEditorPanelCollapsed(false);
+        });
+        setIsUnsavedModalOpen(true);
+      } else {
+        setIsVectorEditMode(false);
+        setDraftElement(null);
+        setEditingElementId(null);
+        setHasUnsavedChanges(false);
+        setIsEditorPanelCollapsed(false);
+      }
+    } else {
+      setCurrentMode('explorar');
+      setIsVectorEditMode(true);
+      setIsEditorPanelCollapsed(false);
+      const target = selectedElement || activeElements[0] || geoElements[0];
+      if (target) {
+        performSelectElementForEdit(target);
+      }
+    }
+  }, [
+    isVectorEditMode,
+    hasUnsavedChanges,
+    selectedElement,
+    activeElements,
+    geoElements,
+    performSelectElementForEdit,
+  ]);
+
+  const handleExitEditMode = useCallback(() => {
+    if (hasUnsavedChanges) {
+      setPendingAction(() => () => {
+        setIsVectorEditMode(false);
+        setDraftElement(null);
+        setEditingElementId(null);
+        setHasUnsavedChanges(false);
+        setIsEditorPanelCollapsed(false);
+      });
+      setIsUnsavedModalOpen(true);
+    } else {
+      setIsVectorEditMode(false);
+      setDraftElement(null);
+      setEditingElementId(null);
+      setHasUnsavedChanges(false);
+      setIsEditorPanelCollapsed(false);
+    }
+  }, [hasUnsavedChanges]);
+
+  const handleUpdateDraftField = useCallback(
+    <K extends keyof GeoElement>(field: K, value: GeoElement[K]) => {
+      setDraftElement((prev) => (prev ? { ...prev, [field]: value } : null));
+      setHasUnsavedChanges(true);
+    },
+    []
+  );
+
+  const handleUpdateDraftGeometry = useCallback((updated: Partial<GeoElement>) => {
+    setDraftElement((prev) => (prev ? { ...prev, ...updated } : null));
+    setHasUnsavedChanges(true);
+  }, []);
+
+  const handleSaveDraft = useCallback(() => {
+    if (!draftElement) return;
+    saveElement(draftElement);
+    setEditingElementId(draftElement.id);
+    setSelectedElement(draftElement);
+    setHasUnsavedChanges(false);
+    playSound('stamp');
+  }, [draftElement, saveElement]);
+
+  const handleDiscardDraft = useCallback(() => {
+    if (!editingElementId) {
+      setDraftElement(null);
+      setHasUnsavedChanges(false);
+      return;
+    }
+    const original = geoElements.find((e) => e.id === editingElementId);
+    if (original) {
+      setDraftElement({ ...original });
+    }
+    setHasUnsavedChanges(false);
+    playSound('click');
+  }, [editingElementId, geoElements]);
+
+  const handleCreateNewElement = useCallback(() => {
+    const doCreate = () => {
+      const created = createNewElement();
+      performSelectElementForEdit(created);
+      playSound('discover');
+    };
+    if (hasUnsavedChanges) {
+      setPendingAction(() => doCreate);
+      setIsUnsavedModalOpen(true);
+    } else {
+      doCreate();
+    }
+  }, [hasUnsavedChanges, createNewElement, performSelectElementForEdit]);
+
+  const handleDuplicateElement = useCallback(
+    (elem: GeoElement) => {
+      const doDuplicate = () => {
+        const cloned = duplicateElement(elem);
+        performSelectElementForEdit(cloned);
+        playSound('discover');
+      };
+      if (hasUnsavedChanges) {
+        setPendingAction(() => doDuplicate);
+        setIsUnsavedModalOpen(true);
+      } else {
+        doDuplicate();
+      }
+    },
+    [hasUnsavedChanges, duplicateElement, performSelectElementForEdit]
+  );
+
+  const handleDeleteElement = useCallback(
+    (elem: GeoElement) => {
+      if (
+        window.confirm(
+          `¿Estás seguro de que deseas eliminar "${elem.name}"? Esta acción no se puede deshacer.`
+        )
+      ) {
+        deleteElement(elem.id);
+        setDraftElement(null);
+        setEditingElementId(null);
+        setSelectedElement(null);
+        setHasUnsavedChanges(false);
+        playSound('click');
+      }
+    },
+    [deleteElement]
+  );
+
   // Handle mode changes
   const handleModeChange = (newMode: GameMode) => {
+    if (isVectorEditMode && hasUnsavedChanges) {
+      setPendingAction(() => () => {
+        setIsVectorEditMode(false);
+        setDraftElement(null);
+        setEditingElementId(null);
+        setHasUnsavedChanges(false);
+        setCurrentMode(newMode);
+      });
+      setIsUnsavedModalOpen(true);
+      return;
+    }
+    if (isVectorEditMode) {
+      setIsVectorEditMode(false);
+      setDraftElement(null);
+      setEditingElementId(null);
+      setHasUnsavedChanges(false);
+    }
     setCurrentMode(newMode);
     setSelectedElement(null);
     setTargetHighlightId(null);
@@ -315,7 +522,7 @@ export default function App() {
     }
     const newVisited = [...currentVisited, element.id];
     const earnedXp = GAME_CONFIG.POINTS.ATLAS_DISCOVERY_XP;
-    const isCompleted = newVisited.length >= GEO_ELEMENTS.length;
+    const isCompleted = newVisited.length >= geoElements.length;
     if (isCompleted) {
       playSound('stamp');
     } else {
@@ -353,6 +560,10 @@ export default function App() {
     playSound('click');
   };
   const handleMapElementClick = (element: GeoElement) => {
+    if (isVectorEditMode) {
+      handleSelectElementForEdit(element);
+      return;
+    }
     if (currentMode === 'explorar') {
       setSelectedElement(element);
       handleVisitAtlasElement(element);
@@ -435,6 +646,13 @@ export default function App() {
         isCollapsed={isHeaderCollapsed}
         onToggleCollapse={() => setIsHeaderCollapsed((prev) => !prev)}
         onSelectElement={handleMapElementClick}
+        isVectorEditMode={isVectorEditMode}
+        onSaveVectorEdit={handleSaveDraft}
+        onCancelVectorEdit={handleExitEditMode}
+        hasUnsavedChanges={hasUnsavedChanges}
+        editingElementName={draftElement?.name}
+        isEditorPanelCollapsed={isEditorPanelCollapsed}
+        onToggleEditorPanelCollapse={() => setIsEditorPanelCollapsed(prev => !prev)}
       />
       {/* Main App Container */}
       <main
@@ -442,11 +660,17 @@ export default function App() {
         className="flex-1 w-full max-w-[1720px] mx-auto px-2.5 sm:px-6 lg:px-8 py-2 sm:py-5 pb-20 sm:pb-28 lg:pb-8 transition-all duration-300"
       >
         {/* Central Workspace: Real Map + Companion Dock */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 sm:gap-4 lg:gap-6 items-start">
-          {/* Main Map Column (Full width on mobile, 8 columns on desktop) */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-2 sm:gap-4 lg:gap-6 items-start relative">
+          {/* Main Map Column (Full width on mobile, 7/8 columns on tablet & desktop, or full 12 columns if collapsed) */}
           <div
-            className={`flex flex-col ${
-              currentMode === 'explorar' ? 'lg:col-span-7 xl:col-span-8' : 'lg:col-span-8 xl:col-span-8'
+            className={`flex flex-col transition-all duration-300 ease-in-out ${
+              isVectorEditMode
+                ? isEditorPanelCollapsed
+                  ? 'col-span-12'
+                  : 'md:col-span-7 lg:col-span-7 xl:col-span-8'
+                : currentMode === 'explorar'
+                ? 'md:col-span-7 lg:col-span-7 xl:col-span-8'
+                : 'md:col-span-7 lg:col-span-8 xl:col-span-8'
             }`}
           >
             <div
@@ -454,11 +678,11 @@ export default function App() {
               className="w-full aspect-[1000/720] relative rounded-DEFAULT lg:rounded-2xl overflow-hidden shadow-[0_4px_0_#cbd5e1] dark:shadow-none border border-slate-200 dark:border-slate-800 transition-all duration-300 bg-map-water-light"
             >
               <SpainMap
-                elements={GEO_ELEMENTS}
+                elements={displayedElements}
                 layers={accidentFilters}
                 theme={theme}
-                selectedElement={selectedElement}
-                onSelectElement={setSelectedElement}
+                selectedElement={isVectorEditMode ? draftElement : selectedElement}
+                onSelectElement={isVectorEditMode ? handleSelectElementForEdit : setSelectedElement}
                 targetHighlightId={activeTargetHighlightId}
                 feedbackElementId={activeFeedbackElementId}
                 feedbackStatus={activeFeedbackStatus}
@@ -470,16 +694,41 @@ export default function App() {
                 currentMode={currentMode}
                 isInteractive={true}
                 blankMode={!accidentFilters.showLabels}
+                isVectorEditMode={isVectorEditMode}
+                onToggleVectorEditMode={handleToggleVectorEditMode}
+                editingElement={isVectorEditMode ? draftElement : null}
+                onUpdateElementGeometry={handleUpdateDraftGeometry}
+                isEditorPanelCollapsed={isEditorPanelCollapsed}
+                onToggleEditorPanelCollapse={() => setIsEditorPanelCollapsed((prev) => !prev)}
               />
             </div>
           </div>
-          {/* Right Column (Desktop sticky companion dock with independent scroll) */}
-          <div
-            className={`hidden lg:flex flex-col ${
-              currentMode === 'explorar' ? 'lg:col-span-5 xl:col-span-4' : 'lg:col-span-4 xl:col-span-4'
-            } lg:sticky lg:top-20 transition-all duration-300 max-h-[calc(100vh-6.5rem)]`}
-          >
-            {currentMode === 'explorar' ? (
+          {/* Right Column (Tablet and desktop sticky companion dock with independent scroll) */}
+          {(!isVectorEditMode || !isEditorPanelCollapsed) && (
+            <div
+              className={`hidden md:flex flex-col transition-all duration-300 ease-in-out animate-slideInRight ${
+                isVectorEditMode || currentMode === 'explorar'
+                  ? 'md:col-span-5 lg:col-span-5 xl:col-span-4'
+                  : 'md:col-span-5 lg:col-span-4 xl:col-span-4'
+              } md:sticky md:top-20 max-h-[calc(100vh-6.5rem)]`}
+            >
+              {isVectorEditMode ? (
+                <VectorEditorPanel
+                  elements={geoElements}
+                  selectedElement={selectedElement}
+                  draftElement={draftElement}
+                  hasUnsavedChanges={hasUnsavedChanges}
+                  onSelectElement={handleSelectElementForEdit}
+                  onUpdateDraftField={handleUpdateDraftField}
+                  onSave={handleSaveDraft}
+                  onDiscard={handleDiscardDraft}
+                  onCreateNew={handleCreateNewElement}
+                  onDuplicate={handleDuplicateElement}
+                  onDelete={handleDeleteElement}
+                  onExitEditMode={handleExitEditMode}
+                  onToggleCollapse={() => setIsEditorPanelCollapsed(true)}
+                />
+              ) : currentMode === 'explorar' ? (
               <ExplorePanel
                 className="w-full max-h-[calc(100vh-6.5rem)]"
                 elements={activeElements}
@@ -507,6 +756,7 @@ export default function App() {
               />
             ) : null}
           </div>
+        )}
   
         {/* Portrait exploration: always visible, with two positions. */}
         {isPortraitExplore && currentMode === 'explorar' && (
@@ -652,7 +902,7 @@ export default function App() {
         onToggleFilter={handleToggleAccidentFilter}
         onApplyPreset={handleApplyPreset}
         activeCount={activeElements.length}
-        totalCount={GEO_ELEMENTS.length}
+        totalCount={geoElements.length}
       />
       {/* Achievements Modal */}
       <AchievementsModal
@@ -678,6 +928,31 @@ export default function App() {
         isOpen={isManualOpen}
         onClose={() => setIsManualOpen(false)}
         onSelectMode={(mode) => handleModeChange(mode)}
+      />
+      {/* Unsaved Changes Confirmation Modal */}
+      <UnsavedChangesModal
+        isOpen={isUnsavedModalOpen}
+        elementName={draftElement?.name || ''}
+        onSaveAndProceed={() => {
+          handleSaveDraft();
+          if (pendingAction) {
+            pendingAction();
+            setPendingAction(null);
+          }
+          setIsUnsavedModalOpen(false);
+        }}
+        onDiscardAndProceed={() => {
+          handleDiscardDraft();
+          if (pendingAction) {
+            pendingAction();
+            setPendingAction(null);
+          }
+          setIsUnsavedModalOpen(false);
+        }}
+        onCancel={() => {
+          setPendingAction(null);
+          setIsUnsavedModalOpen(false);
+        }}
       />
     </div>
   );

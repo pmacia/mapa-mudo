@@ -21,7 +21,8 @@ import {
   Search,
   Flame,
   GraduationCap,
-  Zap
+  Zap,
+  Pencil
 } from 'lucide-react';
 import { GAME_CONFIG } from '../../constants/gameConfig';
 import { GEO_ELEMENTS } from '../../data/geographyData';
@@ -579,6 +580,16 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
                   </span>
                   <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                     El panel del Atlas incorpora un selector compacto de categoría junto a la caja de búsqueda con botón de reseteo rápido para filtrar al instante por ríos, cordilleras o islas sin saturar la pantalla.
+                  </p>
+                </div>
+
+                <div className="md:col-span-2 p-3.5 bg-amber-50/90 dark:bg-amber-950/40 rounded-2xl border border-amber-300 dark:border-amber-800">
+                  <span className="font-extrabold text-xs text-amber-950 dark:text-amber-200 flex items-center gap-2 mb-1">
+                    <Pencil className="w-4 h-4 text-amber-600" />
+                    Modo Edición Vectorial de Accidentes (Escritorio y Tablet)
+                  </span>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                    Accede pulsando el botón con icono de lápiz situado en la esquina inferior izquierda del mapa. Permite seleccionar cualquier polígono o punto geográfico para desplazarlo, deformar sus vértices arrastrándolos, insertar nuevos puntos, eliminar vértices, rotar la figura, editar todos sus datos didácticos, duplicar, eliminar o crear nuevos accidentes geográficos con guardado persistente.
                   </p>
                 </div>
               </div>

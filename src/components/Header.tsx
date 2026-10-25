@@ -20,7 +20,11 @@ import {
   Search, 
   X,
   Palette,
-  Check
+  Check,
+  Save,
+  Pencil,
+  PanelRightClose,
+  PanelRightOpen
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -40,6 +44,14 @@ interface HeaderProps {
   onToggleCollapse: () => void;
   onSearchSelect?: (query: string) => void;
   onSelectElement?: (element: GeoElement) => void;
+  // Vector Edit Mode Props
+  isVectorEditMode?: boolean;
+  isEditorPanelCollapsed?: boolean;
+  onToggleEditorPanelCollapse?: () => void;
+  onSaveVectorEdit?: () => void;
+  onCancelVectorEdit?: () => void;
+  hasUnsavedChanges?: boolean;
+  editingElementName?: string;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -59,6 +71,13 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleCollapse,
   onSearchSelect,
   onSelectElement,
+  isVectorEditMode = false,
+  isEditorPanelCollapsed = false,
+  onToggleEditorPanelCollapse,
+  onSaveVectorEdit,
+  onCancelVectorEdit,
+  hasUnsavedChanges = false,
+  editingElementName,
 }) => {
   const [themeDropdownOpen, setThemeDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -107,6 +126,89 @@ export const Header: React.FC<HeaderProps> = ({
   const currentXp = stats.xp || 0;
   const xpInCurrentLevel = currentXp % 500;
   const levelProgressPercent = Math.min(100, Math.round((xpInCurrentLevel / 500) * 100));
+
+  // In Vector Edit Mode: Hide all standard icons and show ONLY Save and Cancel
+  if (isVectorEditMode) {
+    return (
+      <header className="sticky top-0 z-40 w-full bg-surface-container-low/95 dark:bg-slate-900/95 backdrop-blur-xl border-b-2 border-amber-400 dark:border-amber-500/60 shadow-sm transition-all duration-200">
+        <div className="w-full px-3 sm:px-6 lg:px-8 py-2.5 max-w-[1720px] mx-auto flex items-center justify-between gap-3">
+          {/* Brand & Mode Identification */}
+          <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-md shadow-amber-500/20 shrink-0">
+              <Pencil className="w-5 h-5" />
+            </div>
+            <div className="flex flex-col min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-headline-md text-base sm:text-lg text-amber-600 dark:text-amber-400 font-black tracking-tight">
+                  Modo Edición Vectorial
+                </span>
+                {editingElementName && (
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-200 font-bold border border-amber-300 dark:border-amber-800 truncate max-w-xs">
+                    {editingElementName}
+                  </span>
+                )}
+              </div>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium hidden sm:inline">
+                Edita vértices, polígonos, rotación y fichas de accidentes
+              </span>
+            </div>
+          </div>
+
+          {/* Only Guardar and Cancelar buttons */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <button
+              onClick={onSaveVectorEdit}
+              disabled={!hasUnsavedChanges}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                hasUnsavedChanges
+                  ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-md shadow-amber-500/30 ring-2 ring-amber-400/60 active:scale-95 animate-pulse'
+                  : 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed opacity-60'
+              }`}
+              title={hasUnsavedChanges ? 'Guardar cambios del accidente' : 'Sin cambios pendientes'}
+              aria-label="Guardar cambios"
+            >
+              <Save className="w-4 h-4" />
+              <span>Guardar</span>
+            </button>
+
+            <button
+              onClick={onCancelVectorEdit}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-700 dark:text-slate-200 hover:text-rose-600 dark:hover:text-rose-400 border border-slate-300 dark:border-slate-700 hover:border-rose-300 text-xs font-bold transition-all shadow-sm active:scale-95 cursor-pointer"
+              title="Cancelar y salir de edición"
+              aria-label="Cancelar modo edición"
+            >
+              <X className="w-4 h-4" />
+              <span>Salir</span>
+            </button>
+
+
+
+
+
+
+            {/* El estado del panel se mantiene en App. */}
+            {onToggleEditorPanelCollapse && (
+              <button
+                type="button"
+                onClick={onToggleEditorPanelCollapse}
+                aria-expanded={!isEditorPanelCollapsed}
+                aria-label={isEditorPanelCollapsed ? 'Mostrar panel lateral de edición' : 'Ocultar panel lateral de edición y ampliar el mapa'}
+                title={isEditorPanelCollapsed ? 'Mostrar panel de edición' : 'Ocultar panel y ampliar el mapa'}
+                className="w-11 h-11 shrink-0 rounded-full bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-[0_3px_0_#cbd5e1] dark:shadow-none hover:bg-slate-100 dark:hover:bg-slate-700 active:translate-y-0.5 active:scale-95 transition-all flex items-center justify-center cursor-pointer border border-slate-200 dark:border-slate-700"
+              >
+                {isEditorPanelCollapsed ? (
+                  <PanelRightOpen className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                ) : (
+                  <PanelRightClose className="w-5 h-5 text-slate-600 dark:text-slate-300" />
+                )}
+              </button>
+            )}
+
+          </div>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <header className="sticky top-0 z-40 w-full bg-surface-container-low/95 dark:bg-slate-900/95 backdrop-blur-xl border-b border-outline-variant/40 dark:border-slate-800 shadow-sm transition-all duration-200">
