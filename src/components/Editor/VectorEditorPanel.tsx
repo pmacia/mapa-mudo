@@ -317,7 +317,7 @@ export const VectorEditorPanel: React.FC<VectorEditorPanelProps> = ({
           )}
 
           {showCategoryMenu && (
-            <div className="absolute right-0 mt-1 w-44 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-30 py-1 overflow-hidden animate-fadeIn">
+            <div className="absolute right-0 mt-1 w-44 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded shadow-xl z-30 py-1 overflow-hidden animate-fadeIn">
               {CATEGORIES.map((cat) => (
                 <button
                   key={cat.id}
@@ -757,7 +757,7 @@ export const VectorEditorPanel: React.FC<VectorEditorPanelProps> = ({
                     rows={4}
                     value={draftElement.svgPath}
                     onChange={(e) => onUpdateDraftField('svgPath', e.target.value)}
-                    className="w-full px-2.5 py-1.5 bg-slate-900 text-emerald-300 font-mono text-[10px] rounded-lg border border-slate-700 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                    className="w-full px-2.5 py-1.5 bg-slate-900 text-emerald-300 font-mono text-[10px] rounded border border-slate-700 focus:outline-none focus:ring-1 focus:ring-amber-500"
                   />
                 )}
               </div>
