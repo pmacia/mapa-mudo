@@ -678,18 +678,18 @@ export default function App() {
       ref={workspaceRef}
         className="flex-1 w-full max-w-[1720px] mx-auto px-2.5 sm:px-6 lg:px-8 py-2 sm:py-5 pb-20 sm:pb-28 lg:pb-8 transition-all duration-300"
       >
-        {/* Central Workspace: Real Map + Companion Dock */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-2 sm:gap-4 lg:gap-6 items-start relative">
-          {/* Main Map Column (Full width on mobile, 7/8 columns on tablet & desktop, or full 12 columns if collapsed) */}
+        {/* Switch the entire workspace at lg (1024px), matching isDesktop and mobile navigation. */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 sm:gap-4 lg:gap-6 items-start relative">
+          {/* Main Map Column (Full width below lg, 7/8 columns on desktop, or full 12 columns if collapsed) */}
           <div
             className={`flex flex-col transition-all duration-300 ease-in-out ${
               isVectorEditMode
                 ? isEditorPanelCollapsed
-                  ? 'col-span-12'
-                  : 'md:col-span-7 lg:col-span-7 xl:col-span-8'
+                  ? 'lg:col-span-12'
+                  : 'lg:col-span-7 xl:col-span-8'
                 : currentMode === 'explorar'
-                ? 'md:col-span-7 lg:col-span-7 xl:col-span-8'
-                : 'md:col-span-7 lg:col-span-8 xl:col-span-8'
+                ? 'lg:col-span-7 xl:col-span-8'
+                : 'lg:col-span-8 xl:col-span-8'
             }`}
           >
             <div
@@ -722,14 +722,14 @@ export default function App() {
               />
             </div>
           </div>
-          {/* Right Column (Tablet and desktop sticky companion dock with independent scroll) */}
+          {/* Right Column (Desktop sticky companion dock with independent scroll) */}
           {(!isVectorEditMode || !isEditorPanelCollapsed) && (
             <div
-              className={`hidden md:flex flex-col transition-all duration-300 ease-in-out animate-slideInRight ${
+              className={`hidden lg:flex flex-col transition-all duration-300 ease-in-out animate-slideInRight ${
                 isVectorEditMode || currentMode === 'explorar'
-                  ? 'md:col-span-5 lg:col-span-5 xl:col-span-4'
-                  : 'md:col-span-5 lg:col-span-4 xl:col-span-4'
-              } md:sticky md:top-20 max-h-[calc(100vh-6.5rem)]`}
+                  ? 'lg:col-span-5 xl:col-span-4'
+                  : 'lg:col-span-4 xl:col-span-4'
+              } lg:sticky lg:top-20 max-h-[calc(100vh-6.5rem)]`}
             >
               {isVectorEditMode ? (
                 <VectorEditorPanel
