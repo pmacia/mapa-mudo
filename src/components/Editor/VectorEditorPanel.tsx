@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   GeoElement,
   CategoryType,
@@ -32,6 +32,7 @@ import {
   FileDown,
   PanelRightClose,
   ChevronRight,
+  HelpCircle,
 } from 'lucide-react';
 import {
   parseSvgPathToPoints,
@@ -90,6 +91,21 @@ export const VectorEditorPanel: React.FC<VectorEditorPanelProps> = ({
   const [activeTab, setActiveTab] = useState<'info' | 'geometry' | 'list'>('info');
   const [saveSuccessMsg, setSaveSuccessMsg] = useState(false);
   const [showRawPath, setShowRawPath] = useState(false);
+  const [showShortcutHelp, setShowShortcutHelp] = useState(false);
+  const shortcutButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!showShortcutHelp) return;
+    const closeHelp = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      setShowShortcutHelp(false);
+      shortcutButtonRef.current?.focus();
+    };
+    window.addEventListener('keydown', closeHelp, true);
+    return () => window.removeEventListener('keydown', closeHelp, true);
+  }, [showShortcutHelp]);
 
   // Filter elements by search query and category
   const filteredElements = useMemo(() => {
@@ -190,8 +206,38 @@ export const VectorEditorPanel: React.FC<VectorEditorPanelProps> = ({
           </div>
         </div>
 
+        <button
+          ref={shortcutButtonRef}
+          type="button"
+          onClick={() => setShowShortcutHelp(open => !open)}
+          aria-label="Ayuda de atajos de edición"
+          aria-expanded={showShortcutHelp}
+          aria-controls="editor-shortcut-help"
+          title="Atajos de teclado"
+          className="ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/20 hover:bg-white/30 focus-visible:outline-2 focus-visible:outline-white"
+        >
+          <HelpCircle className="h-5 w-5" />
+        </button>
       </div>
 
+      {showShortcutHelp && (
+        <section id="editor-shortcut-help" aria-labelledby="editor-shortcut-title" className="shrink-0 max-h-[45vh] overflow-y-auto border-b border-amber-200 bg-amber-50 p-3.5 text-xs text-slate-700 dark:border-amber-900 dark:bg-slate-800 dark:text-slate-200">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <h3 id="editor-shortcut-title" className="font-bold">Atajos de edición</h3>
+            <button type="button" aria-label="Cerrar ayuda de atajos" onClick={() => { setShowShortcutHelp(false); shortcutButtonRef.current?.focus(); }} className="rounded p-1 hover:bg-amber-100 dark:hover:bg-slate-700"><X className="h-4 w-4" /></button>
+          </div>
+          <dl className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-2">
+            {[
+              ['Guardar', 'Ctrl + S'], ['Nuevo accidente', 'Ctrl + N'],
+              ['Duplicar', 'Ctrl + D'], ['Copiar accidente', 'Ctrl + C'],
+              ['Pegar accidente', 'Ctrl + V'], ['Salir del editor', 'Esc'],
+              ['Insertar vértice', '+'], ['Borrar vértice', '− / Supr'],
+            ].map(([label, keys]) => <React.Fragment key={label}><dt>{label}</dt><dd><kbd className="rounded border border-amber-200 bg-white px-1.5 py-0.5 font-mono dark:border-slate-600 dark:bg-slate-900">{keys}</kbd></dd></React.Fragment>)}
+          </dl>
+          <p className="mt-3">En Mac, usa Cmd en lugar de Ctrl. Copiar y pegar accidentes funciona dentro de este editor, fuera de los campos de texto. Se pega una copia desplazada.</p>
+          <p className="mt-2">Selecciona un vértice para usar +, − o Supr. Doble clic también lo elimina. Esc cierra primero esta ayuda; fuera de los campos, sale del editor y avisa si hay cambios pendientes.</p>
+        </section>
+      )}
       {/* QUICK ACTIONS TOOLBAR */}
       <div className="p-2.5 bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-1.5 shrink-0 flex-wrap">
         <div className="flex items-center gap-1.5">
@@ -199,7 +245,7 @@ export const VectorEditorPanel: React.FC<VectorEditorPanelProps> = ({
             type="button"
             onClick={onCreateNew}
             className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-white text-xs font-bold shadow-sm transition-all cursor-pointer"
-            title="Crear un nuevo accidente geográfico"
+            title="Crear un nuevo accidente geográfico (Ctrl/Cmd+N)"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Nuevo</span>
@@ -211,7 +257,7 @@ export const VectorEditorPanel: React.FC<VectorEditorPanelProps> = ({
                 type="button"
                 onClick={() => onDuplicate(draftElement)}
                 className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-white dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 text-xs font-medium transition-colors cursor-pointer"
-                title="Duplicar accidente actual"
+                title="Duplicar accidente actual (Ctrl/Cmd+D)"
               >
                 <Copy className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                 <span className="hidden sm:inline">Duplicar</span>

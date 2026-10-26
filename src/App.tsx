@@ -1,3 +1,4 @@
+import { geometryForCategory } from './utils/vectorEditorUtils';
 import { downloadGeographyConfiguration } from './utils/exportGeography';
 /**
  * @license
@@ -43,6 +44,7 @@ export default function App() {
   const [isUnsavedModalOpen, setIsUnsavedModalOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
   const [isEditorPanelCollapsed, setIsEditorPanelCollapsed] = useState(false);
+  const copiedElementRef = useRef<GeoElement | null>(null);
 
   // Game mode
   const [currentMode, setCurrentMode] = useState<GameMode>('explorar');
@@ -269,7 +271,12 @@ export default function App() {
 
   const handleUpdateDraftField = useCallback(
     <K extends keyof GeoElement>(field: K, value: GeoElement[K]) => {
-      setDraftElement((prev) => (prev ? { ...prev, [field]: value } : null));
+      setDraftElement((prev) => {
+        if (!prev) return null;
+        return field === 'category'
+          ? { ...prev, ...geometryForCategory(prev, value as GeoElement['category']), category: value as GeoElement['category'] }
+          : { ...prev, [field]: value };
+      });
       setHasUnsavedChanges(true);
     },
     []
@@ -368,6 +375,39 @@ export default function App() {
     },
     [deleteElement]
   );
+
+  useEffect(() => {
+    if (!isVectorEditMode) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || event.altKey || event.shiftKey || event.isComposing) return;
+      const key = event.key.toLowerCase();
+      const command = event.ctrlKey || event.metaKey;
+      const target = event.target;
+      const typing = target instanceof Element && !!target.closest('input, textarea, select, [contenteditable]:not([contenteditable="false"])');
+      const modalOpen = isUnsavedModalOpen || !!document.querySelector('[role="dialog"][aria-modal="true"]');
+      if (key === 'escape' && !command) {
+        if (typing || modalOpen) return;
+        event.preventDefault();
+        if (!event.repeat) handleExitEditMode();
+        return;
+      }
+      if (!command || !['s', 'n', 'd', 'c', 'v'].includes(key)) return;
+      // Text fields and selected page text retain native copy/paste behavior.
+      if (typing && (key === 'c' || key === 'v')) return;
+      if (key === 'c' && window.getSelection()?.toString()) return;
+      if (key === 'c' && !draftElement) return;
+      if (key === 'v' && !copiedElementRef.current) return;
+      event.preventDefault();
+      if (event.repeat || modalOpen) return;
+      if (key === 's') handleSaveDraft();
+      if (key === 'n') handleCreateNewElement();
+      if (key === 'd' && draftElement) handleDuplicateElement(draftElement);
+      if (key === 'c' && draftElement) copiedElementRef.current = structuredClone(draftElement);
+      if (key === 'v' && copiedElementRef.current) handleDuplicateElement(copiedElementRef.current);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isVectorEditMode, isUnsavedModalOpen, draftElement, handleSaveDraft, handleExitEditMode, handleCreateNewElement, handleDuplicateElement]);
 
   // Handle mode changes
   const handleModeChange = (newMode: GameMode) => {

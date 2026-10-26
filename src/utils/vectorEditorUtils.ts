@@ -1,3 +1,5 @@
+import type { CategoryType, GeoElement } from '../types/geography';
+
 export interface Point2D {
   x: number;
   y: number;
@@ -203,4 +205,17 @@ export function createDefaultPolyline(centerX = 600, centerY = 350, length = 80)
     { x: centerX + length / 6, y: centerY - 10 },
     { x: centerX + length / 2, y: centerY + 15 },
   ];
+}
+
+/** Match the map's category renderers, keeping compatible geometry intact. */
+export function geometryForCategory(
+  element: Pick<GeoElement, 'mapX' | 'mapY' | 'svgType' | 'svgPath'>,
+  category: CategoryType
+): Pick<GeoElement, 'mapX' | 'mapY' | 'svgType' | 'svgPath'> {
+  const svgType = category === 'rios' ? 'polyline' : category === 'montanas' ? 'polygon' : 'point';
+  const { mapX, mapY } = element;
+  if (svgType === element.svgType) return { ...element };
+  const points = svgType === 'polygon' ? createDefaultPolygon(mapX, mapY)
+    : svgType === 'polyline' ? createDefaultPolyline(mapX, mapY) : [];
+  return { mapX, mapY, svgType, svgPath: points.length ? pointsToSvgPath(points, svgType === 'polygon') : undefined };
 }

@@ -48,7 +48,7 @@ export const UnsavedChangesModal: React.FC<UnsavedChangesModalProps> = ({
           </div>
           <button
             onClick={onCancel}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg transition-colors"
+            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-2xl transition-colors"
             aria-label="Cerrar aviso"
           >
             <X className="w-5 h-5" />
@@ -59,14 +59,14 @@ export const UnsavedChangesModal: React.FC<UnsavedChangesModalProps> = ({
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold text-sm transition-colors cursor-pointer"
+            className="px-4 py-2.5 rounded-2xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold text-sm transition-colors cursor-pointer"
           >
             Cancelar
           </button>
           <button
             type="button"
             onClick={onDiscardAndProceed}
-            className="px-4 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-950/70 border border-rose-200 dark:border-rose-900 font-semibold text-sm flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+            className="px-4 py-2.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-950/70 border border-rose-200 dark:border-rose-900 font-semibold text-sm flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
           >
             <Trash2 className="w-4 h-4" />
             Descartar cambios
@@ -74,7 +74,7 @@ export const UnsavedChangesModal: React.FC<UnsavedChangesModalProps> = ({
           <button
             type="button"
             onClick={onSaveAndProceed}
-            className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm shadow-md shadow-amber-500/20 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+            className="px-5 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm shadow-md shadow-amber-500/20 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
           >
             <Save className="w-4 h-4" />
             Guardar y continuar

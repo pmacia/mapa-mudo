@@ -241,20 +241,20 @@ export const ACCIDENTS_VECTOR_DATA = {
       "y": 74.371
     },
     "estrecho-de-gibraltar": {
-      "x": 512.33,
-      "y": 542.446
+      "x": 498.6,
+      "y": 533.42
     },
     "oceano-atlantico": {
-      "x": 266.42,
-      "y": 296.72
+      "x": 283.69,
+      "y": 233.2
     },
     "mar-cantabrico": {
       "x": 571.844,
       "y": 19.692
     },
     "mar-mediterraneo": {
-      "x": 948.37,
-      "y": 426.91
+      "x": 926.86,
+      "y": 423.42
     },
     "isla-mallorca": {
       "x": 944.81,

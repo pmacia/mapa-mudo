@@ -824,6 +824,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
         {/* Vector Editing Interactive Overlay */}
         {isVectorEditMode && editingElement && onUpdateElementGeometry && (
           <VectorEditOverlay
+            key={`${editingElement.id}-${editingElement.svgType}`}
             element={editingElement}
             onUpdateElementGeometry={onUpdateElementGeometry}
             svgRef={svgElementRef}

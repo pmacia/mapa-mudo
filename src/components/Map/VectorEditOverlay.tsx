@@ -66,6 +66,42 @@ export const VectorEditOverlay: React.FC<VectorEditOverlayProps> = ({
   const [activeDrag, setActiveDrag] = useState<DragMode | null>(null);
   const [selectedVertexIndex, setSelectedVertexIndex] = useState<number | null>(null);
 
+  useEffect(() => {
+    setSelectedVertexIndex(null);
+    setActiveDrag(null);
+  }, [element.id, element.svgType]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target;
+      if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey || event.isComposing ||
+          (target instanceof HTMLElement && target.closest('input, textarea, select, [contenteditable="true"], [role="dialog"]')) ||
+          document.querySelector('[role="dialog"][aria-modal="true"]') ||
+          isPoint || activeDrag || selectedVertexIndex === null || !points[selectedVertexIndex]) return;
+      if (event.key !== '+' && event.key !== '-' && event.key !== 'Delete') return;
+      event.preventDefault();
+      if (event.repeat) return;
+      let nextPoints: Point2D[];
+      if (event.key === '+') {
+        const nextIndex = selectedVertexIndex === points.length - 1
+          ? (isPolygon ? 0 : selectedVertexIndex - 1) : selectedVertexIndex + 1;
+        const a = points[selectedVertexIndex], b = points[nextIndex];
+        const insertionIndex = !isPolygon && selectedVertexIndex === points.length - 1
+          ? selectedVertexIndex - 1 : selectedVertexIndex;
+        nextPoints = insertPointAt(points, insertionIndex, { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+        setSelectedVertexIndex(insertionIndex + 1);
+      } else {
+        if (points.length <= (isPolygon ? 3 : 2)) return;
+        nextPoints = removePointAt(points, selectedVertexIndex);
+        setSelectedVertexIndex(Math.min(selectedVertexIndex, nextPoints.length - 1));
+      }
+      const center = calculateCentroid(nextPoints);
+      onUpdateElementGeometry({ svgPath: pointsToSvgPath(nextPoints, isPolygon), mapX: center.x, mapY: center.y });
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [points, isPoint, isPolygon, activeDrag, selectedVertexIndex, onUpdateElementGeometry]);
+
   // Helper to convert screen coordinates to SVG coordinates
   const getSvgCoordinates = useCallback(
     (clientX: number, clientY: number): Point2D => {
