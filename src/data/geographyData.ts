@@ -4,6 +4,36 @@ import { ACCIDENTS_VECTOR_DATA } from './geographyAccidentsData';
 
 export const GEO_ELEMENTS: GeoElement[] = [
 {
+  "id": "cordillera-cantabrica-copia-mvp4qkp2",
+  "name": "Cordillera Cantábrica",
+  "category": "montanas",
+  "subCategory": "Sistema Montañoso",
+  "difficulty": "facil",
+  "elevationOrLength": "480 km de longitud",
+  "svgType": "polygon",
+  "description": "Gran barrera montañosa paralela a la costa norte que separa la Meseta de la cornisa cantábrica. Alberga los Picos de Europa.",
+  "curiosity": "Es el refugio natural del oso pardo cantábrico y del urogallo, especies emblemáticas protegidas."
+,
+  mapX: ACCIDENTS_VECTOR_DATA.rangeCenters["cordillera-cantabrica-copia-mvp4qkp2"].x,
+  mapY: ACCIDENTS_VECTOR_DATA.rangeCenters["cordillera-cantabrica-copia-mvp4qkp2"].y,
+  svgPath: ACCIDENTS_VECTOR_DATA.mountainRanges["cordillera-cantabrica-copia-mvp4qkp2"]
+},
+{
+  "id": "sistema-central-copia-mvp4o3p6",
+  "name": "Sistema Central",
+  "category": "montanas",
+  "subCategory": "Sistema Montañoso Interior",
+  "difficulty": "facil",
+  "elevationOrLength": "600 km de longitud",
+  "svgType": "polygon",
+  "description": "Eje montañoso interior que divide la Meseta Central en dos mitades: la Submeseta Norte y la Submeseta Sur (sierras de Gata, Gredos y Guadarrama).",
+  "curiosity": "Su cumbre máxima es el Pico Almanzor (2.592 m) en la Sierra de Gredos, esculpido por antiguos circos glaciares."
+,
+  mapX: ACCIDENTS_VECTOR_DATA.rangeCenters["sistema-central-copia-mvp4o3p6"].x,
+  mapY: ACCIDENTS_VECTOR_DATA.rangeCenters["sistema-central-copia-mvp4o3p6"].y,
+  svgPath: ACCIDENTS_VECTOR_DATA.mountainRanges["sistema-central-copia-mvp4o3p6"]
+},
+{
   "id": "macizo-galaico",
   "name": "Macizo Galaico",
   "category": "montanas",
@@ -17,21 +47,6 @@ export const GEO_ELEMENTS: GeoElement[] = [
   mapX: ACCIDENTS_VECTOR_DATA.rangeCenters["macizo-galaico"].x,
   mapY: ACCIDENTS_VECTOR_DATA.rangeCenters["macizo-galaico"].y,
   svgPath: ACCIDENTS_VECTOR_DATA.mountainRanges["macizo-galaico"]
-},
-{
-  "id": "cordillera-cantabrica",
-  "name": "Cordillera Cantábrica",
-  "category": "montanas",
-  "subCategory": "Sistema Montañoso",
-  "difficulty": "facil",
-  "elevationOrLength": "480 km de longitud",
-  "svgType": "polygon",
-  "description": "Gran barrera montañosa paralela a la costa norte que separa la Meseta de la cornisa cantábrica. Alberga los Picos de Europa.",
-  "curiosity": "Es el refugio natural del oso pardo cantábrico y del urogallo, especies emblemáticas protegidas."
-,
-  mapX: ACCIDENTS_VECTOR_DATA.rangeCenters["cordillera-cantabrica"].x,
-  mapY: ACCIDENTS_VECTOR_DATA.rangeCenters["cordillera-cantabrica"].y,
-  svgPath: ACCIDENTS_VECTOR_DATA.mountainRanges["cordillera-cantabrica"]
 },
 {
   "id": "montes-leon",
@@ -107,21 +122,6 @@ export const GEO_ELEMENTS: GeoElement[] = [
   mapX: ACCIDENTS_VECTOR_DATA.rangeCenters["sistema-iberico"].x,
   mapY: ACCIDENTS_VECTOR_DATA.rangeCenters["sistema-iberico"].y,
   svgPath: ACCIDENTS_VECTOR_DATA.mountainRanges["sistema-iberico"]
-},
-{
-  "id": "sistema-central",
-  "name": "Sistema Central",
-  "category": "montanas",
-  "subCategory": "Sistema Montañoso Interior",
-  "difficulty": "facil",
-  "elevationOrLength": "600 km de longitud",
-  "svgType": "polygon",
-  "description": "Eje montañoso interior que divide la Meseta Central en dos mitades: la Submeseta Norte y la Submeseta Sur (sierras de Gata, Gredos y Guadarrama).",
-  "curiosity": "Su cumbre máxima es el Pico Almanzor (2.592 m) en la Sierra de Gredos, esculpido por antiguos circos glaciares."
-,
-  mapX: ACCIDENTS_VECTOR_DATA.rangeCenters["sistema-central"].x,
-  mapY: ACCIDENTS_VECTOR_DATA.rangeCenters["sistema-central"].y,
-  svgPath: ACCIDENTS_VECTOR_DATA.mountainRanges["sistema-central"]
 },
 {
   "id": "montes-de-toledo",
