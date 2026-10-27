@@ -1,9 +1,11 @@
+import { DraggableOverlay } from '../Layout/DraggableOverlay';
 import { createPortal } from 'react-dom';
 import React, { useEffect, useState, useCallback } from 'react';
 import { GeoElement } from '../../types/geography';
 import { useChallengeSession, ChallengeType } from '../../hooks/useChallengeSession';
 import { 
-  Trophy, 
+  Trophy,
+  GripVertical,
   Heart, 
   Flame, 
   HelpCircle, 
@@ -313,9 +315,11 @@ export const ChallengeMode: React.FC<ChallengeModeProps> = ({
   // SCREEN: MODO 60S CONTRARRELOJ
   // -------------------------------------------------------------
     if (challengeType === 'contrarreloj') {
-    const telemetry = (<section className="timed-hud ui-glass w-full bg-surface-container-lowest dark:bg-slate-900 rounded-DEFAULT p-3 sm:p-4 portrait:p-2 shadow-[0_4px_0_#c3c6d7] portrait:shadow-[0_1px_0_#c3c6d7] dark:shadow-none border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
+    const telemetry = (<DraggableOverlay><section className="timed-hud ui-glass w-full bg-surface-container-lowest dark:bg-slate-900 rounded-DEFAULT p-3 sm:p-4 portrait:p-2 shadow-[0_4px_0_#c3c6d7] portrait:shadow-[0_1px_0_#c3c6d7] dark:shadow-none border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
+          <button type="button" className="timed-hud-grip" data-overlay-drag-handle
+            aria-label="Mover marcador de contrarreloj" title="Arrastra para mover · Flechas del teclado para ajustar"><GripVertical size={17} /></button>
           {/* Gigantic Pulsing Critical Timer */}
-          <div className="flex items-center gap-3 portrait:gap-1.5 bg-error-container/80 dark:bg-red-950/60 px-4 py-2 portrait:px-2 portrait:py-1 rounded-DEFAULT portrait:rounded-md shadow-[0_3px_0_#93000a] portrait:shadow-[0_2px_0_#93000a] animate-pulse portrait:shrink-0">
+          <div className="timed-clock flex items-center gap-3 portrait:gap-1.5 bg-error-container/80 dark:bg-red-950/60 px-4 py-2 portrait:px-2 portrait:py-1 rounded-DEFAULT portrait:rounded-md shadow-[0_3px_0_#93000a] portrait:shadow-[0_2px_0_#93000a] animate-pulse portrait:shrink-0">
             <div className="w-10 h-10 portrait:w-6 portrait:h-6 rounded-full bg-danger-rose text-on-error flex items-center justify-center shadow-[0_2px_0_#ba1a1a] portrait:shadow-[0_1px_0_#ba1a1a]">
               <Timer className="w-6 h-6 portrait:w-3.5 portrait:h-3.5" />
             </div>
@@ -330,7 +334,7 @@ export const ChallengeMode: React.FC<ChallengeModeProps> = ({
           </div>
 
           {/* Telemetry Chips */}
-          <div className="flex items-center gap-2 portrait:gap-1 flex-wrap portrait:justify-end portrait:flex-1">
+          <div className="timed-stats flex items-center gap-2 portrait:gap-1 flex-wrap portrait:justify-end portrait:flex-1">
             {/* Aciertos */}
             <div title="Aciertos" className="flex items-center gap-1.5 portrait:gap-1 bg-surface-container-low dark:bg-slate-800 px-3 py-1.5 portrait:px-1.5 portrait:py-1 rounded-DEFAULT portrait:rounded-md shadow-[0_2px_0_#cbd5e1] portrait:shadow-[0_1px_0_#cbd5e1]">
               <CheckCircle2 className="w-5 h-5 portrait:w-3.5 portrait:h-3.5 text-success-emerald portrait:shrink-0" />
@@ -375,7 +379,7 @@ export const ChallengeMode: React.FC<ChallengeModeProps> = ({
               </div>
             </div>
           </div>
-        </section>);
+        </section></DraggableOverlay>);
     return (
       <div data-challenge="contrarreloj" className={`timed-challenge w-full flex flex-col gap-3 ${className || ''}`}>
         {/* Critical Adrenaline Heads-Up Display */}

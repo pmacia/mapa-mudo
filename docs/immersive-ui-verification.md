@@ -15,6 +15,7 @@ node tests/map-visibility.mjs
 node tests/map-interactions.mjs
 node tests/category-labels.mjs
 node tests/atlas-search-drag.mjs
+node tests/timed-hud-drag.mjs
 ```
 
 Las pruebas de navegador necesitan Playwright y un navegador instalado. Admiten `BASE_URL`, `PLAYWRIGHT_MODULE` (ruta al módulo Playwright) y `BROWSER_EXECUTABLE` (ruta al navegador); no añaden dependencias a la aplicación.
@@ -32,3 +33,5 @@ La revisión independiente de esta segunda iteración detectó y verificó tres 
 Etiquetas por categoría: se comprueba que los ríos puedan ocultar sus nombres sin afectar afluentes ni relieve; las categorías ausentes quedan bloqueadas; el interruptor global conserva la selección y los juegos mantienen su modo mudo. Los paneles grandes recuperan cierre directo y se reabren desde Visibilidad. El Atlas diferencia expandir/reducir de ocultar mediante iconos distintos.
 
 Búsqueda del Atlas desplazable: el título permite arrastrar con ratón/tacto y mover con las flechas del teclado. La prueba comprueba posición, límites al cambiar el tamaño de pantalla y selección de resultados tras desplazar la ventana.
+
+El marcador superior de contrarreloj admite arrastre con ratón o tacto y movimiento con teclado desde su asa. Las comprobaciones cubren continuidad del reloj, conservación de posición al ocultar/restaurar, límites de pantalla, valores completos a 360/390 px y ausencia de respuestas accidentales al mover con flechas.
