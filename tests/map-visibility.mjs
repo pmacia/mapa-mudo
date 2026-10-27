@@ -34,7 +34,8 @@ try {
   for(const [width,height] of [[360,640],[390,844],[844,390],[1440,900]]){
     await page.setViewportSize({width,height});await page.waitForTimeout(150);
     const base=await snapshot();await toggle('Ficha del reto');assert.deepEqual(await snapshot(),base);await toggle('Ficha del reto');
-    const fit=await page.locator('[data-map-part="Relleno_Peninsula"]').boundingBox();
+    // Published source map extents for the mainland including western Portugal.
+    const fit=await canvas.evaluate(svg=>{const matrix=svg.getScreenCTM();const a=new DOMPoint(367.117,31.467).matrixTransform(matrix);const b=new DOMPoint(939.749,527.338).matrixTransform(matrix);return {x:a.x,y:a.y,width:b.x-a.x,height:b.y-a.y};});
     assert.ok(fit&&fit.x>=12&&fit.y>=12&&fit.x+fit.width<=width-12&&fit.y+fit.height<=height-12,`Peninsula must fit ${width}x${height}: ${JSON.stringify(fit)}`);
     assert.ok(fit.width>=width*.88||fit.height>=height*.88,'Peninsula uses available width or height');
   }

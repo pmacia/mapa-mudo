@@ -311,6 +311,8 @@
 @media(max-width:1023px) and (orientation:portrait) {
   .immersive-map .map-tools { top:auto; left:12px; right:auto; bottom:calc(326px + env(safe-area-inset-bottom)); }
   .immersive-shell[data-mode="contrarreloj"] .map-tools { bottom:calc(292px + env(safe-area-inset-bottom)); }
+  .immersive-shell[data-mode="reto_identificar"] .map-tools,
+  .immersive-shell[data-mode="reto_localizar"] .map-tools { bottom:calc(43dvh + 104px + env(safe-area-inset-bottom)); }
 }
 @media(max-height:420px) {
   .visibility-menu { top:46px; }

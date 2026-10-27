@@ -117,7 +117,30 @@ export const SpainMap: React.FC<SpainMapProps> = ({
     const container = containerRef.current;
     const mainland = svgElementRef.current?.querySelector<SVGPathElement>('[data-map-part="Relleno_Peninsula"]');
     if (!container || !mainland) return;
-    const bounds = mainland.getBBox();
+    const mainlandBounds = mainland.getBBox();
+    const bounds = { x: mainlandBounds.x, y: mainlandBounds.y, width: mainlandBounds.width, height: mainlandBounds.height };
+    // Portugal shares the source's neighbour layer with France and Africa. Include only
+    // its mainland subpaths, contained in Spain's north/south extent and extending west.
+    const neighbour = svgElementRef.current?.querySelector<SVGPathElement>('[data-map-part="Relleno_-_Portugal_Francia_África"]');
+    if (neighbour) {
+      const probe = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      neighbour.parentElement?.appendChild(probe);
+      for (const path of (neighbour.getAttribute('d') ?? '').split(/(?=M)/)) {
+        probe.setAttribute('d', path);
+        const part = probe.getBBox();
+        if (part.width > 0 && part.x < mainlandBounds.x && part.y >= mainlandBounds.y &&
+            part.y + part.height <= mainlandBounds.y + mainlandBounds.height) {
+          bounds.width += bounds.x - Math.min(bounds.x, part.x);
+          bounds.x = Math.min(bounds.x, part.x);
+        }
+      }
+      probe.remove();
+    }
+    // Include the coastal stroke as well as the land fill.
+    bounds.x -= 2;
+    bounds.y -= 2;
+    bounds.width += 4;
+    bounds.height += 4;
     const sourceScale = LAYERED_SPAIN_MAP.sourceScale;
     const fit = (width: number, height: number) => {
       if (width <= 32 || height <= 32) return;
@@ -209,7 +232,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
 
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     didPan.current = false;
-    if (!event.isPrimary || event.button !== 0 || isVectorEditMode || (event.target as Element).closest('button')) return;
+    if (!event.isPrimary || event.button !== 0 || (event.target as Element).closest('button, #vector-editor-overlay')) return;
     panGesture.current = { x: event.clientX, y: event.clientY, panX: panOffset.x, panY: panOffset.y };
   };
   const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -298,7 +321,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
       className="immersive-map relative w-full h-full select-none"
       style={{
         backgroundColor: themeStyles.seaBg,
-        cursor: isVectorEditMode ? 'default' : isDragging ? 'grabbing' : 'grab',
+        cursor: isDragging ? 'grabbing' : 'grab',
         touchAction: 'none',
       }}
       onPointerDown={handlePointerDown}
