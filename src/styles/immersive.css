@@ -346,3 +346,13 @@
   cursor:grab!important; touch-action:none; user-select:none; }
 .panel-drag-handle:active { cursor:grabbing!important; }
 @media(pointer:coarse) { .panel-drag-handle { min-height:44px; } }
+.manual-current-guide { color:var(--ui-text); font-size:13px; line-height:1.6; }
+.manual-current-guide h3 { display:flex; align-items:center; gap:8px; font-size:19px; font-weight:650; margin-bottom:16px; }
+.manual-current-guide h4 { display:flex; align-items:center; gap:9px; font-size:14px; font-weight:650; margin-bottom:7px; }
+.manual-current-guide h4 svg { color:var(--ui-accent); flex-shrink:0; }
+.manual-guide-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px 24px; }
+.manual-guide-grid p { color:var(--ui-muted); }
+.manual-shortcut-list { margin:18px 0; display:grid; grid-template-columns:1fr 1fr; gap:8px 24px; }
+.manual-shortcut-list>div { display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; padding:7px 0; border-bottom:1px solid var(--ui-border); }
+.manual-shortcut-list kbd { padding:2px 5px; background:var(--ui-soft); border-radius:5px; font-size:11px; }
+@media(max-width:600px) { .manual-guide-grid,.manual-shortcut-list { grid-template-columns:1fr; } }

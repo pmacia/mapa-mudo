@@ -1,3 +1,4 @@
+import { EDITOR_SHORTCUTS } from '../../constants/editorShortcuts';
 import { availableRiverParents } from '../../utils/riverRelations';
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
@@ -227,15 +228,10 @@ export const VectorEditorPanel: React.FC<VectorEditorPanelProps> = ({
             <button type="button" aria-label="Cerrar ayuda de atajos" onClick={() => { setShowShortcutHelp(false); shortcutButtonRef.current?.focus(); }} className="rounded p-1 hover:bg-amber-100 dark:hover:bg-slate-700"><X className="h-4 w-4" /></button>
           </div>
           <dl className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-2">
-            {[
-              ['Guardar', 'Ctrl + S'], ['Nuevo accidente', 'Ctrl + N'],
-              ['Duplicar', 'Ctrl + D'], ['Copiar accidente', 'Ctrl + C'],
-              ['Pegar accidente', 'Ctrl + V'], ['Salir del editor', 'Esc'],
-              ['Insertar vértice', '+'], ['Borrar vértice', '− / Supr'],
-            ].map(([label, keys]) => <React.Fragment key={label}><dt>{label}</dt><dd><kbd className="rounded border border-amber-200 bg-white px-1.5 py-0.5 font-mono dark:border-slate-600 dark:bg-slate-900">{keys}</kbd></dd></React.Fragment>)}
+            {EDITOR_SHORTCUTS.map(({label, keys}) => <React.Fragment key={label}><dt>{label}</dt><dd><kbd className="rounded border border-amber-200 bg-white px-1.5 py-0.5 font-mono dark:border-slate-600 dark:bg-slate-900">{keys}</kbd></dd></React.Fragment>)}
           </dl>
-          <p className="mt-3">En Mac, usa Cmd en lugar de Ctrl. Copiar y pegar accidentes funciona dentro de este editor, fuera de los campos de texto. Se pega una copia desplazada.</p>
-          <p className="mt-2">Selecciona un vértice para usar +, − o Supr. Doble clic también lo elimina. Esc cierra primero esta ayuda; fuera de los campos, sale del editor y avisa si hay cambios pendientes.</p>
+          <p className="mt-3">Ctrl y Cmd son equivalentes según el teclado. Copiar y pegar accidentes funciona dentro de este editor, fuera de los campos de texto. Se pega una copia desplazada.</p>
+          <p className="mt-2">Arrastra la cabecera para mover el panel sin modificar la figura. Selecciona un vértice para usar +, − o Supr. Doble clic también lo elimina. Esc cierra primero esta ayuda; fuera de los campos, sale del editor y avisa si hay cambios pendientes.</p>
         </section>
       )}
       {/* QUICK ACTIONS TOOLBAR */}

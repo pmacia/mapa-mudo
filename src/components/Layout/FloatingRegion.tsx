@@ -20,7 +20,7 @@ export function FloatingRegion({ id, label, className = '', children, collapsed 
       {(actions || onCollapse) && <div className="region-toolbar">{draggable ? <button type="button" className="panel-drag-handle" data-overlay-drag-handle
         aria-label={`Mover panel ${label}`} title="Arrastra para mover · Flechas del teclado para ajustar"><GripHorizontal size={15} /><span>{label}</span></button> : <span>{label}</span>}<div className="region-actions">{actions}
         {onCollapse && <button type="button" className="ui-icon panel-collapse" aria-label={`Ocultar ${label}`}
-          aria-controls={`${id}-content`} aria-expanded={!collapsed} onClick={onCollapse}><ChevronDown size={16} /></button>}
+          title={`Ocultar ${label} · Recuperar desde la flecha del ojo`} aria-controls={`${id}-content`} aria-expanded={!collapsed} onClick={onCollapse}><ChevronDown size={16} /></button>}
       </div></div>}
       {children}
     </div>

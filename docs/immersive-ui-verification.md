@@ -17,13 +17,14 @@ node tests/category-labels.mjs
 node tests/atlas-search-drag.mjs
 node tests/timed-hud-drag.mjs
 node tests/floating-panels-drag.mjs
+node tests/help-and-icons.mjs
 ```
 
 Las pruebas de navegador necesitan Playwright y un navegador instalado. Admiten `BASE_URL`, `PLAYWRIGHT_MODULE` (ruta al módulo Playwright) y `BROWSER_EXECUTABLE` (ruta al navegador); no añaden dependencias a la aplicación.
 
 Cobertura: continuidad del temporizador al redimensionar y ocultar, respuestas sin duplicación, resultados, controles táctiles, paneles recuperables, herramientas, temas, edición y exportación, desplazamiento del quiz y preferencia de reducir transparencia. Se comprueban tamaños de móvil vertical desde 360×640, horizontal, tablet y escritorio, incluidos ambos lados del punto de cambio de 1024 px.
 
-Validación final: 15 pruebas de lógica, cinco comprobaciones de navegador, TypeScript y compilación correctos. Una revisión independiente no encontró problemas críticos o importantes; su observación sobre reducir transparencia quedó corregida con una prueba de regresión. La inspección visual adicional detectó y corrigió el desbordamiento de la ficha del quiz en móvil.
+Validación final: 15 pruebas de lógica, comprobaciones de navegador de la interfaz, TypeScript y compilación correctos. Una revisión independiente no encontró problemas críticos o importantes; su observación sobre reducir transparencia quedó corregida con una prueba de regresión. La inspección visual adicional detectó y corrigió el desbordamiento de la ficha del quiz en móvil.
 
 Las pruebas táctiles usan emulación de Chrome; queda pendiente la comprobación en dispositivos físicos, especialmente las áreas seguras de iOS. La compilación mantiene los avisos existentes de Vite sobre `__dirname` y el tamaño del paquete JavaScript.
 
@@ -38,3 +39,7 @@ Búsqueda del Atlas desplazable: el título permite arrastrar con ratón/tacto y
 El marcador superior de contrarreloj admite arrastre con ratón o tacto y movimiento con teclado desde su asa. Las comprobaciones cubren continuidad del reloj, conservación de posición al ocultar/restaurar, límites de pantalla, valores completos a 360/390 px y ausencia de respuestas accidentales al mover con flechas.
 
 Los paneles de Atlas, retos, resultados y edición se desplazan desde su cabecera, conservando el desplazamiento interno del contenido. La posición se conserva al ocultar/mostrar y se adapta al expandir o redimensionar; cada modo comienza en su disposición inicial. Las pruebas cubren arrastre con ratón/tacto/teclado, scroll táctil del quiz, borrador del editor y movimiento independiente del marcador y la pregunta.
+
+Iconos y ayuda: `public/icons/favicon.svg` es la fuente vectorial de los favicons SVG/PNG/ICO y los iconos de instalación. `scripts/generate-app-icons.mjs` genera todos los tamaños y mantiene compatibles las rutas antiguas; admite las mismas variables Playwright y navegador que las pruebas. El manifiesto usa los iconos de 192/512 px con zona segura para recorte y Apple usa 180 px.
+
+El manual integrado incluye interfaz, paneles, editor y atajos; usa los datos actuales para sus recuentos. Las reglas y ayudas se contrastaron con el juego: pista de Ubicar 30→20 puntos, 50:50 de un solo uso sin penalización, y contrarreloj sin pista. Los atajos de edición se comparten entre su ficha de ayuda y el manual. Las flechas de contrarreloj no envían respuestas mientras hay un diálogo modal abierto.

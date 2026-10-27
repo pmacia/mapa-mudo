@@ -110,7 +110,7 @@ export const Header: React.FC<HeaderProps> = ({ currentMode, onModeChange, activ
               aria-current={currentMode === id ? 'page' : undefined}><Icon size={15} /><span>{label}</span></button>)}
           </nav>
           <div className="header-actions">
-            {currentMode === 'explorar' && <button type="button" className="ui-icon header-search-button" aria-label="Buscar accidentes" title="Buscar accidentes"
+            {currentMode === 'explorar' && <button type="button" className="ui-icon header-search-button" aria-label="Buscar accidentes" title="Buscar en el Atlas · Arrastra el título para mover la ventana"
               aria-expanded={popup === 'search'} onClick={() => toggle('search')}><Search size={17} /></button>}
             <button type="button" className="ui-icon" aria-label="Cambiar tema visual del mapa" title="Cambiar tema visual del mapa"
               aria-expanded={popup === 'theme'} onClick={() => toggle('theme')}><Palette size={17} /></button>
@@ -175,7 +175,7 @@ export const Header: React.FC<HeaderProps> = ({ currentMode, onModeChange, activ
             <button type="button" onClick={() => action(onOpenAccidentFilter)}><Layers size={18} />Capas y filtros<small>{activeCount} accidentes activos</small></button>
             <button type="button" onClick={() => action(onOpenAchievements)}><Trophy size={18} />Logros e insignias<small>{stats.xp || 0} XP · Nivel {stats.level || 1}</small></button>
             <button type="button" onClick={() => action(onOpenPrintable)}><Printer size={18} />Imprimir mapa<small>Ficha y soluciones</small></button>
-            <button type="button" onClick={() => action(onOpenManual)}><BookOpen size={18} />Manual de juego<small>Guía didáctica</small></button>
+            <button type="button" onClick={() => action(onOpenManual)}><BookOpen size={18} />Manual de juego<small>Controles, reglas y atajos</small></button>
             <button type="button" onClick={() => action(onToggleSound)}>{soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}{soundEnabled ? 'Silenciar sonidos' : 'Activar sonidos'}<small>Audio de la aplicación</small></button>
             <button type="button" onClick={() => action(fullscreen)}>{isFullScreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}{isFullScreen ? 'Salir de pantalla completa' : 'Pantalla completa'}<small>Proyector y aula</small></button>
           </div>

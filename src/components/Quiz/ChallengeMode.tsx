@@ -104,7 +104,7 @@ export const ChallengeMode: React.FC<ChallengeModeProps> = ({
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (feedback !== null) return;
+      if (feedback !== null || e.defaultPrevented || document.querySelector('[role="dialog"][aria-modal="true"]')) return;
       if (e.key === 'ArrowLeft') {
         // User says YES, it is the element
         handleContrarrelojAnswer(true);
@@ -518,7 +518,7 @@ export const ChallengeMode: React.FC<ChallengeModeProps> = ({
               onClick={handleFiftyFifty}
               disabled={fiftyFiftyUsed || feedback !== null}
               className="flex items-center gap-1 bg-surface-container dark:bg-slate-800 px-2.5 py-1 rounded-full text-xs font-bold hover:bg-surface-container-high disabled:opacity-40 transition-all cursor-pointer shadow-xs"
-              title="Comodín 50:50: Descarta 2 opciones erróneas"
+              title={fiftyFiftyUsed ? 'Comodín 50:50 ya utilizado' : 'Comodín 50:50: descarta dos opciones falsas; es de un solo uso y no descuenta puntos'}
             >
               <span className="text-[11px]">50:50</span>
               <span className="w-4 h-4 rounded-full bg-category-rivers text-white text-[9px] flex items-center justify-center font-bold">
@@ -803,17 +803,18 @@ export const ChallengeMode: React.FC<ChallengeModeProps> = ({
 
               {!showHint ? (
                 <button
+                  aria-label="Pista"
                   onClick={handleHint}
                   disabled={showHint || feedback !== null}
                   className="self-end shrink-0 mt-3 mb-1 inline-flex items-center gap-1.5 bg-surface-container dark:bg-slate-800 text-on-surface px-2.5 py-1.5 min-h-8 rounded-DEFAULT font-body-bold text-xs leading-normal enabled:hover:brightness-110 enabled:hover:-translate-y-0.5 active:translate-y-0.5 shadow-[0_2px_0_#cbd5e1] dark:shadow-none transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                  title="Pista Educativa (-25 pts)"
+                  title={`Pista educativa: el acierto vale ${GAME_CONFIG.POINTS.LOCALIZAR_WITH_HINT} puntos en lugar de ${GAME_CONFIG.POINTS.LOCALIZAR_BASE} (−${GAME_CONFIG.POINTS.LOCALIZAR_BASE - GAME_CONFIG.POINTS.LOCALIZAR_WITH_HINT})`}
                 >
                   <Lightbulb className="w-3.5 h-3.5 shrink-0 text-secondary-container" />
 
                   <span>Pista</span>
 
                   <span className="font-label-caps text-[9px] bg-surface-container-lowest dark:bg-slate-700 px-1 py-0.5 rounded-full">
-                    -25 pts
+                    −{GAME_CONFIG.POINTS.LOCALIZAR_BASE - GAME_CONFIG.POINTS.LOCALIZAR_WITH_HINT} pts
                   </span>
                 </button>
               ) : (

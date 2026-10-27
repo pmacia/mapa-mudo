@@ -42,6 +42,7 @@ interface AccidentFilterPanelProps {
   onApplyPreset: (preset: 'todos' | 'rios' | 'relieve' | 'costas') => void;
   activeCount: number;
   totalCount: number;
+  categoryCounts: Partial<Record<CategoryType, number>>;
 }
 export const AccidentFilterPanel: React.FC<AccidentFilterPanelProps> = ({
   isOpen,
@@ -52,6 +53,7 @@ export const AccidentFilterPanel: React.FC<AccidentFilterPanelProps> = ({
   onApplyPreset,
   activeCount,
   totalCount,
+  categoryCounts,
 }) => {
   const [activePreset, setActivePreset] = useState<'todos' | 'rios' | 'relieve' | 'costas' | null>(() =>
     filters.rios && filters.afluentes && filters.montanas && filters.picos && filters.costas &&
@@ -82,7 +84,7 @@ export const AccidentFilterPanel: React.FC<AccidentFilterPanelProps> = ({
     {
       key: 'rios',
       label: 'Ríos de España',
-      countLabel: '17 ríos (Tajo, Ebro, Duero...)',
+      countLabel: `${categoryCounts.rios ?? 0} ríos (Tajo, Ebro, Duero...)`,
       icon: <Droplet className="w-5 h-5 text-category-rivers" />,
       badgeClass: 'bg-category-rivers/15 text-category-rivers',
       borderClass: 'border-category-rivers/40',
@@ -98,7 +100,7 @@ export const AccidentFilterPanel: React.FC<AccidentFilterPanelProps> = ({
     {
       key: 'montanas',
       label: 'Cordilleras y Relieve',
-      countLabel: '13 cordilleras y sierras',
+      countLabel: `${categoryCounts.montanas ?? 0} cordilleras y sierras`,
       icon: <Mountain className="w-5 h-5 text-category-mountains" />,
       badgeClass: 'bg-category-mountains/15 text-category-mountains',
       borderClass: 'border-category-mountains/40',
@@ -114,7 +116,7 @@ export const AccidentFilterPanel: React.FC<AccidentFilterPanelProps> = ({
     {
       key: 'costas',
       label: 'Cabos, Golfos y Estrechos',
-      countLabel: '11 accidentes costeros',
+      countLabel: `${categoryCounts.costas ?? 0} accidentes costeros`,
       icon: <Compass className="w-5 h-5 text-category-coasts" />,
       badgeClass: 'bg-category-coasts/15 text-category-coasts',
       borderClass: 'border-category-coasts/40',
@@ -130,7 +132,7 @@ export const AccidentFilterPanel: React.FC<AccidentFilterPanelProps> = ({
     {
       key: 'islas',
       label: 'Islas Baleares y Canarias',
-      countLabel: '13 islas (inc. La Graciosa y Cabrera)',
+      countLabel: `${categoryCounts.islas ?? 0} islas (inc. La Graciosa y Cabrera)`,
       icon: <Palmtree className="w-5 h-5 text-tertiary" />,
       badgeClass: 'bg-tertiary/15 text-tertiary',
       borderClass: 'border-tertiary/40',
@@ -336,6 +338,7 @@ export const AccidentFilterPanel: React.FC<AccidentFilterPanelProps> = ({
             </span>
             <button
               aria-label="Mostrar textos en el mapa"
+              title={filters.showLabels ? 'Ocultar todos los textos conservando la selección por tipos' : 'Mostrar los textos de los tipos seleccionados'}
               aria-pressed={filters.showLabels}
               onClick={() => onToggleFilter('showLabels')}
               className={`w-full p-3 rounded-DEFAULT border text-left flex items-center justify-between gap-3 transition-all cursor-pointer ${
@@ -368,7 +371,8 @@ export const AccidentFilterPanel: React.FC<AccidentFilterPanelProps> = ({
               <p>{filters.showLabels ? 'Elige qué nombres mostrar. Las capas desactivadas no están disponibles.' : 'Activa los textos para ajustar los nombres por tipo. Tu selección se conserva.'}</p>
               <div className="category-label-grid">
                 {categoriesList.map(cat => <label key={cat.key} className="category-label-option"
-                  data-disabled={!filters[cat.key] || !filters.showLabels}>
+                  data-disabled={!filters[cat.key] || !filters.showLabels}
+                  title={!filters[cat.key] ? 'Activa primero esta categoría en Capas Temáticas' : !filters.showLabels ? 'Activa primero el interruptor global de textos' : `Mostrar u ocultar los nombres de ${cat.label.toLowerCase()}`}>
                   <input type="checkbox" aria-label={`Textos: ${cat.label}`}
                     checked={filters.labelsByCategory?.[cat.key] !== false}
                     disabled={!filters[cat.key] || !filters.showLabels}

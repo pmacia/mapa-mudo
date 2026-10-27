@@ -347,7 +347,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
         <button
           onClick={() => handleZoom(0.32)}
           aria-label="Acercar mapa"
-          title="Acercar mapa (+)"
+          title="Acercar mapa"
           className="w-10 h-10 rounded-full bg-surface-container-lowest dark:bg-slate-800 text-on-surface dark:text-white flex items-center justify-center shadow-[0_3px_0_#d3e4fe] dark:shadow-none active:translate-y-0.5 active:scale-95 transition-all cursor-pointer"
         >
           <ZoomIn className="w-5 h-5 text-primary" />
@@ -355,7 +355,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
         <button
           onClick={() => handleZoom(-0.32)}
           aria-label="Alejar mapa"
-          title="Alejar mapa (-)"
+          title="Alejar mapa · Permite ver los archipiélagos"
           disabled={zoomLevel <= 0.5}
           className="w-10 h-10 rounded-full bg-surface-container-lowest dark:bg-slate-800 text-on-surface dark:text-white flex items-center justify-center shadow-[0_3px_0_#d3e4fe] dark:shadow-none active:translate-y-0.5 active:scale-95 disabled:opacity-30 transition-all cursor-pointer"
         >
@@ -365,7 +365,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
           <button
             onClick={handleResetZoom}
             aria-label="Recentrar mapa"
-            title="Recentrar mapa"
+            title="Recuperar el encuadre inicial de la península"
             className="w-10 h-10 rounded-full bg-primary-fixed dark:bg-blue-950 text-on-primary-fixed dark:text-blue-300 flex items-center justify-center shadow-[0_3px_0_#b4c5ff] dark:shadow-none active:translate-y-0.5 active:scale-95 transition-all cursor-pointer"
           >
             <RotateCcw className="w-4 h-4 text-primary dark:text-blue-400" />

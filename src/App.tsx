@@ -38,6 +38,11 @@ export default function App() {
     resetToDefaults,
   } = useCustomElements();
 
+  const categoryCounts = useMemo(() => geoElements.reduce<Partial<Record<CategoryType, number>>>((counts, element) => {
+    counts[element.category] = (counts[element.category] ?? 0) + 1;
+    return counts;
+  }, {}), [geoElements]);
+
   // Vector Editor State (Desktop & Tablet only)
   const [isVectorEditMode, setIsVectorEditMode] = useState(false);
   const [editingElementId, setEditingElementId] = useState<string | null>(null);
@@ -804,6 +809,7 @@ export default function App() {
         onApplyPreset={handleApplyPreset}
         activeCount={activeElements.length}
         totalCount={geoElements.length}
+        categoryCounts={categoryCounts}
       />
       {/* Achievements Modal */}
       <AchievementsModal
@@ -826,6 +832,7 @@ export default function App() {
       />
       {/* Game Manual & Didactic Guide Modal */}
       <GameManualModal
+        elements={geoElements}
         isOpen={isManualOpen}
         onClose={() => setIsManualOpen(false)}
         onSelectMode={(mode) => handleModeChange(mode)}

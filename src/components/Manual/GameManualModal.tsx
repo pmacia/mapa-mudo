@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { InterfaceGuide, EditorGuide } from './InterfaceGuide';
+import React, { useState, useEffect } from 'react';
 import { 
   BookOpen, 
   X, 
@@ -22,45 +23,54 @@ import {
   Flame,
   GraduationCap,
   Zap,
-  Pencil
+  Pencil,
+  Eye
 } from 'lucide-react';
 import { GAME_CONFIG } from '../../constants/gameConfig';
+import type { GeoElement } from '../../types/geography';
 import { GEO_ELEMENTS } from '../../data/geographyData';
 
 interface GameManualModalProps {
   isOpen: boolean;
+  elements?: readonly GeoElement[];
   onClose: () => void;
   onSelectMode?: (mode: 'explorar' | 'reto_localizar' | 'reto_identificar' | 'contrarreloj') => void;
 }
 
-type ManualSection = 'modos' | 'pistas_puntos' | 'progresion' | 'mapa_capas' | 'imprimibles' | 'trucos_estudio' | 'configuracion';
+type ManualSection = 'interfaz' | 'edicion' | 'modos' | 'pistas_puntos' | 'progresion' | 'mapa_capas' | 'imprimibles' | 'trucos_estudio' | 'configuracion';
 
-const SECTIONS: { id: ManualSection; label: string; icon: React.FC<{ className?: string }>; badge: string }[] = [
-  { id: 'modos', label: 'Modos de Juego', icon: Compass, badge: '4 Modos' },
-  { id: 'pistas_puntos', label: 'Puntuación y Pistas', icon: Lightbulb, badge: 'Reglas' },
-  { id: 'progresion', label: 'Niveles y Medallas', icon: Trophy, badge: 'Gamificación' },
-  { id: 'mapa_capas', label: 'Capas y Cartografía', icon: Layers, badge: `${GEO_ELEMENTS.length} Elementos` },
-  { id: 'imprimibles', label: 'Fichas Imprimibles', icon: Printer, badge: 'Docentes' },
-  { id: 'trucos_estudio', label: 'Guía Didáctica ESO', icon: Sparkles, badge: 'Nemotecnia' },
-  { id: 'configuracion', label: 'Ajustes Técnicos', icon: Sliders, badge: 'gameConfig' },
-];
-
-const QUICK_SEARCHES: { label: string; section: ManualSection }[] = [
-  { label: 'Contrarreloj v2', section: 'modos' },
-  { label: 'Atajos Teclado', section: 'modos' },
-  { label: 'Rachas y Fuego', section: 'pistas_puntos' },
-  { label: 'Nueva Rosa Náutica', section: 'mapa_capas' },
-  { label: 'Exámenes A4', section: 'imprimibles' },
-  { label: 'Reglas de Ríos', section: 'trucos_estudio' },
+const SECTIONS: { id: ManualSection; label: string; icon: React.FC<{ className?: string }> }[] = [
+  { id: 'interfaz', label: 'Interfaz y controles', icon: Eye },
+  { id: 'edicion', label: 'Edición y atajos', icon: Pencil },
+  { id: 'modos', label: 'Modos de Juego', icon: Compass },
+  { id: 'pistas_puntos', label: 'Puntuación y Pistas', icon: Lightbulb },
+  { id: 'progresion', label: 'Niveles y Medallas', icon: Trophy },
+  { id: 'mapa_capas', label: 'Capas y Cartografía', icon: Layers },
+  { id: 'imprimibles', label: 'Fichas Imprimibles', icon: Printer },
+  { id: 'trucos_estudio', label: 'Guía Didáctica ESO', icon: Sparkles },
+  { id: 'configuracion', label: 'Reglas de la partida', icon: Sliders },
 ];
 
 export const GameManualModal: React.FC<GameManualModalProps> = ({
   isOpen,
+  elements = GEO_ELEMENTS,
   onClose,
   onSelectMode,
 }) => {
-  const [activeSection, setActiveSection] = useState<ManualSection>('modos');
+  const [activeSection, setActiveSection] = useState<ManualSection>('interfaz');
+  useEffect(() => {
+    if (!isOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      event.stopPropagation();
+      onClose();
+    };
+    document.addEventListener('keydown', closeOnEscape);
+    return () => document.removeEventListener('keydown', closeOnEscape);
+  }, [isOpen, onClose]);
 
+  const count = (category: GeoElement['category']) => elements.filter(element => element.category === category).length;
   if (!isOpen) return null;
 
   return (
@@ -69,7 +79,7 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
       onClick={onClose}
     >
       <div 
-        className="bg-white dark:bg-slate-900 w-full max-w-4xl h-[92vh] max-h-[850px] rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col transition-all"
+        role="dialog" aria-modal="true" aria-labelledby="game-manual-title" className="bg-white dark:bg-slate-900 w-full max-w-4xl h-[92vh] max-h-[850px] rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col transition-all"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Header */}
@@ -80,9 +90,9 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-lg font-black tracking-tight">Manual del Juego y Guía Didáctica</h2>
+                <h2 id="game-manual-title" className="text-base sm:text-lg font-black tracking-tight">Manual del Juego y Guía Didáctica</h2>
                 <span className="text-[10px] uppercase font-black tracking-wider px-2 py-0.5 rounded-full bg-amber-400 text-slate-900 shadow-xs">
-                  Versión 2.0
+                  Guía actualizada
                 </span>
               </div>
               <p className="text-xs text-blue-100/90 hidden sm:block">
@@ -110,6 +120,7 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
               return (
                 <button
                   key={sec.id}
+                  aria-pressed={isActive}
                   onClick={() => {
                     setActiveSection(sec.id);
                   }}
@@ -130,6 +141,8 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
         {/* Main Content Area (Scrollable) */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 text-slate-700 dark:text-slate-300">
           
+          {activeSection === 'interfaz' && <InterfaceGuide />}
+          {activeSection === 'edicion' && <EditorGuide />}
           {/* SECTION 1: MODOS DE JUEGO */}
           {activeSection === 'modos' && (
             <div className="space-y-6 animate-fadeIn">
@@ -147,7 +160,7 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
                 
                 {/* Añadimos shrink-0 y whitespace-nowrap para proteger el tamaño de la cápsula */}
                 <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 self-start sm:self-auto border border-blue-200 dark:border-blue-900 shrink-0 whitespace-nowrap">
-                  {GEO_ELEMENTS.length} Accidentes Evaluables
+                  {elements.length} Accidentes Evaluables
                 </span>
               </div>
 
@@ -183,7 +196,7 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
                       </div>
                       <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
                         <Sparkles className="w-3.5 h-3.5 text-purple-500 shrink-0" />
-                        <span><strong>Sello Dorado:</strong> Bonificación de +{GAME_CONFIG.POINTS.ATLAS_STAMP_BONUS_XP} XP al descubrir los {GEO_ELEMENTS.length} elementos.</span>
+                        <span><strong>Sello Dorado:</strong> Bonificación de +{GAME_CONFIG.POINTS.ATLAS_STAMP_BONUS_XP} XP al descubrir los {elements.length} elementos.</span>
                       </div>
                     </div>
                   </div>
@@ -225,7 +238,7 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
                       </div>
                       <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
                         <Lightbulb className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                        <span><strong>Botón Pista:</strong> Centra el mapa e ilumina el sector con una aureola.</span>
+                        <span><strong>Botón Pista:</strong> Muestra una pista sobre el accidente y reduce los puntos del siguiente acierto.</span>
                       </div>
                       <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
                         <ShieldAlert className="w-3.5 h-3.5 text-rose-500 shrink-0" />
@@ -262,12 +275,12 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
                       </span>
                     </div>
                     <p className="text-xs text-slate-600 dark:text-slate-300 mb-3 leading-relaxed">
-                      El mapa ilumina un accidente con el marcador dorado objetivo. Debes elegir su nombre oficial entre 4 opciones con botones táctiles.
+                      El mapa ilumina un accidente con el indicador fucsia de objetivo. Debes elegir su nombre oficial entre 4 opciones con botones táctiles.
                     </p>
                     <div className="bg-white dark:bg-slate-900/80 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 mb-3 text-xs space-y-1.5">
                       <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                        <span><strong>+{GAME_CONFIG.POINTS.IDENTIFICAR_BASE} pts</strong> por acierto directo ({GAME_CONFIG.POINTS.IDENTIFICAR_WITH_HINT} pts con pista).</span>
+                        <span><strong>+{GAME_CONFIG.POINTS.IDENTIFICAR_BASE} pts</strong> por acierto. El comodín 50:50 no descuenta puntos.</span>
                       </div>
                       <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
                         <Lightbulb className="w-3.5 h-3.5 text-amber-500 shrink-0" />
@@ -275,7 +288,7 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
                       </div>
                       <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
                         <Flame className="w-3.5 h-3.5 text-orange-500 shrink-0" />
-                        <span>Acumula rachas consecutivas para subir nota en el informe escolar.</span>
+                        <span>El comodín 50:50 descarta dos opciones falsas y es de un solo uso. La nota depende de los aciertos, no de la racha.</span>
                       </div>
                     </div>
                   </div>
@@ -376,7 +389,7 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
                     <tr>
                       <th className="p-3">Modo de Juego</th>
                       <th className="p-3">Acierto Directo</th>
-                      <th className="p-3">Con Pista</th>
+                      <th className="p-3">Ayuda disponible</th>
                       <th className="p-3">Penalización</th>
                       <th className="p-3">Bonificación Especial</th>
                     </tr>
@@ -389,14 +402,14 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
                       <td className="p-3 text-emerald-600 dark:text-emerald-400 font-bold">+{GAME_CONFIG.POINTS.LOCALIZAR_BASE} XP</td>
                       <td className="p-3 text-amber-600 dark:text-amber-400 font-bold">+{GAME_CONFIG.POINTS.LOCALIZAR_WITH_HINT} XP</td>
                       <td className="p-3 text-rose-500">-1 Vida</td>
-                      <td className="p-3 text-slate-500">Aureola luminosa en el mapa</td>
+                      <td className="p-3 text-slate-500">Pista sobre el accidente</td>
                     </tr>
                     <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
                       <td className="p-3 font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
                         <HelpCircle className="w-3.5 h-3.5" /> Identificar
                       </td>
                       <td className="p-3 text-emerald-600 dark:text-emerald-400 font-bold">+{GAME_CONFIG.POINTS.IDENTIFICAR_BASE} XP</td>
-                      <td className="p-3 text-amber-600 dark:text-amber-400 font-bold">+{GAME_CONFIG.POINTS.IDENTIFICAR_WITH_HINT} XP</td>
+                      <td className="p-3 text-amber-600 dark:text-amber-400 font-bold">50:50 sin penalización</td>
                       <td className="p-3 text-rose-500">-1 Vida</td>
                       <td className="p-3 text-slate-500">Pista 50/50 (elimina 2 falsas)</td>
                     </tr>
@@ -405,7 +418,7 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
                         <Timer className="w-3.5 h-3.5" /> Contrarreloj 60s
                       </td>
                       <td className="p-3 text-emerald-600 dark:text-emerald-400 font-bold">+{GAME_CONFIG.POINTS.CONTRARRELOJ_BASE} XP</td>
-                      <td className="p-3 text-amber-600 dark:text-amber-400 font-bold">+{GAME_CONFIG.POINTS.CONTRARRELOJ_WITH_HINT} XP</td>
+                      <td className="p-3 text-amber-600 dark:text-amber-400 font-bold">No disponible</td>
                       <td className="p-3 text-rose-500 font-semibold">-{GAME_CONFIG.POINTS.CONTRARRELOJ_WRONG_PENALTY} pts</td>
                       <td className="p-3 text-orange-600 dark:text-orange-400 font-bold">
                         +{GAME_CONFIG.TIMERS.CONTRARRELOJ_TIME_BONUS_SECONDS}s de tiempo al reloj
@@ -418,7 +431,7 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
                       <td className="p-3 text-emerald-600 dark:text-emerald-400 font-bold">+{GAME_CONFIG.POINTS.ATLAS_DISCOVERY_XP} XP</td>
                       <td className="p-3 text-slate-400">—</td>
                       <td className="p-3 text-slate-400">—</td>
-                      <td className="p-3 text-purple-600 dark:text-purple-400 font-bold">+{GAME_CONFIG.POINTS.ATLAS_STAMP_BONUS_XP} XP por {GEO_ELEMENTS.length}/{GEO_ELEMENTS.length}</td>
+                      <td className="p-3 text-purple-600 dark:text-purple-400 font-bold">+{GAME_CONFIG.POINTS.ATLAS_STAMP_BONUS_XP} XP por {elements.length}/{elements.length}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -442,10 +455,10 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
                 <div className="bg-emerald-50 dark:bg-emerald-950/40 p-4 rounded-2xl border border-emerald-200 dark:border-emerald-800/60">
                   <h4 className="font-bold text-sm text-emerald-900 dark:text-emerald-200 flex items-center gap-2 mb-2">
                     <GraduationCap className="w-4 h-4 text-emerald-600" />
-                    Calificación Escolar Oficial (1 a 10)
+                    Calificación orientativa (0 a 10)
                   </h4>
                   <p className="text-xs text-emerald-800 dark:text-emerald-300 leading-relaxed mb-2">
-                    Al terminar cualquier ronda o partida de contrarreloj, el sistema computa tu nota sobre 10 con la escala académica estándar española:
+                    Al terminar cualquier ronda o partida de contrarreloj, el sistema computa tu nota sobre 10 a partir de los aciertos divididos entre el total de preguntas de la ronda. Las preguntas no contestadas también cuentan en ese total:
                   </p>
                   <div className="grid grid-cols-2 gap-1.5 text-[11px] font-semibold text-slate-700 dark:text-slate-300">
                     <div className="p-1.5 rounded-lg bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-900">
@@ -458,7 +471,7 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
                       <span className="text-amber-600 dark:text-amber-400">6 - 6.9:</span> Bien 👍
                     </div>
                     <div className="p-1.5 rounded-lg bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-900">
-                      <span className="text-orange-600 dark:text-orange-400">5 - 5.9:</span> Suficiente 📝
+                      <span className="text-orange-600 dark:text-orange-400">5 - 6.9:</span> Aprobado 📝
                     </div>
                   </div>
                 </div>
@@ -508,7 +521,7 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
                     { icon: '🏖️', title: 'Centinela Costero', desc: `Identifica ${GAME_CONFIG.BADGE_REQUIREMENTS.COSTAS_COUNT} cabos, golfos o rías del litoral` },
                     { icon: '🏝️', title: 'Navegante Insular', desc: `Domina Baleares y Canarias con ${GAME_CONFIG.BADGE_REQUIREMENTS.ISLAS_COUNT} aciertos de islas` },
                     { icon: '⚡', title: 'Racha Imparable', desc: `Consigue una racha continua de ${GAME_CONFIG.BADGE_REQUIREMENTS.STREAK_COUNT} aciertos sin fallos` },
-                    { icon: '📜', title: 'Sello del Explorador', desc: `Explora los ${GEO_ELEMENTS.length} accidentes geográficos en el Atlas` },
+                    { icon: '📜', title: 'Sello del Explorador', desc: `Explora los ${elements.length} accidentes geográficos en el Atlas` },
                   ].map((b, i) => (
                     <div key={i} className="p-3 bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 flex items-start gap-3 shadow-xs">
                       <span className="text-2xl shrink-0">{b.icon}</span>
@@ -529,7 +542,7 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
               <div className="border-b border-slate-200 dark:border-slate-800 pb-3">
                 <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                   <Palette className="w-5 h-5 text-purple-600" />
-                  Cartografía Vectorial, Nueva Rosa Náutica y Capas ({GEO_ELEMENTS.length} Elementos)
+                  Cartografía, orientación y capas ({elements.length} Elementos)
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
                   Personaliza tanto la apariencia como los accidentes geográficos mostrados según tus necesidades pedagógicas.
@@ -541,21 +554,21 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
                 <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">3 Temas Visuales Profesionales</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="p-3.5 bg-amber-50/70 dark:bg-slate-800 rounded-2xl border border-amber-200 dark:border-slate-700">
-                    <span className="text-xs font-bold text-amber-900 dark:text-amber-300 block mb-1">📜 Atlas Clásico</span>
+                    <span className="text-xs font-bold text-amber-900 dark:text-amber-300 block mb-1">Clásico · Claro</span>
                     <p className="text-xs text-slate-600 dark:text-slate-400">
-                      Tono cálido pergamino, con relieve sutil y trazos contrastados. Ideal para proyección en pizarras digitales interactivas (PDI).
+                      Fondo claro, mar suave y relieve cálido con trazos contrastados para estudiar y proyectar en el aula.
                     </p>
                   </div>
                   <div className="p-3.5 bg-blue-50/70 dark:bg-slate-800 rounded-2xl border border-blue-200 dark:border-slate-700">
-                    <span className="text-xs font-bold text-blue-900 dark:text-blue-300 block mb-1">🏔️ Físico Moderno</span>
+                    <span className="text-xs font-bold text-blue-900 dark:text-blue-300 block mb-1">Relieve Moderno · Claro</span>
                     <p className="text-xs text-slate-600 dark:text-slate-400">
-                      Elevación topográfica en relieve verde/tierra, mares celestes vivos y sombreado tridimensional de cordilleras.
+                      Relieve en tonos verdes y tierra, mares celestes y controles claros sobre el mapa.
                     </p>
                   </div>
                   <div className="p-3.5 bg-slate-900 text-white rounded-2xl border border-slate-700">
-                    <span className="text-xs font-bold text-purple-400 block mb-1">🌙 Modo Satélite / Gamer</span>
+                    <span className="text-xs font-bold text-purple-400 block mb-1">Nocturno · Oscuro</span>
                     <p className="text-xs text-slate-300">
-                      Modo oscuro de alto contraste, elementos fluorescentes y estilo satelital nocturno para reducir la fatiga visual.
+                      Mapa vectorial oscuro, con colores y rosa de los vientos adaptados para mantener el contraste.
                     </p>
                   </div>
                 </div>
@@ -566,10 +579,10 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
                 <div className="p-3.5 bg-indigo-50/80 dark:bg-indigo-950/40 rounded-2xl border border-indigo-200 dark:border-indigo-800">
                   <span className="font-extrabold text-xs text-indigo-950 dark:text-indigo-200 flex items-center gap-2 mb-1">
                     <Compass className="w-4 h-4 text-indigo-600" />
-                    Nueva Rosa de los Vientos Náutica Minimalista
+                    Rosa de los vientos adaptada al tema
                   </span>
                   <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                    Situada en la esquina inferior izquierda, incluye una aguja magnética estilizada con flor de lis orientada al Norte cartográfico, rumbos cardinales (N, E, S, O) y cuadrantes náuticos de orientación geográfica.
+                    En las vistas amplias, aparece en la parte superior izquierda del mapa. Indica los puntos cardinales y se adapta al tema claro u oscuro. Se oculta junto con las herramientas del mapa.
                   </p>
                 </div>
 
@@ -589,38 +602,38 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
                     Modo Edición Vectorial de Accidentes (Escritorio y Tablet)
                   </span>
                   <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                    Accede pulsando el botón con icono de lápiz situado en la esquina inferior izquierda del mapa. Permite seleccionar cualquier polígono o punto geográfico para desplazarlo, deformar sus vértices arrastrándolos, insertar nuevos puntos, eliminar vértices, rotar la figura, editar todos sus datos didácticos, duplicar, eliminar o crear nuevos accidentes geográficos con guardado persistente.
+                    Accede pulsando el botón con icono de lápiz situado en la esquina inferior derecha del mapa. Permite seleccionar cualquier polígono o punto geográfico para desplazarlo, deformar sus vértices arrastrándolos, insertar nuevos puntos, eliminar vértices, rotar la figura, editar todos sus datos didácticos, duplicar, eliminar o crear nuevos accidentes geográficos con guardado persistente.
                   </p>
                 </div>
               </div>
 
               {/* Physical Accident Layers */}
               <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Desglose de Accidentes Geográficos ({GEO_ELEMENTS.length} Elementos)</h4>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Desglose de Accidentes Geográficos ({elements.length} Elementos)</h4>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                   <div className="p-2.5 bg-blue-50 dark:bg-blue-950/40 rounded-2xl border border-blue-200 dark:border-blue-900/40 font-medium">
-                    🌊 <strong>Ríos y afluentes:</strong> los ríos principales y sus tributarios se filtran por separado. Entre los afluentes están el Sil (Miño), Esla (Duero), Jarama (Tajo), Genil (Guadalquivir) y Segre (Ebro). El Cinca desemboca en el Segre. Los nuevos afluentes tienen recorridos didácticos simplificados que puedes ajustar en el editor.
+                    🌊 <strong>{count('rios')} ríos y {count('afluentes')} afluentes:</strong> los ríos principales y sus tributarios se filtran por separado. Entre los afluentes están el Sil (Miño), Esla (Duero), Jarama (Tajo), Genil (Guadalquivir) y Segre (Ebro). El Cinca desemboca en el Segre. Los nuevos afluentes tienen recorridos didácticos simplificados que puedes ajustar en el editor.
                   </div>
                   <div className="p-2.5 bg-amber-50 dark:bg-amber-950/40 rounded-2xl border border-amber-200 dark:border-amber-900/40 font-medium">
-                    🏔️ <strong>16 Cordilleras:</strong> Pirineos, Sistema Central, Ibérico, Béticas, Subbética, Penibética, Sierra Nevada, Montes de León...
+                    🏔️ <strong>{count('montanas')} Cordilleras:</strong> Pirineos, Sistema Central, Ibérico, Béticas, Subbética, Penibética, Sierra Nevada, Montes de León...
                   </div>
                   <div className="p-2.5 bg-rose-50 dark:bg-rose-950/40 rounded-2xl border border-rose-200 dark:border-rose-900/40 font-medium">
-                    ⛰️ <strong>9 Picos:</strong> Teide, Mulhacén, Aneto, Torre Cerredo, Moncayo, Veleta, Almanzor, Peñalara, Urriellu...
+                    ⛰️ <strong>{count('picos')} Picos:</strong> Teide, Mulhacén y Aneto; la lista se adapta a los datos guardados en el editor.
                   </div>
                   <div className="p-2.5 bg-cyan-50 dark:bg-cyan-950/40 rounded-2xl border border-cyan-200 dark:border-cyan-900/40 font-medium">
-                    🏖️ <strong>10 Costas y Cabos:</strong> Cabo de Gata, Finisterre, Estaca de Bares, Creus, Peñas, Golfos de Valencia y Cádiz...
+                    🏖️ <strong>{count('costas')} Costas y Cabos:</strong> Cabo de Gata, Finisterre, Estaca de Bares, Creus, Peñas, Golfos de Valencia y Cádiz...
                   </div>
                   <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200 dark:border-emerald-900/40 font-medium">
-                    🏝️ <strong>10 Islas:</strong> Baleares (Mallorca, Menorca, Ibiza...) y Canarias (Tenerife, Gran Canaria, Lanzarote...)
+                    🏝️ <strong>{count('islas')} Islas:</strong> Baleares (Mallorca, Menorca, Ibiza...) y Canarias (Tenerife, Gran Canaria, Lanzarote...)
                   </div>
                   <div className="p-2.5 bg-yellow-50 dark:bg-yellow-950/40 rounded-2xl border border-yellow-200 dark:border-yellow-900/40 font-medium">
-                    🏞️ <strong>5 Unidades Relieve:</strong> Meseta Central, Submeseta Norte y Sur, Depresiones del Ebro y Guadalquivir.
+                    🏞️ <strong>{count('unidades_relieve')} Unidades de relieve:</strong> Submesetas Norte y Sur y depresiones del Ebro y Guadalquivir.
                   </div>
                   <div className="p-2.5 bg-indigo-50 dark:bg-indigo-950/40 rounded-2xl border border-indigo-200 dark:border-indigo-900/40 font-medium">
                     🏛️ <strong>17 CC.AA. y Provincias:</strong> Líneas divisorias administrativas opcionales conmutables.
                   </div>
                   <div className="p-2.5 bg-purple-50 dark:bg-purple-950/40 rounded-2xl border border-purple-200 dark:border-purple-900/40 font-medium">
-                    🏷️ <strong>Rótulos de Nombres:</strong> Activa o desactiva las etiquetas para convertir el mapa en mudo.
+                    🏷️ <strong>Rótulos de Nombres:</strong> En Capas, Textos por tipo de accidente permite elegir los nombres de cada categoría. El interruptor global activa o desactiva los textos conservando esa selección. Los tipos sin capa activa quedan en gris y bloqueados.
                   </div>
                 </div>
               </div>
@@ -711,7 +724,7 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
                     <li>
                       <strong>Vertiente Mediterránea:</strong>
                       <p className="font-semibold text-blue-600 dark:text-blue-400 mt-0.5">Ebro → Turia → Júcar → Segura</p>
-                      <span className="text-[11px] text-slate-500">El Ebro es el río más caudaloso de España y nace en Fontibre.</span>
+                      <span className="text-[11px] text-slate-500">El Ebro nace en Fontibre y desemboca en el mar Mediterráneo.</span>
                     </li>
                   </ul>
                 </div>
@@ -723,7 +736,7 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
                   </h4>
                   <ul className="text-xs space-y-2 text-slate-600 dark:text-slate-300">
                     <li>
-                      <strong>1. La Meseta Central:</strong> Dividida en dos por el <em>Sistema Central</em> y los <em>Montes de Toledo</em>.
+                      <strong>1. La Meseta Central:</strong> El <em>Sistema Central</em> separa las submesetas Norte y Sur. Los <em>Montes de Toledo</em> separan las cuencas del Tajo y del Guadiana en la submeseta Sur.
                     </li>
                     <li>
                       <strong>2. Rebordes de la Meseta:</strong> Montes de León, Cordillera Cantábrica, Sistema Ibérico y Sierra Morena.
@@ -763,43 +776,43 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
               <div className="border-b border-slate-200 dark:border-slate-800 pb-3">
                 <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                   <Sliders className="w-5 h-5 text-indigo-600" />
-                  Parámetros Centralizados (gameConfig.ts)
+                  Reglas actuales de la partida
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-                  Todos los números del juego están desacoplados del código para permitir ajustes inmediatos de balanceo y calibración pedagógica.
+                  Estos valores corresponden a las reglas que utiliza la aplicación. Las capas permiten ajustar los contenidos que se practican.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                 <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-700">
-                  <h4 className="font-bold text-sm text-slate-900 dark:text-white mb-2">Constantes de Partida Actuales</h4>
+                  <h4 className="font-bold text-sm text-slate-900 dark:text-white mb-2">Valores actuales</h4>
                   <div className="space-y-1.5 font-mono text-[11px]">
                     <div className="flex justify-between py-1 border-b border-slate-200 dark:border-slate-700">
-                      <span className="text-slate-500">GAMEPLAY.INITIAL_LIVES</span>
+                      <span className="text-slate-500">Vidas en Ubicar y Quiz</span>
                       <span className="font-bold text-blue-600 dark:text-blue-400">{GAME_CONFIG.GAMEPLAY.INITIAL_LIVES} vidas</span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-slate-200 dark:border-slate-700">
-                      <span className="text-slate-500">GAMEPLAY.DEFAULT_ROUND_SIZE</span>
+                      <span className="text-slate-500">Máximo de preguntas por ronda</span>
                       <span className="font-bold text-blue-600 dark:text-blue-400">{GAME_CONFIG.GAMEPLAY.DEFAULT_ROUND_SIZE} preguntas/ronda</span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-slate-200 dark:border-slate-700">
-                      <span className="text-slate-500">TIMERS.CONTRARRELOJ_INITIAL_SECONDS</span>
+                      <span className="text-slate-500">Tiempo inicial</span>
                       <span className="font-bold text-orange-600">{GAME_CONFIG.TIMERS.CONTRARRELOJ_INITIAL_SECONDS}s</span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-slate-200 dark:border-slate-700">
-                      <span className="text-slate-500">TIMERS.CONTRARRELOJ_TIME_BONUS_SECONDS</span>
+                      <span className="text-slate-500">Tiempo extra por acierto</span>
                       <span className="font-bold text-emerald-600">+{GAME_CONFIG.TIMERS.CONTRARRELOJ_TIME_BONUS_SECONDS}s / acierto</span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-slate-200 dark:border-slate-700">
-                      <span className="text-slate-500">POINTS.LOCALIZAR_BASE</span>
+                      <span className="text-slate-500">Puntos por localizar sin pista</span>
                       <span className="font-bold text-emerald-600">{GAME_CONFIG.POINTS.LOCALIZAR_BASE} pts</span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-slate-200 dark:border-slate-700">
-                      <span className="text-slate-500">POINTS.CONTRARRELOJ_WRONG_PENALTY</span>
+                      <span className="text-slate-500">Penalización en contrarreloj</span>
                       <span className="font-bold text-rose-600">-{GAME_CONFIG.POINTS.CONTRARRELOJ_WRONG_PENALTY} pts</span>
                     </div>
                     <div className="flex justify-between py-1">
-                      <span className="text-slate-500">POINTS.ATLAS_STAMP_BONUS_XP</span>
+                      <span className="text-slate-500">Bonificación del sello del Atlas</span>
                       <span className="font-bold text-purple-600">+{GAME_CONFIG.POINTS.ATLAS_STAMP_BONUS_XP} pts</span>
                     </div>
                   </div>
@@ -807,22 +820,9 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
 
                 <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 flex flex-col justify-between">
                   <div>
-                    <h4 className="font-bold text-sm text-slate-900 dark:text-white mb-2">¿Cómo personalizar para tu centro escolar?</h4>
-                    <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-xs mb-3">
-                      Cualquier parámetro del juego se modifica directamente en el archivo <code className="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-700 rounded font-mono text-[10px]">/src/constants/gameConfig.ts</code>. Los cambios se reflejan de inmediato en la interfaz, el temporizador, las bonificaciones y la longitud de las rondas.
-                    </p>
-                    <p className="text-slate-500 dark:text-slate-400 text-xs">
-                      Por ejemplo, para una ronda rápida de 10 preguntas basta con cambiar <code className="font-mono text-[10px]">DEFAULT_ROUND_SIZE: 10</code>.
-                    </p>
-                  </div>
-
-                  <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-950/40 rounded-2xl border border-blue-200 dark:border-blue-900">
-                    <span className="text-xs text-blue-700 dark:text-blue-300 font-semibold block">
-                      Arquitectura Modular y Sin Dependencias Externas
-                    </span>
-                    <span className="text-[11px] text-blue-600 dark:text-blue-400">
-                      Funciona 100% en cliente con React, Tailwind CSS y Web Speech API sin necesidad de servidor de backend ni bases de datos complejas.
-                    </span>
+                    <h4 className="font-bold text-sm text-slate-900 dark:text-white mb-2">Preparar una sesión de estudio</h4>
+                    <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-xs mb-3">Abre Capas y elige los tipos de accidentes o un grupo recomendado: ríos y afluentes, relieve, o costas e islas. Empieza en el Atlas con los nombres que necesites y pasa después a Ubicar o Quiz para practicar sin ellos.</p>
+                    <p className="text-slate-500 dark:text-slate-400 text-xs">En contrarreloj, los nombres se ocultan al entrar. Ocultar el marcador o abrir el manual no pausa el reloj: termina la partida o cambia de modo si necesitas detenerte.</p>
                   </div>
                 </div>
               </div>

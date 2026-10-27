@@ -50,6 +50,7 @@ export function VisibilityControl({ regions, onToggleAll }: VisibilityControlPro
   return <div className="visibility-control" ref={root}>
     <button type="button" className="visibility-eye" aria-label={allHidden ? 'Mostrar interfaz' : 'Ocultar interfaz'}
       aria-pressed={allHidden} aria-controls="visibility-options"
+      title={allHidden ? 'Mostrar todos los elementos disponibles · Mantén pulsado para elegir' : 'Ocultar todos los elementos flotantes · Mantén pulsado para elegir'}
       onPointerDown={event => {
         if (event.button !== 0 || !event.isPrimary) return;
         cancelTimer();
@@ -75,7 +76,7 @@ export function VisibilityControl({ regions, onToggleAll }: VisibilityControlPro
       {allHidden ? <EyeOff size={20} /> : <Eye size={20} />}
     </button>
     <button ref={disclosure} type="button" className="visibility-disclosure" aria-label="Subopciones de visibilidad"
-      aria-expanded={open} aria-controls="visibility-options" onClick={() => setOpen(value => !value)}>
+      aria-expanded={open} aria-controls="visibility-options" title={open ? 'Cerrar opciones del ojo' : 'Elegir qué barras y paneles mostrar'} onClick={() => setOpen(value => !value)}>
       <ChevronDown size={14} />
     </button>
     {open && <div id="visibility-options" className="visibility-menu ui-glass" role="dialog" aria-label="Visibilidad">
@@ -83,7 +84,7 @@ export function VisibilityControl({ regions, onToggleAll }: VisibilityControlPro
       {regions.map(region => {
         const Icon = icons[region.id as keyof typeof icons] ?? PanelRight;
         return <button key={region.id} type="button" className="visibility-option" aria-label={region.label}
-          aria-pressed={region.visible} onClick={region.onToggle}>
+          aria-pressed={region.visible} title={`${region.visible ? 'Ocultar' : 'Mostrar'} ${region.label}`} onClick={region.onToggle}>
           <Icon size={17} /><span>{region.label}</span><small>{region.visible ? 'Visible' : 'Oculto'}</small>
         </button>;
       })}
