@@ -116,6 +116,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
   const themeStyles = {
     clasico: {
       seaBg: '#e0f2fe',
+      coastShadow: '#87cdde',
       landBg: '#fef3c7',
       landBorder: '#b45309',
       communityStroke: '#d97706',
@@ -129,6 +130,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
     },
     fisico_moderno: {
       seaBg: '#dbeafe',
+      coastShadow: '#87cdde',
       landBg: '#f0fdf4',
       landBorder: '#16a34a',
       communityStroke: '#86efac',
@@ -142,6 +144,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
     },
     nocturno: {
       seaBg: '#090d16',
+      coastShadow: '#123b52',
       landBg: '#131c2e',
       landBorder: '#38bdf8',
       communityStroke: '#1e293b',
@@ -246,7 +249,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
     const stroke = part.stroke === 'none' ? 'none'
       : boundaryLayer ? themeStyles.communityStroke
       : (isCoast || part.stroke === '#000000') ? themeStyles.landBorder
-      : part.stroke === '#87cdde' ? themeStyles.seaBg : part.stroke;
+      : part.stroke === '#87cdde' ? themeStyles.coastShadow : part.stroke;
     return <path key={`${part.id}-${index}`} d={part.d} fill={fill} stroke={stroke}
       strokeWidth={part.strokeWidth} fillRule={part.fillRule}
       strokeLinecap="round" strokeLinejoin="round" />;
