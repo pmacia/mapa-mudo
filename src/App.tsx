@@ -70,6 +70,7 @@ export default function App() {
   // Accident Filter & Selection State (Active on Map & in Games)
   const [accidentFilters, setAccidentFilters] = useState<AccidentFilterState>({
     rios: true,
+    afluentes: true,
     montanas: true,
     picos: true,
     costas: true,
@@ -271,15 +272,28 @@ export default function App() {
 
   const handleUpdateDraftField = useCallback(
     <K extends keyof GeoElement>(field: K, value: GeoElement[K]) => {
+      if (field === 'category' && value !== 'rios' && value !== 'afluentes' &&
+          geoElements.some(e => e.parentRiverId === draftElement?.id)) {
+        window.alert('Este río recibe afluentes. Reasigna primero los afluentes que desembocan en él antes de cambiarlo a una categoría no fluvial.');
+        return;
+      }
       setDraftElement((prev) => {
         if (!prev) return null;
-        return field === 'category'
-          ? { ...prev, ...geometryForCategory(prev, value as GeoElement['category']), category: value as GeoElement['category'] }
-          : { ...prev, [field]: value };
+        if (field === 'category') {
+          const category = value as GeoElement['category'];
+          return { ...prev, ...geometryForCategory(prev, category), category,
+            parentRiverId: category === 'afluentes' ? prev.parentRiverId : undefined };
+        }
+        if (field === 'parentRiverId') {
+          const parent = geoElements.find(e => e.id === value);
+          return { ...prev, parentRiverId: parent?.id, vertiente: parent?.vertiente ?? prev.vertiente,
+            subCategory: parent ? `Afluente del ${parent.name.replace(/^Río /, '')}` : 'Afluente' };
+        }
+        return { ...prev, [field]: value };
       });
       setHasUnsavedChanges(true);
     },
-    []
+    [geoElements, draftElement?.id]
   );
 
   const handleUpdateDraftGeometry = useCallback((updated: Partial<GeoElement>) => {
@@ -360,6 +374,10 @@ export default function App() {
 
   const handleDeleteElement = useCallback(
     (elem: GeoElement) => {
+      if (geoElements.some(e => e.parentRiverId === elem.id)) {
+        window.alert('Este río tiene afluentes asociados. Reasigna o elimina sus afluentes antes de eliminarlo.');
+        return;
+      }
       if (
         window.confirm(
           `¿Estás seguro de que deseas eliminar "${elem.name}"? Esta acción no se puede deshacer.`
@@ -373,7 +391,7 @@ export default function App() {
         playSound('click');
       }
     },
-    [deleteElement]
+    [deleteElement, geoElements]
   );
 
   useEffect(() => {
@@ -453,6 +471,7 @@ export default function App() {
       setAccidentFilters((prev) => ({
         ...prev,
         rios: true,
+        afluentes: true,
         montanas: true,
         picos: true,
         costas: true,
@@ -464,6 +483,7 @@ export default function App() {
       setAccidentFilters((prev) => ({
         ...prev,
         rios: true,
+        afluentes: true,
         montanas: false,
         picos: false,
         costas: false,
@@ -475,6 +495,7 @@ export default function App() {
       setAccidentFilters((prev) => ({
         ...prev,
         rios: false,
+        afluentes: false,
         montanas: true,
         picos: true,
         costas: false,
@@ -486,6 +507,7 @@ export default function App() {
       setAccidentFilters((prev) => ({
         ...prev,
         rios: false,
+        afluentes: false,
         montanas: false,
         picos: false,
         costas: true,
@@ -504,7 +526,7 @@ export default function App() {
     if (!unlocked.includes('primer-paso') && updatedStats.correctAnswers >= 1) {
       unlocked.push('primer-paso');
     }
-    if (!unlocked.includes('senor-rios') && (newCounts['rios'] || 0) >= GAME_CONFIG.BADGE_REQUIREMENTS.RIOS_COUNT) {
+    if (!unlocked.includes('senor-rios') && ((newCounts['rios'] || 0) + (newCounts['afluentes'] || 0)) >= GAME_CONFIG.BADGE_REQUIREMENTS.RIOS_COUNT) {
       unlocked.push('senor-rios');
     }
     if (
@@ -789,6 +811,7 @@ export default function App() {
                 />
               ) : currentMode === 'explorar' ? (
               <ExplorePanel
+                allElements={displayedElements}
                 className="w-full max-h-[calc(100vh-6.5rem)]"
                 elements={activeElements}
                 selectedElement={activeSelectedElement}
@@ -845,6 +868,7 @@ export default function App() {
             </div>
             <div id="portrait-explore-content" className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3">
             <ExplorePanel
+                allElements={displayedElements}
               className="h-full min-h-0 w-full"
                 elements={activeElements}
                 selectedElement={activeSelectedElement}
@@ -931,6 +955,7 @@ export default function App() {
             {/* Explore Panel inside Bottom Sheet */}
             <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
               <ExplorePanel
+                allElements={displayedElements}
                 elements={activeElements}
                 selectedElement={activeSelectedElement}
                 onSelectElement={(elem) => {

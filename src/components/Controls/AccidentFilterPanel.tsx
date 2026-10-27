@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 export interface AccidentFilterState {
   rios: boolean;
+  afluentes: boolean;
   montanas: boolean;
   picos: boolean;
   costas: boolean;
@@ -50,7 +51,7 @@ export const AccidentFilterPanel: React.FC<AccidentFilterPanelProps> = ({
   totalCount,
 }) => {
   const [activePreset, setActivePreset] = useState<'todos' | 'rios' | 'relieve' | 'costas' | null>(() =>
-    filters.rios && filters.montanas && filters.picos && filters.costas &&
+    filters.rios && filters.afluentes && filters.montanas && filters.picos && filters.costas &&
     filters.mares && filters.islas && filters.unidades_relieve ? 'todos' : null
   );
 
@@ -82,6 +83,14 @@ export const AccidentFilterPanel: React.FC<AccidentFilterPanelProps> = ({
       icon: <Droplet className="w-5 h-5 text-category-rivers" />,
       badgeClass: 'bg-category-rivers/15 text-category-rivers',
       borderClass: 'border-category-rivers/40',
+    },
+    {
+      key: 'afluentes',
+      label: 'Afluentes',
+      countLabel: 'Ríos que desembocan en otros ríos',
+      icon: <Droplet className="w-5 h-5 text-cyan-600" />,
+      badgeClass: 'bg-cyan-100 text-cyan-800',
+      borderClass: 'border-cyan-400/40',
     },
     {
       key: 'montanas',

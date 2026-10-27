@@ -146,6 +146,7 @@ export const ChallengeMode: React.FC<ChallengeModeProps> = ({
 
   const getCategoryThemeIcon = (category?: string) => {
     switch (category) {
+      case 'afluentes':
       case 'rios':
         return <Droplet className="w-6 h-6 text-category-rivers" />;
       case 'montanas':

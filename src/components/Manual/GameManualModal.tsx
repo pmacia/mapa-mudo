@@ -503,7 +503,7 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
                 <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2.5">Medallas de Honor Desbloqueables</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                   {[
-                    { icon: '🌊', title: 'Maestro de Ríos', desc: `Acierta al menos ${GAME_CONFIG.BADGE_REQUIREMENTS.RIOS_COUNT} ríos de diferentes vertientes` },
+                    { icon: '🌊', title: 'Maestro de Ríos', desc: `Acierta al menos ${GAME_CONFIG.BADGE_REQUIREMENTS.RIOS_COUNT} ríos o afluentes` },
                     { icon: '🏔️', title: 'Conquistador de Cumbres', desc: `Ubica ${GAME_CONFIG.BADGE_REQUIREMENTS.MONTANAS_PICOS_COUNT} cordilleras o picos principales` },
                     { icon: '🏖️', title: 'Centinela Costero', desc: `Identifica ${GAME_CONFIG.BADGE_REQUIREMENTS.COSTAS_COUNT} cabos, golfos o rías del litoral` },
                     { icon: '🏝️', title: 'Navegante Insular', desc: `Domina Baleares y Canarias con ${GAME_CONFIG.BADGE_REQUIREMENTS.ISLAS_COUNT} aciertos de islas` },
@@ -599,7 +599,7 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
                 <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Desglose de Accidentes Geográficos ({GEO_ELEMENTS.length} Elementos)</h4>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                   <div className="p-2.5 bg-blue-50 dark:bg-blue-950/40 rounded-2xl border border-blue-200 dark:border-blue-900/40 font-medium">
-                    🌊 <strong>17 Ríos:</strong> Ebro, Duero, Tajo, Guadiana, Guadalquivir, Miño, Sil, Júcar, Segura, Genil, Nalón, Bidasoa...
+                    🌊 <strong>Ríos y afluentes:</strong> los ríos principales y sus tributarios se filtran por separado. Entre los afluentes están el Sil (Miño), Esla (Duero), Jarama (Tajo), Genil (Guadalquivir) y Segre (Ebro). El Cinca desemboca en el Segre. Los nuevos afluentes tienen recorridos didácticos simplificados que puedes ajustar en el editor.
                   </div>
                   <div className="p-2.5 bg-amber-50 dark:bg-amber-950/40 rounded-2xl border border-amber-200 dark:border-amber-900/40 font-medium">
                     🏔️ <strong>16 Cordilleras:</strong> Pirineos, Sistema Central, Ibérico, Béticas, Subbética, Penibética, Sierra Nevada, Montes de León...

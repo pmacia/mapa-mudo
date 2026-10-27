@@ -1,3 +1,4 @@
+import { availableRiverParents } from './riverRelations';
 import type { GeoElement } from '../types/geography';
 import { BADGES, CATEGORY_INFO } from '../data/geographyData';
 
@@ -9,6 +10,10 @@ export function buildGeographyFiles(elements: readonly GeoElement[]) {
     if (!element.id || ids.has(element.id)) throw new Error('Hay identificadores vacíos o duplicados.');
     ids.add(element.id);
     if (!Number.isFinite(element.mapX) || !Number.isFinite(element.mapY)) throw new Error(`Coordenadas inválidas: ${element.name}`);
+    if (element.parentRiverId && (element.category !== 'afluentes' ||
+        !availableRiverParents(elements, element.id).some(e => e.id === element.parentRiverId))) {
+      throw new Error(`Río receptor inválido o relación circular: ${element.name}`);
+    }
     const { mapX, mapY, svgPath, ...metadata } = element;
     const key = JSON.stringify(element.id);
     const centerGroup = element.svgType === 'polygon' ? 'rangeCenters' : 'landmarks';

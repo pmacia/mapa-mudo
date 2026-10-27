@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { geometryForCategory } from './vectorEditorUtils';
-for (const [category, type] of Object.entries({ rios: 'polyline', montanas: 'polygon', picos: 'point', costas: 'point', mares: 'point', islas: 'point', unidades_relieve: 'point' })) {
+for (const [category, type] of Object.entries({ rios: 'polyline', afluentes: 'polyline', montanas: 'polygon', picos: 'point', costas: 'point', mares: 'point', islas: 'point', unidades_relieve: 'point' })) {
   test(`geometry for ${category} preserves center and uses ${type}`, () => {
     const result = geometryForCategory({ mapX: 430, mapY: 270, svgType: category === 'montanas' ? 'point' : 'polygon', svgPath: 'M 1 2 L 3 4 L 5 6 Z' }, category as import('../types/geography').CategoryType);
     assert.equal(result.svgType, type);

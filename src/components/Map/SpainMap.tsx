@@ -37,6 +37,7 @@ export function getSeparatedMarkerPositions(elements: readonly GeoElement[]): Re
 
 export interface MapLayers {
   rios: boolean;
+  afluentes: boolean;
   montanas: boolean;
   picos: boolean;
   costas: boolean;
@@ -449,10 +450,10 @@ export const SpainMap: React.FC<SpainMapProps> = ({
               );
             })}
 
-        {/* 2. RÍOS (Trazos con su recorrido cartográfico real) */}
-        {(layers.rios || targetHighlightElement?.category === 'rios') &&
+        {/* 2. RÍOS Y AFLUENTES (Los afluentes nuevos usan trazados didácticos simplificados.) */}
+        {(layers.rios || layers.afluentes || targetHighlightElement?.category === 'rios' || targetHighlightElement?.category === 'afluentes') &&
           visibleElements
-            .filter((e) => e.category === 'rios' && e.svgType === 'polyline')
+            .filter((e) => (e.category === 'rios' || e.category === 'afluentes') && e.svgType === 'polyline')
             .map((elem) => {
               const isSelected = selectedElement?.id === elem.id;
               const isHovered = hoveredElement?.id === elem.id;
@@ -510,7 +511,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
                         ? '#0369a1'
                         : themeStyles.riverStroke
                     }
-                    strokeWidth={isTargetHighlight ? 6 : isSelected || isHovered ? 4.5 : elem.subCategory?.includes('Afluente') ? 2.5 : 3.5}
+                    strokeWidth={isTargetHighlight ? 6 : isSelected || isHovered ? 4.5 : elem.category === 'afluentes' ? 2.5 : 3.5}
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     className="transition-all duration-200"
@@ -553,6 +554,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
               islas: '#16a34a',
               unidades_relieve: '#8b5cf6',
               rios: '#0284c7',
+              afluentes: '#0891b2',
               montanas: '#d97706',
             };
 
@@ -664,7 +666,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
                     />
                     <circle cx="0" cy="0" r="2.5" fill="#ffffff" />
                   </g>
-                ) : (elem.category === 'mares' || elem.category === 'rios') ? (
+                ) : (elem.category === 'mares' || elem.category === 'rios' || elem.category === 'afluentes') ? (
                   // Sea & Ocean Waves Marker
                   <g>
                     <circle
@@ -741,7 +743,8 @@ export const SpainMap: React.FC<SpainMapProps> = ({
           let beaconText = '¿QUÉ ES?';
           if (currentMode === 'contrarreloj') {
             beaconText = '¿ES ESTE?';
-          } else if (targetHighlightElement.category === 'rios') beaconText = '¿QUÉ RÍO ES?';
+          } else if (targetHighlightElement.category === 'afluentes') beaconText = '¿QUÉ AFLUENTE ES?';
+          else if (targetHighlightElement.category === 'rios') beaconText = '¿QUÉ RÍO ES?';
           else if (targetHighlightElement.category === 'montanas') beaconText = '¿QUÉ CORDILLERA ES?';
           else if (targetHighlightElement.category === 'picos') beaconText = '¿QUÉ PICO ES?';
           else if (targetHighlightElement.category === 'islas') beaconText = '¿QUÉ ISLA ES?';

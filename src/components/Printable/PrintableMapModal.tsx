@@ -15,6 +15,7 @@ export const PrintableMapModal: React.FC<PrintableMapModalProps> = ({
 }) => {
   const [selectedCategories, setSelectedCategories] = useState<Record<CategoryType, boolean>>({
     rios: true,
+    afluentes: true,
     montanas: true,
     picos: true,
     costas: true,
@@ -114,6 +115,7 @@ export const PrintableMapModal: React.FC<PrintableMapModalProps> = ({
             {(
               [
                 ['rios', 'Ríos'],
+                ['afluentes', 'Afluentes'],
                 ['montanas', 'Cordilleras'],
                 ['picos', 'Picos'],
                 ['costas', 'Cabos y Golfos'],
@@ -236,9 +238,9 @@ export const PrintableMapModal: React.FC<PrintableMapModalProps> = ({
                   FRANCIA
                 </text>
                 {/* Real Rivers */}
-                {selectedCategories.rios &&
+                {(selectedCategories.rios || selectedCategories.afluentes) &&
                   activeElements
-                    .filter((e) => e.category === 'rios' && e.svgPath)
+                    .filter((e) => (e.category === 'rios' || e.category === 'afluentes') && e.svgPath)
                     .map((elem) => (
                       <path
                         key={elem.id}

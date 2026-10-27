@@ -1,5 +1,6 @@
 export type CategoryType = 
   | 'rios' 
+  | 'afluentes'
   | 'montanas' 
   | 'picos' 
   | 'costas' 
@@ -15,6 +16,7 @@ export interface GeoElement {
   id: string;
   name: string;
   category: CategoryType;
+  parentRiverId?: string; // Río receptor (río principal u otro afluente).
   subCategory?: string; // e.g. "Río Principal", "Afluente", "Cabo", "Golfo", "Isla Balear", "Isla Canaria", "Cordillera"
   vertiente?: VertienteType;
   difficulty: DifficultyLevel;

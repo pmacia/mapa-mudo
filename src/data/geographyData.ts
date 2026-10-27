@@ -1,8 +1,10 @@
 // Generado desde el editor. Coordenadas y geometrías finales.
 import type { GeoElement, Badge } from '../types/geography';
+import { TRIBUTARIES } from './tributariesData';
 import { ACCIDENTS_VECTOR_DATA } from './geographyAccidentsData';
 
 export const GEO_ELEMENTS: GeoElement[] = [
+...TRIBUTARIES,
 {
   "id": "cordillera-cantabrica-copia-mvp4qkp2",
   "name": "Cordillera Cantábrica",
@@ -1076,9 +1078,9 @@ export const BADGES: Badge[] = [
   {
     "id": "sello-atlas",
     "title": "Sello Cartógrafo Real",
-    "description": "¡Has explorado los 67 accidentes geográficos de España en el Modo Atlas!",
+    "description": "¡Has explorado todos los accidentes geográficos del Atlas!",
     "icon": "🎖️",
-    "conditionDesc": "Visita los 67 accidentes en el Atlas"
+    "conditionDesc": "Visita todos los accidentes en el Atlas"
   }
 ];
 
@@ -1088,6 +1090,12 @@ export const CATEGORY_INFO: Record<string, { label: string; icon: string; color:
     "icon": "Droplet",
     "color": "#0284c7",
     "badgeColor": "bg-sky-100 text-sky-800 border-sky-300 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-800"
+  },
+  "afluentes": {
+    "label": "Afluentes",
+    "icon": "Droplet",
+    "color": "#0891b2",
+    "badgeColor": "bg-cyan-100 text-cyan-800 border-cyan-300 dark:bg-cyan-950/60 dark:text-cyan-300 dark:border-cyan-800"
   },
   "montanas": {
     "label": "Cordilleras",

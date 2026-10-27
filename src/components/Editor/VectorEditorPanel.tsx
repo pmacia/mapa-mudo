@@ -1,3 +1,4 @@
+import { availableRiverParents } from '../../utils/riverRelations';
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   GeoElement,
@@ -61,6 +62,7 @@ interface VectorEditorPanelProps {
 
 const CATEGORIES: { id: CategoryType | 'todos'; label: string; icon: string }[] = [
   { id: 'todos', label: 'Todos', icon: '🇪🇸' },
+  { id: 'afluentes', label: 'Afluentes', icon: '💧' },
   { id: 'rios', label: 'Ríos', icon: '🌊' },
   { id: 'montanas', label: 'Montañas', icon: '🏔️' },
   { id: 'picos', label: 'Picos', icon: '⛰️' },
@@ -506,6 +508,7 @@ export const VectorEditorPanel: React.FC<VectorEditorPanelProps> = ({
                   className="w-full px-2.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"
                 >
                   <option value="rios">Ríos</option>
+                  <option value="afluentes">Afluentes</option>
                   <option value="montanas">Montañas</option>
                   <option value="picos">Picos</option>
                   <option value="costas">Costas</option>
@@ -529,6 +532,18 @@ export const VectorEditorPanel: React.FC<VectorEditorPanelProps> = ({
               </div>
             </div>
 
+            {draftElement.category === 'afluentes' && (
+              <div>
+                <label htmlFor="tributary-parent" className="mb-1 block text-[11px] font-bold text-slate-700 dark:text-slate-300">Río receptor:</label>
+                <select id="tributary-parent" value={draftElement.parentRiverId || ''}
+                  onChange={e => onUpdateDraftField('parentRiverId', e.target.value || undefined)}
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-xs dark:border-slate-700 dark:bg-slate-800 dark:text-white">
+                  <option value="">Sin asignar</option>
+                  {availableRiverParents(elements, draftElement.id).map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+                </select>
+                <p className="mt-1 text-[10px] text-slate-500">La vertiente se toma del río receptor. Puede ser otro afluente.</p>
+              </div>
+            )}
             {/* VERTIENTE & DIFFICULTY */}
             <div className="grid grid-cols-2 gap-2">
               <div>
@@ -537,6 +552,7 @@ export const VectorEditorPanel: React.FC<VectorEditorPanelProps> = ({
                 </label>
                 <select
                   value={draftElement.vertiente || 'interior'}
+                  disabled={!!draftElement.parentRiverId}
                   onChange={(e) => onUpdateDraftField('vertiente', e.target.value as VertienteType)}
                   className="w-full px-2.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                 >

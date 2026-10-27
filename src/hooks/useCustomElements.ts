@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { GeoElement } from '../types/geography';
 import { GEO_ELEMENTS } from '../data/geographyData';
+import { migrateStoredElements, inheritRiverSlopes } from '../utils/riverRelations';
 import { createDefaultPolygon } from '../utils/vectorEditorUtils';
 
 const STORAGE_KEY_CUSTOM_ELEMENTS = 'geoespana_elements_v2';
@@ -10,10 +11,13 @@ export function useCustomElements() {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_CUSTOM_ELEMENTS);
       if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
+        const migrated = migrateStoredElements(JSON.parse(saved), GEO_ELEMENTS);
+        try {
+          localStorage.setItem(STORAGE_KEY_CUSTOM_ELEMENTS, JSON.stringify({ version: 3, elements: migrated }));
+        } catch {
+          // A full or read-only storage must not discard the user's loaded edits.
         }
+        return migrated;
       }
     } catch {
       // Fallback
@@ -25,7 +29,7 @@ export function useCustomElements() {
   const persistElements = useCallback((nextElements: GeoElement[]) => {
     setElements(nextElements);
     try {
-      localStorage.setItem(STORAGE_KEY_CUSTOM_ELEMENTS, JSON.stringify(nextElements));
+      localStorage.setItem(STORAGE_KEY_CUSTOM_ELEMENTS, JSON.stringify({ version: 3, elements: nextElements }));
     } catch (err) {
       console.error('Failed to persist elements to localStorage', err);
     }
@@ -41,7 +45,7 @@ export function useCustomElements() {
       } else {
         next = [updatedElement, ...elements];
       }
-      persistElements(next);
+      persistElements(inheritRiverSlopes(next, updatedElement.id));
       return updatedElement;
     },
     [elements, persistElements]

@@ -27,6 +27,7 @@ import {
   Check
 } from 'lucide-react';
 interface ExplorePanelProps {
+  allElements?: GeoElement[];
   elements: GeoElement[];
   selectedElement: GeoElement | null;
   onSelectElement: (element: GeoElement | null) => void;
@@ -41,6 +42,7 @@ interface ExplorePanelProps {
 }
 const CATEGORY_TABS: { id: CategoryType | 'todos'; label: string; colorClass: string }[] = [
   { id: 'todos', label: 'Todos', colorClass: 'bg-primary text-on-primary shadow-[0_2px_0_#003ea8]' },
+  { id: 'afluentes', label: 'Afluentes', colorClass: 'bg-surface-container text-cyan-600 hover:bg-surface-container-high' },
   { id: 'rios', label: 'Ríos', colorClass: 'bg-surface-container text-category-rivers hover:bg-surface-container-high' },
   { id: 'montanas', label: 'Cordilleras', colorClass: 'bg-surface-container text-category-mountains hover:bg-surface-container-high' },
   { id: 'picos', label: 'Picos', colorClass: 'bg-surface-container text-category-peaks hover:bg-surface-container-high' },
@@ -50,6 +52,7 @@ const CATEGORY_TABS: { id: CategoryType | 'todos'; label: string; colorClass: st
   { id: 'mares', label: 'Mares', colorClass: 'bg-surface-container text-category-rivers hover:bg-surface-container-high' },
 ];
 export const ExplorePanel: React.FC<ExplorePanelProps> = ({
+  allElements,
   elements,
   selectedElement,
   onSelectElement,
@@ -112,6 +115,7 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
     });
   const getCategoryBadgeClass = (category: CategoryType) => {
     switch (category) {
+      case 'afluentes':
       case 'rios':
         return 'bg-category-rivers/15 text-category-rivers border-category-rivers/30';
       case 'montanas':
@@ -371,6 +375,12 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
           <p className="font-body-base text-xs text-on-surface-variant dark:text-slate-300 leading-relaxed">
             {selectedElement.description}
           </p>
+          {selectedElement.parentRiverId && (
+            <p className="text-xs font-bold text-cyan-700 dark:text-cyan-300">Afluente de {(allElements || elements).find(e => e.id === selectedElement.parentRiverId)?.name || selectedElement.parentRiverId}</p>
+          )}
+          {(allElements || elements).some(e => e.parentRiverId === selectedElement.id) && (
+            <p className="text-xs text-on-surface-variant">Afluentes: {(allElements || elements).filter(e => e.parentRiverId === selectedElement.id).map(e => e.name).join(', ')}.</p>
+          )}
           {selectedElement.elevationOrLength && (
             <div className="flex items-center gap-1 text-xs font-body-bold text-on-surface dark:text-white bg-surface-container dark:bg-slate-800 px-2.5 py-1 rounded-DEFAULT w-fit">
               <span>📏 Medida:</span>

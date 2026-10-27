@@ -212,7 +212,7 @@ export function geometryForCategory(
   element: Pick<GeoElement, 'mapX' | 'mapY' | 'svgType' | 'svgPath'>,
   category: CategoryType
 ): Pick<GeoElement, 'mapX' | 'mapY' | 'svgType' | 'svgPath'> {
-  const svgType = category === 'rios' ? 'polyline' : category === 'montanas' ? 'polygon' : 'point';
+  const svgType = (category === 'rios' || category === 'afluentes') ? 'polyline' : category === 'montanas' ? 'polygon' : 'point';
   const { mapX, mapY } = element;
   if (svgType === element.svgType) return { ...element };
   const points = svgType === 'polygon' ? createDefaultPolygon(mapX, mapY)
