@@ -135,14 +135,14 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
   return (
     <aside className={`w-full h-full min-h-0 flex flex-col gap-3.5 [&>*]:shrink-0 overflow-y-auto scrollbar-thin ${className || ''}`}>
       {/* 1. Official Curriculum Status Card */}
-      <div className="w-full bg-surface-container-lowest dark:bg-slate-900 rounded-DEFAULT p-4 sm:p-5 shadow-sm border border-slate-200/80 dark:border-slate-800 flex flex-col gap-3">
+      <div className="atlas-overview w-full bg-surface-container-lowest dark:bg-slate-900 rounded-DEFAULT p-4 sm:p-5 shadow-sm border border-slate-200/80 dark:border-slate-800 flex flex-col gap-3">
         <div className="flex items-start justify-between gap-2">
           <div>
             <span className="font-label-caps text-[10px] text-primary uppercase tracking-wider font-extrabold">
-              Módulo Oficial LOMLOE
+              Atlas interactivo
             </span>
             <h2 className="font-headline-md text-base sm:text-lg text-on-surface dark:text-white leading-tight">
-              1º ESO Geografía Física
+              Explora España.
             </h2>
           </div>
           {atlasStampUnlocked ? (
@@ -184,7 +184,7 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
       </div>
       {/* 2. Reto del Día Banner (Gamified Motivation Card) */}
       {!isDailyChallengeDismissed && (
-        <div className="hidden lg:block w-full shrink-0 bg-gradient-to-br from-tertiary-container via-tertiary to-primary p-4 rounded-DEFAULT text-on-tertiary shadow-md relative overflow-hidden">
+        <div className="atlas-daily hidden lg:block w-full shrink-0 bg-gradient-to-br from-tertiary-container via-tertiary to-primary p-4 rounded-DEFAULT text-on-tertiary shadow-md relative overflow-hidden">
           <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-surface-bright/10 rounded-full blur-xl pointer-events-none" />
           <div className="relative z-10 flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
@@ -332,7 +332,7 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
       </div>
       {/* 4. Selected Accident Didactic Inspection Card */}
       {selectedElement && (
-        <div className="w-full bg-surface-container-lowest dark:bg-slate-900 rounded-DEFAULT p-4 shadow-sm border-2 border-primary/40 dark:border-blue-500/40 flex flex-col gap-2.5 animate-fadeIn">
+        <div className="atlas-directory w-full bg-surface-container-lowest dark:bg-slate-900 rounded-DEFAULT p-4 shadow-sm border-2 border-primary/40 dark:border-blue-500/40 flex flex-col gap-2.5 animate-fadeIn">
           <div className="flex items-start justify-between gap-2">
             <div>
               <div className="flex items-center gap-1.5 flex-wrap">
@@ -399,7 +399,7 @@ export const ExplorePanel: React.FC<ExplorePanelProps> = ({
         </div>
       )}
       {/* 5. Directory list of matching accidents for quick location */}
-      <div className="w-full flex-1 min-h-[12rem] bg-surface-container-lowest dark:bg-slate-900 rounded-DEFAULT p-3 shadow-sm border border-slate-200/80 dark:border-slate-800 flex flex-col gap-1.5" ref={listRef}>
+      <div className="atlas-directory w-full flex-1 min-h-[12rem] bg-surface-container-lowest dark:bg-slate-900 rounded-DEFAULT p-3 shadow-sm border border-slate-200/80 dark:border-slate-800 flex flex-col gap-1.5" ref={listRef}>
         <div className="shrink-0 flex justify-between items-center px-1 pb-1 border-b border-slate-100 dark:border-slate-800">
           <span className="font-label-caps text-[10px] text-on-surface-variant uppercase font-bold">
             Directorio Geográfico ({filteredElements.length})

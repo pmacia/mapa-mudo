@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { GeoElement, CategoryType } from '../../types/geography';
 import { LAYERED_SPAIN_MAP, SvgMapPath } from '../../data/spainBaseMapData';
 import { CompassRose } from './CompassRose';
@@ -52,6 +52,7 @@ export interface MapLayers {
 export type MapTheme = 'clasico' | 'fisico_moderno' | 'nocturno';
 
 interface SpainMapProps {
+  controlsHidden?: boolean;
   elements: GeoElement[];
   layers: MapLayers;
   theme: MapTheme;
@@ -79,6 +80,7 @@ interface SpainMapProps {
 }
 
 export const SpainMap: React.FC<SpainMapProps> = ({
+  controlsHidden = false,
   elements,
   layers,
   theme,
@@ -102,8 +104,11 @@ export const SpainMap: React.FC<SpainMapProps> = ({
   isEditorPanelCollapsed = false,
   onToggleEditorPanelCollapse,
 }) => {
+  const [mapControlsCollapsed, setMapControlsCollapsed] = useState(false);
+  useEffect(() => setMapControlsCollapsed(false), [currentMode]);
   const [hoveredElement, setHoveredElement] = useState<GeoElement | null>(null);
-  const [zoomLevel, setZoomLevel] = useState<number>(1.32);
+  const initialZoom = useRef(typeof window !== 'undefined' && window.innerWidth >= 1024 ? 1.4 : 1.32);
+  const [zoomLevel, setZoomLevel] = useState<number>(initialZoom.current);
   const [panOffset, setPanOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -112,15 +117,28 @@ export const SpainMap: React.FC<SpainMapProps> = ({
 
   const markerPositions = useMemo(() => getSeparatedMarkerPositions(elements), [elements]);
 
+  // Preserve the user's zoom/pan while fitting the map into short portrait/landscape windows.
+  const [frameFit, setFrameFit] = useState(1);
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const observer = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+      setFrameFit(width > 0 ? Math.min(1, height / (width * 0.74)) : 1);
+    });
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
+
   // Theme styling definitions
   const themeStyles = {
     clasico: {
-      seaBg: '#e0f2fe',
+      seaBg: '#e3edf0',
       coastShadow: '#87cdde',
-      landBg: '#fef3c7',
-      landBorder: '#b45309',
-      communityStroke: '#d97706',
-      portugalBg: '#f1f5f9',
+      landBg: '#e9ecdc',
+      landBorder: '#708c88',
+      communityStroke: '#a4b3a7',
+      portugalBg: '#dce5e7',
       portugalBorder: '#94a3b8',
       reliefHigh: '#d97706',
       reliefStroke: '#92400e',
@@ -143,15 +161,15 @@ export const SpainMap: React.FC<SpainMapProps> = ({
       insetBackground: '#f8fafc',
     },
     nocturno: {
-      seaBg: '#090d16',
+      seaBg: '#09151e',
       coastShadow: '#123b52',
-      landBg: '#131c2e',
-      landBorder: '#38bdf8',
-      communityStroke: '#1e293b',
-      portugalBg: '#0a0f1d',
+      landBg: '#20383e',
+      landBorder: '#63949f',
+      communityStroke: '#45626a',
+      portugalBg: '#132730',
       portugalBorder: '#1e293b',
-      reliefHigh: '#78350f',
-      reliefStroke: '#f59e0b',
+      reliefHigh: '#455e57',
+      reliefStroke: '#6f8d7c',
       riverStroke: '#38bdf8',
       textPrimary: '#f8fafc',
       insetBackground: '#0d1527',
@@ -167,7 +185,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
   };
 
   const handleResetZoom = () => {
-    setZoomLevel(1.32);
+    setZoomLevel(initialZoom.current);
     setPanOffset({ x: 0, y: 0 });
   };
 
@@ -258,7 +276,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-full select-none overflow-hidden rounded-2xl border border-slate-300 dark:border-slate-800 shadow-xl"
+      className="immersive-map relative w-full h-full select-none"
       style={{
         backgroundColor: themeStyles.seaBg,
         cursor: isDragging ? 'grabbing' : zoomLevel > 1 ? 'grab' : 'default',
@@ -272,8 +290,13 @@ export const SpainMap: React.FC<SpainMapProps> = ({
       }}
     >
 
-      {/* Zoom / Pan Controls Overlay (Tactile 3D buttons) */}
-      <div className="absolute top-3 right-3 z-20 flex flex-col gap-2">
+      {!controlsHidden && <button type="button" className="map-tools-toggle ui-glass ui-icon" onClick={() => setMapControlsCollapsed(value => !value)}
+        aria-label={mapControlsCollapsed ? 'Mostrar controles del mapa' : 'Ocultar controles del mapa'}
+        aria-expanded={!mapControlsCollapsed} aria-controls="map-tools">
+        {mapControlsCollapsed ? <ZoomIn size={17} /> : <PanelRightClose size={17} />}
+      </button>}
+      {/* Zoom / Pan Controls Overlay */}
+      <div id="map-tools" className="map-tools absolute top-3 right-3 z-20 flex flex-col gap-2" hidden={controlsHidden || mapControlsCollapsed}>
         <button
           onClick={() => handleZoom(0.32)}
           aria-label="Acercar mapa"
@@ -291,7 +314,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
         >
           <ZoomOut className="w-5 h-5 text-on-surface-variant" />
         </button>
-        {zoomLevel !== 1.32 && (
+        {zoomLevel !== initialZoom.current && (
           <button
             onClick={handleResetZoom}
             aria-label="Recentrar mapa"
@@ -304,12 +327,14 @@ export const SpainMap: React.FC<SpainMapProps> = ({
       </div>
 
       {/* Decorative Classical Compass Rose (Rosa de los vientos náutica) */}
-      <div className="absolute top-4 left-4 z-10 pointer-events-none hidden md:block opacity-90 transition-opacity hover:opacity-100">
+      <div hidden={controlsHidden || mapControlsCollapsed}
+        className="map-chrome map-compass absolute top-4 left-4 z-10 pointer-events-none hidden md:block opacity-90 transition-opacity hover:opacity-100">
         <CompassRose theme={theme} size={84} />
       </div>      
 
       {/* Vector Editor Toggle & Panel Toggle Buttons (Desktop & Tablet only, located in bottom-right corner) */}
-      <div className="absolute bottom-4 right-4 z-20 hidden md:flex items-center gap-2">
+      <div hidden={controlsHidden || mapControlsCollapsed}
+        className="map-chrome map-editor-control absolute bottom-4 right-4 z-20 hidden md:flex items-center gap-2">
 
         <button
           onClick={onToggleVectorEditMode}
@@ -328,11 +353,12 @@ export const SpainMap: React.FC<SpainMapProps> = ({
 
       {/* SVG Map Canvas */}
       <svg
+        data-map-canvas="true"
         ref={svgElementRef}
         viewBox={LAYERED_SPAIN_MAP.viewBox}
         className="w-full h-full transition-transform duration-100 ease-out"
         style={{
-          transform: `scale(${zoomLevel}) translate(${panOffset.x / zoomLevel}px, ${panOffset.y / zoomLevel}px)`,
+          transform: `scale(${zoomLevel * frameFit}) translate(${panOffset.x / (zoomLevel * frameFit)}px, ${panOffset.y / (zoomLevel * frameFit)}px)`,
           transformOrigin: 'center center',
         }}
       >

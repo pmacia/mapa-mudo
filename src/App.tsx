@@ -1,3 +1,4 @@
+import { FloatingRegion } from './components/Layout/FloatingRegion';
 import { geometryForCategory } from './utils/vectorEditorUtils';
 import { downloadGeographyConfiguration } from './utils/exportGeography';
 /**
@@ -17,7 +18,7 @@ import { PrintableMapModal } from './components/Printable/PrintableMapModal';
 import { AtlasStampCelebrationModal } from './components/Achievements/AtlasStampCelebrationModal';
 import { GameManualModal } from './components/Manual/GameManualModal';
 import { playSound } from './utils/audio';
-import { List, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Eye, EyeOff, ChevronDown, ChevronUp } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { MobileBottomNav } from './components/Navigation/MobileBottomNav';
 import { GAME_CONFIG } from './constants/gameConfig';
@@ -53,20 +54,6 @@ export default function App() {
   const [targetHighlightId, setTargetHighlightId] = useState<string | null>(null);
   const [feedbackElementId, setFeedbackElementId] = useState<string | null>(null);
   const [feedbackStatus, setFeedbackStatus] = useState<'correct' | 'wrong' | null>(null);
-  // Responsive device detection to prevent duplicate mounted ChallengeMode instances
-  const [isDesktop, setIsDesktop] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return window.innerWidth >= GAME_CONFIG.UI.DESKTOP_BREAKPOINT_PX;
-    }
-    return true;
-  });
-  useEffect(() => {
-    const handleResize = () => {
-      setIsDesktop(window.innerWidth >= GAME_CONFIG.UI.DESKTOP_BREAKPOINT_PX);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
   // Accident Filter & Selection State (Active on Map & in Games)
   const [accidentFilters, setAccidentFilters] = useState<AccidentFilterState>({
     rios: true,
@@ -84,6 +71,9 @@ export default function App() {
   const [theme, setTheme] = useState<MapTheme>('clasico');
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false);
+  const [interfaceHidden, setInterfaceHidden] = useState(false);
+  const [isCompanionCollapsed, setIsCompanionCollapsed] = useState(false);
+  const [telemetryTarget, setTelemetryTarget] = useState<HTMLDivElement | null>(null);
   const [exploreCategory, setExploreCategory] = useState<CategoryType | 'todos'>('todos');
   // Synchronize dark mode class with document and html
   useEffect(() => {
@@ -99,45 +89,6 @@ export default function App() {
   const [isPrintableOpen, setIsPrintableOpen] = useState(false);
   const [isManualOpen, setIsManualOpen] = useState(false);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
-  const [isPortraitExplore, setIsPortraitExplore] = useState(false);
-  const [sheetBounds, setSheetBounds] = useState({ top: 80, bottom: 80, collapsedTop: 400, collapsedHeight: 200 });
-  const workspaceRef = useRef<HTMLElement>(null);
-  const mapFrameRef = useRef<HTMLDivElement>(null);
-  const bottomNavRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const media = window.matchMedia('(max-width: 1023px) and (orientation: portrait)');
-    const updateLayout = () => {
-      setIsPortraitExplore(media.matches);
-      const nav = bottomNavRef.current?.firstElementChild;
-      const navRect = nav?.getBoundingClientRect();
-      const top = Math.max(0, workspaceRef.current?.getBoundingClientRect().top ?? 0);
-      const bottom = navRect && navRect.height > 0
-        ? Math.max(0, window.innerHeight - navRect.top) : 0;
-      const availableBottom = window.innerHeight - bottom;
-      const mapBottom = mapFrameRef.current?.getBoundingClientRect().bottom ?? top;
-      const collapsedTop = Math.max(top, Math.min(mapBottom + 8, availableBottom - 96));
-      const collapsedHeight = Math.max(0, availableBottom - collapsedTop);
-      setSheetBounds(prev => prev.top === top && prev.bottom === bottom &&
-        prev.collapsedTop === collapsedTop && prev.collapsedHeight === collapsedHeight
-        ? prev : { top, bottom, collapsedTop, collapsedHeight });
-    };
-    updateLayout();
-    const observer = new ResizeObserver(updateLayout);
-    if (bottomNavRef.current?.firstElementChild) observer.observe(bottomNavRef.current.firstElementChild);
-    if (workspaceRef.current?.previousElementSibling) observer.observe(workspaceRef.current.previousElementSibling);
-    if (mapFrameRef.current) observer.observe(mapFrameRef.current);
-    media.addEventListener('change', updateLayout);
-    window.addEventListener('resize', updateLayout);
-    window.addEventListener('scroll', updateLayout, { passive: true });
-    return () => {
-      observer.disconnect();
-      media.removeEventListener('change', updateLayout);
-      window.removeEventListener('resize', updateLayout);
-      window.removeEventListener('scroll', updateLayout);
-    };
-  }, []);
-
   const [isStampCelebrationOpen, setIsStampCelebrationOpen] = useState(false);
   // Player stats
   const [stats, setStats] = useState<PlayerStats>(() => {
@@ -429,6 +380,9 @@ export default function App() {
 
   // Handle mode changes
   const handleModeChange = (newMode: GameMode) => {
+    setInterfaceHidden(false);
+    setIsCompanionCollapsed(false);
+    setIsHeaderCollapsed(false);
     if (isVectorEditMode && hasUnsavedChanges) {
       setPendingAction(() => () => {
         setIsVectorEditMode(false);
@@ -704,13 +658,17 @@ export default function App() {
   const activeFeedbackElementId = !isGameFinished && currentMode !== 'explorar' ? feedbackElementId : null;
   const activeFeedbackStatus = !isGameFinished && currentMode !== 'explorar' ? feedbackStatus : null;
   return (
-    <div
-      className={`min-h-screen ${
-        theme === 'nocturno' ? 'dark' : ''
-      } bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200`}
-    >
-      {/* Header & Controls */}
-      <Header
+    <div className={`immersive-shell ${theme === 'nocturno' ? 'dark' : ''}`} data-theme={theme}
+      data-mode={isVectorEditMode ? 'editor' : currentMode} data-interface-hidden={interfaceHidden}
+      data-panel-collapsed={isVectorEditMode ? isEditorPanelCollapsed : isCompanionCollapsed}
+      data-expanded={isMobileDrawerOpen} data-finished={isGameFinished}>
+      <button type="button" className="interface-toggle ui-glass ui-icon" onClick={() => setInterfaceHidden(value => !value)}
+        aria-label={interfaceHidden ? 'Mostrar interfaz' : 'Ocultar interfaz'} title={interfaceHidden ? 'Mostrar interfaz' : 'Ocultar interfaz'}>
+        {interfaceHidden ? <Eye size={19} /> : <EyeOff size={19} />}
+      </button>
+      <FloatingRegion id="header" label="barra superior" className="header-region" collapsed={isHeaderCollapsed}
+        onToggle={() => setIsHeaderCollapsed(value => !value)}>
+        <Header
         currentMode={currentMode}
         onModeChange={handleModeChange}
         activeCount={activeElements.length}
@@ -735,30 +693,10 @@ export default function App() {
         isEditorPanelCollapsed={isEditorPanelCollapsed}
         onToggleEditorPanelCollapse={() => setIsEditorPanelCollapsed(prev => !prev)}
       />
-      {/* Main App Container */}
-      <main
-      ref={workspaceRef}
-        className="flex-1 w-full max-w-[1720px] mx-auto px-2.5 sm:px-6 lg:px-8 py-2 sm:py-5 pb-20 sm:pb-28 lg:pb-8 transition-all duration-300"
-      >
-        {/* Switch the entire workspace at lg (1024px), matching isDesktop and mobile navigation. */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 sm:gap-4 lg:gap-6 items-start relative">
-          {/* Main Map Column (Full width below lg, 7/8 columns on desktop, or full 12 columns if collapsed) */}
-          <div
-            className={`flex flex-col transition-all duration-300 ease-in-out ${
-              isVectorEditMode
-                ? isEditorPanelCollapsed
-                  ? 'lg:col-span-12'
-                  : 'lg:col-span-7 xl:col-span-8'
-                : currentMode === 'explorar'
-                ? 'lg:col-span-7 xl:col-span-8'
-                : 'lg:col-span-8 xl:col-span-8'
-            }`}
-          >
-            <div
-              ref={mapFrameRef}
-              className="w-full aspect-[1000/720] relative rounded-DEFAULT lg:rounded-2xl overflow-hidden shadow-[0_4px_0_#cbd5e1] dark:shadow-none border border-slate-200 dark:border-slate-800 transition-all duration-300 bg-map-water-light"
-            >
-              <SpainMap
+      </FloatingRegion>
+      <main className="map-stage" aria-label="Mapa interactivo de España">
+        <div className="map-safe-frame">
+          <SpainMap
                 elements={displayedElements}
                 layers={accidentFilters}
                 theme={theme}
@@ -780,21 +718,20 @@ export default function App() {
                 editingElement={isVectorEditMode ? draftElement : null}
                 onUpdateElementGeometry={handleUpdateDraftGeometry}
                 isEditorPanelCollapsed={isEditorPanelCollapsed}
+                controlsHidden={interfaceHidden}
                 onToggleEditorPanelCollapse={() => setIsEditorPanelCollapsed((prev) => !prev)}
               />
-            </div>
-          </div>
-          {/* Right Column (Desktop sticky companion dock with independent scroll) */}
-          {(!isVectorEditMode || !isEditorPanelCollapsed) && (
-            <div
-              className={`hidden lg:flex flex-col transition-all duration-300 ease-in-out animate-slideInRight ${
-                isVectorEditMode || currentMode === 'explorar'
-                  ? 'lg:col-span-5 xl:col-span-4'
-                  : 'lg:col-span-4 xl:col-span-4'
-              } lg:sticky lg:top-20 max-h-[calc(100vh-6.5rem)]`}
-            >
-              {isVectorEditMode ? (
-                <VectorEditorPanel
+        </div>
+      </main>
+      <FloatingRegion id="companion" label={isVectorEditMode ? 'editor' : currentMode === 'explorar' ? 'Atlas' : 'reto'}
+        className={`companion-region ui-glass ${currentMode === 'explorar' && !isVectorEditMode ? 'atlas-region' : ''}`}
+        collapsed={isVectorEditMode ? isEditorPanelCollapsed : isCompanionCollapsed}
+        onToggle={() => isVectorEditMode ? setIsEditorPanelCollapsed(value => !value) : setIsCompanionCollapsed(value => !value)}
+        actions={currentMode === 'explorar' && !isVectorEditMode ? <button type="button" className="ui-icon expand-atlas" onClick={() => setIsMobileDrawerOpen(value => !value)}
+          aria-label={isMobileDrawerOpen ? 'Bajar ficha y ver el mapa' : 'Subir ficha de exploración'} aria-expanded={isMobileDrawerOpen}>
+          {isMobileDrawerOpen ? <ChevronDown size={17} /> : <ChevronUp size={17} />}</button> : undefined}>
+        {isVectorEditMode ? (
+          <VectorEditorPanel
                   elements={geoElements}
                   selectedElement={selectedElement}
                   draftElement={draftElement}
@@ -809,14 +746,15 @@ export default function App() {
                   onExitEditMode={handleExitEditMode}
                   onToggleCollapse={() => setIsEditorPanelCollapsed(true)}
                 />
-              ) : currentMode === 'explorar' ? (
-              <ExplorePanel
+        ) : currentMode === 'explorar' ? (
+          <ExplorePanel
                 allElements={displayedElements}
-                className="w-full max-h-[calc(100vh-6.5rem)]"
+                className="explore-panel"
                 elements={activeElements}
                 selectedElement={activeSelectedElement}
                 onSelectElement={(elem) => {
                   setSelectedElement(elem);
+                  if (elem) setIsMobileDrawerOpen(false);
                   if (elem) handleVisitAtlasElement(elem);
                   playSound('click');
                 }}
@@ -828,156 +766,19 @@ export default function App() {
                 onResetAtlas={handleResetAtlas}
                 onStartDailyChallenge={() => handleModeChange('reto_localizar')}
               />
-            ) : isDesktop ? (
-              <ChallengeMode
-                className="w-full max-h-[calc(100vh-6.5rem)]"
-                session={challengeSession}
-                challengeType={challengeType}
-                onSwitchToAtlas={() => handleModeChange('explorar')}
-                onOpenPrintable={() => setIsPrintableOpen(true)}
-              />
-            ) : null}
-          </div>
+        ) : (
+          <ChallengeMode className="challenge-panel" session={challengeSession} challengeType={challengeType}
+            telemetryTarget={telemetryTarget} onSwitchToAtlas={() => handleModeChange('explorar')}
+            onOpenPrintable={() => setIsPrintableOpen(true)} />
         )}
-  
-        {/* Portrait exploration: always visible, with two positions. */}
-        {isPortraitExplore && currentMode === 'explorar' && (
-          <div aria-hidden="true" style={{ height: sheetBounds.collapsedHeight }} />
-        )}
-        {isPortraitExplore && currentMode === 'explorar' && (
-          <section
-            aria-label="Panel de exploración"
-            className="fixed inset-x-2.5 z-30 flex min-h-0 flex-col overflow-hidden rounded-t-2xl border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900 transition-[top,bottom] duration-[350ms] ease-in-out motion-reduce:transition-none"
-            style={{
-              top: isMobileDrawerOpen ? sheetBounds.top : sheetBounds.collapsedTop,
-              bottom: sheetBounds.bottom,
-            }}
-          >
-            <div className="flex shrink-0 items-center justify-between gap-2 border-b border-slate-200 p-3 dark:border-slate-800">
-              <span className="text-xs font-bold">Accidentes ({activeElements.length})</span>
-              <button
-                type="button"
-                onClick={() => setIsMobileDrawerOpen(prev => !prev)}
-                aria-expanded={isMobileDrawerOpen}
-                aria-controls="portrait-explore-content"
-                aria-label={isMobileDrawerOpen ? 'Bajar ficha y ver el mapa' : 'Subir ficha de exploración'}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700"
-              >
-                {isMobileDrawerOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
-              </button>
-            </div>
-            <div id="portrait-explore-content" className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3">
-            <ExplorePanel
-                allElements={displayedElements}
-              className="h-full min-h-0 w-full"
-                elements={activeElements}
-                selectedElement={activeSelectedElement}
-                onSelectElement={(elem) => {
-                  setSelectedElement(elem);
-                  if (elem) {
-                    handleVisitAtlasElement(elem);
-                    playSound('click');
-                    // Return to the lower position so the selected element is visible on the map
-                    setIsMobileDrawerOpen(false);
-                  }
-                }}
-                activeCategory={exploreCategory}
-                onCategoryChange={setExploreCategory}
-                visitedAtlasIds={stats.visitedAtlasElements}
-                atlasStampUnlocked={stats.atlasStampUnlocked}
-                onOpenStampModal={() => setIsStampCelebrationOpen(true)}
-                onResetAtlas={handleResetAtlas}
-              onStartDailyChallenge={() => handleModeChange('reto_localizar')}
-              />
-            </div>
-          </section>
-        )}
-        {/* Mobile Bottom Challenge Banner (When in Quiz mode on mobile) */}
-          {!isDesktop && currentMode !== 'explorar' && (
-            <div className="lg:hidden mt-1 sm:mt-2">
-              <ChallengeMode
-                session={challengeSession}
-                challengeType={challengeType}
-                onSwitchToAtlas={() => handleModeChange('explorar')}
-                onOpenPrintable={() => setIsPrintableOpen(true)}
-              />
-            </div>
-          )}
-        </div>
-      </main>
-      {/* Floating Bottom Button for Mobile (In Explore Mode) */}
-      {!isPortraitExplore && currentMode === 'explorar' && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-30 lg:hidden">
-          <button
-            onClick={() => setIsMobileDrawerOpen(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-primary text-on-primary rounded-full font-headline-md text-xs shadow-[0_3px_0_#003ea8] active:translate-y-0.5 transition-all cursor-pointer"
-          >
-            <List className="w-4 h-4" />
-            <span>Accidentes ({activeElements.length})</span>
-            <ChevronUp className="w-4 h-4" />
-          </button>
-        </div>
-      )}
-      {/* Mobile Bottom Navigation Bar (Persistent touch dock) */}
-      <div ref={bottomNavRef}>
-    <MobileBottomNav
-        currentMode={currentMode}
-        onModeChange={handleModeChange}
-        onOpenLayers={() => setIsAccidentFilterOpen(true)}
-        onOpenAchievements={() => setIsAchievementsOpen(true)}
-      />
-    </div>
-      {/* Mobile Bottom Sheet Drawer for Explore Panel */}
-      {!isPortraitExplore && isMobileDrawerOpen && currentMode === 'explorar' && (
-        <div 
-          className="fixed inset-0 z-50 lg:hidden flex flex-col justify-end bg-black/60 backdrop-blur-xs animate-fadeIn"
-          onClick={() => setIsMobileDrawerOpen(false)}
-        >
-          <div 
-            className="w-full bg-white dark:bg-slate-900 rounded-t-3xl shadow-2xl border-t border-slate-200 dark:border-slate-800 flex flex-col h-[95vh] animate-slideUp overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Sheet Handle & Close Bar */}
-            <div className="p-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-            {/*   <div className="flex items-center gap-2">
-                <div className="w-8 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto" />
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                  Accidentes Geográficos ({activeElements.length})
-                </span>
-              </div> */}
-              <button
-                onClick={() => setIsMobileDrawerOpen(false)}
-                className="flex items-center gap-1 px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-bold cursor-pointer"
-              >
-                <ChevronDown className="w-3.5 h-3.5" />
-              </button>
-            </div>
-            {/* Explore Panel inside Bottom Sheet */}
-            <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-              <ExplorePanel
-                allElements={displayedElements}
-                elements={activeElements}
-                selectedElement={activeSelectedElement}
-                onSelectElement={(elem) => {
-                  setSelectedElement(elem);
-                  if (elem) {
-                    handleVisitAtlasElement(elem);
-                    playSound('click');
-                    // Auto close sheet so student sees the element on map
-                    setIsMobileDrawerOpen(false);
-                  }
-                }}
-                activeCategory={exploreCategory}
-                onCategoryChange={setExploreCategory}
-                visitedAtlasIds={stats.visitedAtlasElements}
-                atlasStampUnlocked={stats.atlasStampUnlocked}
-                onOpenStampModal={() => setIsStampCelebrationOpen(true)}
-                onResetAtlas={handleResetAtlas}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      </FloatingRegion>
+      {currentMode === 'contrarreloj' && !isGameFinished && <FloatingRegion id="telemetry" label="marcador" resetKey={currentMode} className="telemetry-region">
+        <div ref={setTelemetryTarget} />
+      </FloatingRegion>}
+      <FloatingRegion id="navigation" label="navegación" resetKey={currentMode} className="navigation-region">
+        <MobileBottomNav currentMode={currentMode} onModeChange={handleModeChange}
+          onOpenLayers={() => setIsAccidentFilterOpen(true)} onOpenAchievements={() => setIsAchievementsOpen(true)} />
+      </FloatingRegion>
       {/* Unified Accident & Layer Selection Modal */}
       <AccidentFilterPanel
         isOpen={isAccidentFilterOpen}

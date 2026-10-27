@@ -1,33 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { GameMode, PlayerStats, GeoElement } from '../types/geography';
 import { GEO_ELEMENTS } from '../data/geographyData';
-import { MapTheme } from './Map/SpainMap';
-import { 
-  Compass, 
-  Map as MapIcon, 
-  Target, 
-  HelpCircle, 
-  Timer, 
-  Printer, 
-  Trophy, 
-  Layers, 
-  Volume2, 
-  VolumeX, 
-  BookOpen, 
-  Tv, 
-  Flame, 
-  GraduationCap, 
-  Search, 
-  X,
-  Palette,
-  Check,
-  Save,
-  Download,
-  Pencil,
-  PanelRightClose,
-  PanelRightOpen
-} from 'lucide-react';
-
+import type { MapTheme } from './Map/SpainMap';
+import { Compass, Target, CircleHelp, Timer, Search, X, Palette, Check, MoreHorizontal, Printer,
+  Trophy, Layers, Volume2, VolumeX, BookOpen, Maximize2, Minimize2, Save, Download,
+  PanelRightClose, PanelRightOpen, Flame } from 'lucide-react';
 interface HeaderProps {
   currentMode: GameMode;
   onModeChange: (mode: GameMode) => void;
@@ -56,500 +33,107 @@ interface HeaderProps {
   editingElementName?: string;
 }
 
-export const Header: React.FC<HeaderProps> = ({
-  currentMode,
-  onModeChange,
-  activeCount,
-  onOpenAccidentFilter,
-  theme,
-  onThemeChange,
-  stats,
-  onOpenAchievements,
-  onOpenPrintable,
-  onOpenManual,
-  soundEnabled,
-  onToggleSound,
-  isCollapsed,
-  onToggleCollapse,
-  onSearchSelect,
-  onSelectElement,
-  isVectorEditMode = false,
-  isEditorPanelCollapsed = false,
-  onToggleEditorPanelCollapse,
-  onSaveVectorEdit,
-  onExportConfiguration,
-  onCancelVectorEdit,
-  hasUnsavedChanges = false,
-  editingElementName,
-}) => {
-  const [themeDropdownOpen, setThemeDropdownOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const searchContainerRef = useRef<HTMLDivElement>(null);
+const MODES = [
+  { id: 'explorar', label: 'Explorar', icon: Compass },
+  { id: 'reto_localizar', label: 'Ubicar', icon: Target },
+  { id: 'reto_identificar', label: 'Quiz', icon: CircleHelp },
+  { id: 'contrarreloj', label: '60 s', icon: Timer },
+] as const;
+
+export const Header: React.FC<HeaderProps> = ({ currentMode, onModeChange, activeCount,
+  onOpenAccidentFilter, theme, onThemeChange, stats, onOpenAchievements, onOpenPrintable,
+  onOpenManual, soundEnabled, onToggleSound, onSearchSelect, onSelectElement, isVectorEditMode,
+  isEditorPanelCollapsed, onToggleEditorPanelCollapse, onSaveVectorEdit, onExportConfiguration,
+  onCancelVectorEdit, hasUnsavedChanges, editingElementName }) => {
+  const [popup, setPopup] = useState<'tools' | 'theme' | 'search' | null>(null);
+  const [query, setQuery] = useState('');
   const [isFullScreen, setIsFullScreen] = useState(false);
-
+  const headerRef = useRef<HTMLElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
-        setIsSearchOpen(false);
-      }
+    const outside = (event: PointerEvent) => {
+      if (headerRef.current && !headerRef.current.contains(event.target as Node)) setPopup(null);
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    const fullscreen = () => setIsFullScreen(!!document.fullscreenElement);
+    document.addEventListener('pointerdown', outside);
+    document.addEventListener('fullscreenchange', fullscreen);
+    return () => { document.removeEventListener('pointerdown', outside); document.removeEventListener('fullscreenchange', fullscreen); };
   }, []);
-
-  const matchingElements = searchQuery.trim().length > 0
-    ? GEO_ELEMENTS.filter((e) => 
-        e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (e.subCategory && e.subCategory.toLowerCase().includes(searchQuery.toLowerCase()))
-      ).slice(0, 8)
-    : [];
-
-  const handleSelectSearchItem = (elem: GeoElement) => {
-    if (onSelectElement) {
-      onSelectElement(elem);
-    }
-    setSearchQuery(elem.name);
-    setIsSearchOpen(false);
+  useEffect(() => { if (popup === 'search') searchRef.current?.focus(); }, [popup]);
+  const matches = query.trim() ? GEO_ELEMENTS.filter(e => `${e.name} ${e.subCategory || ''}`.toLowerCase().includes(query.toLowerCase())).slice(0, 8) : [];
+  const choose = (element: GeoElement) => { onSelectElement?.(element); setQuery(element.name); setPopup(null); };
+  const action = (callback: () => void) => { setPopup(null); callback(); };
+  const toggle = (value: typeof popup) => setPopup(current => current === value ? null : value);
+  const fullscreen = () => {
+    if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
+    else document.documentElement.requestFullscreen?.().catch(() => {});
   };
-
-  const handleToggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {});
-      setIsFullScreen(true);
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen().catch(() => {});
-      }
-      setIsFullScreen(false);
-    }
-  };
-
-  const currentLevel = stats.level || 1;
-  const currentXp = stats.xp || 0;
-  const xpInCurrentLevel = currentXp % 500;
-  const levelProgressPercent = Math.min(100, Math.round((xpInCurrentLevel / 500) * 100));
-
-  // In Vector Edit Mode: Hide all standard icons and show ONLY Save and Cancel
-  if (isVectorEditMode) {
-    return (
-      <header className="sticky top-0 z-40 w-full bg-surface-container-low/95 dark:bg-slate-900/95 backdrop-blur-xl border-b-2 border-amber-400 dark:border-amber-500/60 shadow-sm transition-all duration-200">
-        <div className="w-full px-3 sm:px-6 lg:px-8 py-2.5 max-w-[1720px] mx-auto flex items-center justify-between gap-3">
-          {/* Brand & Mode Identification */}
-          <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-md shadow-amber-500/20 shrink-0">
-              <Pencil className="w-5 h-5" />
-            </div>
-            <div className="flex flex-col min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-headline-md text-base sm:text-lg text-amber-600 dark:text-amber-400 font-black tracking-tight">
-                  Modo Edición Vectorial
-                </span>
-                {editingElementName && (
-                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-200 font-bold border border-amber-300 dark:border-amber-800 truncate max-w-xs">
-                    {editingElementName}
-                  </span>
-                )}
-              </div>
-              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium hidden sm:inline">
-                Edita vértices, polígonos, rotación y fichas de accidentes
-              </span>
-            </div>
-          </div>
-
-          {/* Only Guardar and Cancelar buttons */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            {onExportConfiguration && (
-              <button type="button" onClick={onExportConfiguration}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-colors cursor-pointer"
-                title="Descargar los dos archivos de configuración en ZIP" aria-label="Exportar configuración">
-                <Download className="w-4 h-4" />
-                <span>Exportar</span>
-              </button>
-            )}
-            <button
-              onClick={onSaveVectorEdit}
-              disabled={!hasUnsavedChanges}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                hasUnsavedChanges
-                  ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-md shadow-amber-500/30 ring-2 ring-amber-400/60 active:scale-95 animate-pulse'
-                  : 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed opacity-60'
-              }`}
-              title={hasUnsavedChanges ? 'Guardar cambios del accidente' : 'Sin cambios pendientes'}
-              aria-label="Guardar cambios"
-            >
-              <Save className="w-4 h-4" />
-              <span>Guardar</span>
-            </button>
-
-            <button
-              onClick={onCancelVectorEdit}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-700 dark:text-slate-200 hover:text-rose-600 dark:hover:text-rose-400 border border-slate-300 dark:border-slate-700 hover:border-rose-300 text-xs font-bold transition-all shadow-sm active:scale-95 cursor-pointer"
-              title="Cancelar y salir de edición"
-              aria-label="Cancelar modo edición"
-            >
-              <X className="w-4 h-4" />
-              <span>Salir</span>
-            </button>
-
-
-
-
-
-
-            {/* El estado del panel se mantiene en App. */}
-            {onToggleEditorPanelCollapse && (
-              <button
-                type="button"
-                onClick={onToggleEditorPanelCollapse}
-                aria-expanded={!isEditorPanelCollapsed}
-                aria-label={isEditorPanelCollapsed ? 'Mostrar panel lateral de edición' : 'Ocultar panel lateral de edición y ampliar el mapa'}
-                title={isEditorPanelCollapsed ? 'Mostrar panel de edición' : 'Ocultar panel y ampliar el mapa'}
-                className="w-11 h-11 shrink-0 rounded-full bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-[0_3px_0_#cbd5e1] dark:shadow-none hover:bg-slate-100 dark:hover:bg-slate-700 active:translate-y-0.5 active:scale-95 transition-all flex items-center justify-center cursor-pointer border border-slate-200 dark:border-slate-700"
-              >
-                {isEditorPanelCollapsed ? (
-                  <PanelRightOpen className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-                ) : (
-                  <PanelRightClose className="w-5 h-5 text-slate-600 dark:text-slate-300" />
-                )}
-              </button>
-            )}
-
-          </div>
-        </div>
-      </header>
-    );
-  }
-
   return (
-    <header className="sticky top-0 z-40 w-full bg-surface-container-low/95 dark:bg-slate-900/95 backdrop-blur-xl border-b border-outline-variant/40 dark:border-slate-800 shadow-sm transition-all duration-200">
-      <div className="w-full px-3 sm:px-6 lg:px-8 py-2 sm:py-2.5 max-w-[1720px] mx-auto flex items-center justify-between gap-2 sm:gap-4 flex-wrap">
-        {/* LEFT: Brand Logo & Classroom Pill (Only icon on mobile for single-line fit) */}
-        <div className="flex items-center gap-2 sm:gap-4 min-w-0 shrink-0">
-          <div className="flex items-center gap-2">
-            <div 
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-DEFAULT bg-primary flex items-center justify-center text-on-primary shadow-[0_3px_0_#003ea8] shrink-0"
-              title="GeoEspaña Junior: Mapa Mudo Interactivo"
-            >
-              <Compass className="w-5 h-5 sm:w-6 sm:h-6 animate-pulse" />
-            </div>
-            {/* Title & subtitle hidden on mobile and tablet, visible from desktop (lg) onwards */}
-            <div className="hidden lg:flex flex-col min-w-0">
-              <div className="flex items-center gap-1 leading-none">
-                <span className="font-headline-md text-base sm:text-lg text-primary tracking-tight">GeoEspaña</span>
-                <span className="font-headline-md text-base sm:text-lg text-secondary-container">Junior</span>
-              </div>
-              <span className="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-wider truncate">
-                1º ESO Geografía Física
-              </span>
-            </div>
-          </div>
-
-          {/* Classroom / Aula LOMLOE Badge (Oculto cuando se muestra el buscador en modo Explorar) */}
-          {currentMode !== 'explorar' && (
-            <div className="hidden xl:flex items-center gap-1.5 bg-surface-container px-3 py-1 rounded-full shadow-[0_2px_0_#cbd5e1] dark:shadow-none">
-              <GraduationCap className="w-4 h-4 text-primary" />
-              <span className="font-body-bold text-xs text-on-surface">1º ESO - Aula A</span>
-              <span className="font-label-caps text-[9px] bg-success-emerald text-on-primary px-1.5 py-0.2 rounded-full uppercase">
-                LOMLOE
-              </span>
-            </div>
-          )}
-
-          {/* Quick Search Bar (Solo visible en modo Explorar y selecciona el accidente directamente en el mapa) */}
-          {currentMode === 'explorar' && (
-            <div className="hidden md:flex items-center relative w-56 lg:w-64" ref={searchContainerRef}>
-              <Search className="w-4 h-4 absolute left-3 text-on-surface-variant pointer-events-none" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setIsSearchOpen(true);
-                  if (onSearchSelect) onSearchSelect(e.target.value);
-                }}
-                onFocus={() => {
-                  if (searchQuery.trim().length > 0) setIsSearchOpen(true);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && matchingElements.length > 0) {
-                    handleSelectSearchItem(matchingElements[0]);
-                  }
-                }}
-                placeholder="Buscar río, pico, cabo..."
-                className="w-full bg-surface-container-lowest dark:bg-slate-800 text-on-surface font-body-base text-xs pl-9 pr-7 py-1.5 rounded-full shadow-[0_2px_0_#cbd5e1] dark:shadow-none outline-none focus:ring-2 focus:ring-primary border border-slate-200/60 dark:border-slate-700"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => {
-                    setSearchQuery('');
-                    setIsSearchOpen(false);
-                    if (onSearchSelect) onSearchSelect('');
-                  }}
-                  className="absolute right-2 text-on-surface-variant hover:text-on-surface cursor-pointer"
-                  title="Borrar búsqueda"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-
-              {/* Dropdown interactivo con los accidentes coincidentes */}
-              {isSearchOpen && matchingElements.length > 0 && (
-                <div className="absolute top-10 left-0 w-72 bg-surface-container-lowest dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-DEFAULT shadow-xl py-1 z-50 max-h-64 overflow-y-auto scrollbar-thin animate-fadeIn">
-                  <div className="px-3 py-1 text-[10px] font-label-caps text-on-surface-variant uppercase border-b border-slate-100 dark:border-slate-800 font-bold">
-                    Accidentes ({matchingElements.length})
-                  </div>
-                  {matchingElements.map((elem) => (
-                    <button
-                      key={elem.id}
-                      onClick={() => handleSelectSearchItem(elem)}
-                      className="w-full px-3 py-2 text-left hover:bg-surface-container dark:hover:bg-slate-800 flex items-center justify-between text-xs transition-colors cursor-pointer"
-                    >
-                      <div className="flex flex-col truncate pr-2">
-                        <span className="font-headline-md text-xs font-bold text-on-surface dark:text-white truncate">
-                          {elem.name}
-                        </span>
-                        <span className="text-[10px] text-on-surface-variant truncate">
-                          {elem.subCategory || elem.category}
-                        </span>
-                      </div>
-                      {elem.elevationOrLength && (
-                        <span className="font-label-caps text-[9px] text-primary shrink-0">
-                          {elem.elevationOrLength}
-                        </span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+    <header ref={headerRef} className="immersive-header" onKeyDown={event => {
+      if (event.key === 'Escape' && popup) { event.stopPropagation(); setPopup(null); }
+    }}>
+      <div className="header-line">
+        <div className="header-brand" title="GeoEspaña Junior: Mapa Mudo Interactivo">
+          <span>geo<span>españa</span></span>
+          <small>{isVectorEditMode ? 'EDICIÓN VECTORIAL' : 'EXPLORA. RECONOCE. DESCUBRE.'}</small>
         </div>
-
-        {/* CENTER: Tactile Game Mode Switcher HUD (Hidden on mobile/tablet where bottom nav is active) */}
-        <nav className="hidden lg:flex items-center gap-1 bg-surface-container dark:bg-slate-800 p-1 rounded-full shadow-[0_2px_0_#cbd5e1] dark:shadow-none justify-center">
-          {/* 1. Explorar / Atlas */}
-          <button
-            onClick={() => onModeChange('explorar')}
-            className={`px-3 py-1.5 rounded-full font-body-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
-              currentMode === 'explorar'
-                ? 'bg-primary text-on-primary shadow-[0_2px_0_#003ea8] active:translate-y-0.5'
-                : 'text-primary hover:bg-surface-container-lowest'
-            }`}
-          >
-            <Compass className={`w-4 h-4 ${
-              currentMode === 'explorar' ? 'text-on-primary' : 'text-primary'
-            }`} />
-            <span>Explorar</span>
-          </button>
-
-          {/* 2. Ubicar (¿Dónde está?) */}
-          <button
-            onClick={() => onModeChange('reto_localizar')}
-            className={`px-3 py-1.5 rounded-full font-body-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
-              currentMode === 'reto_localizar'
-                ? 'bg-primary text-on-primary shadow-[0_2px_0_#003ea8] active:translate-y-0.5'
-                : 'text-red-500 hover:bg-surface-container-lowest'
-            }`}
-          >
-            <Target className={`w-4 h-4 ${
-              currentMode === 'reto_localizar' ? 'text-on-primary' : 'text-red-500'
-            }`} />
-            <span>Ubicar</span>
-          </button>
-
-          {/* 3. Quiz Curricular (Test) */}
-          <button
-            onClick={() => onModeChange('reto_identificar')}
-            className={`px-3 py-1.5 rounded-full font-body-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
-              currentMode === 'reto_identificar'
-                ? 'bg-primary text-on-primary shadow-[0_2px_0_#003ea8] active:translate-y-0.5'
-                : 'text-blue-500 hover:bg-surface-container-lowest'
-            }`}
-          >
-            <HelpCircle className={`w-4 h-4 ${
-              currentMode === 'reto_identificar' ? 'text-on-primary' : 'text-blue-500'
-            }`} />
-            <span>Quiz Rápido</span>
-          </button>
-
-          {/* 4. 60s Contrarreloj */}
-          <button
-            onClick={() => onModeChange('contrarreloj')}
-            className={`px-3 py-1.5 rounded-full font-body-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
-              currentMode === 'contrarreloj'
-                ? 'bg-adventure-orange text-white shadow-[0_2px_0_#c2410c] active:translate-y-0.5'
-                : 'text-adventure-orange hover:bg-surface-container-lowest'
-            }`}
-          >
-            <Timer className={`w-4 h-4 ${
-              currentMode === 'contrarreloj' ? 'text-white' : 'text-adventure-orange'
-            }`} />
-            <span>60s Contrarreloj</span>
-          </button>
-        </nav>
-
-        {/* RIGHT: Live Gamified Telemetry & Action Buttons */}
-        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-          {/* ACTION BUTTON: Capas y Filtros (Hidden on mobile where bottom nav has it) */}
-          <button
-            onClick={onOpenAccidentFilter}
-            className="hidden lg:flex w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-surface-container-lowest dark:bg-slate-800 text-on-surface items-center justify-center hover:bg-surface-container active:scale-95 transition-all shadow-[0_2px_0_#cbd5e1] dark:shadow-none cursor-pointer"
-            title="Capas del mapa y personalización curricular"
-          >
-            <Layers className="w-4 h-4 text-primary" />
-          </button>
-
-          {/* ACTION BUTTON: PDI / Proyector Fullscreen */}
-          <button
-            onClick={handleToggleFullscreen}
-            className="hidden sm:flex w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-surface-container-lowest dark:bg-slate-800 text-on-surface items-center justify-center hover:bg-surface-container active:scale-95 transition-all shadow-[0_2px_0_#cbd5e1] dark:shadow-none cursor-pointer"
-            title={isFullScreen ? 'Salir de pantalla completa' : 'Modo Pantalla Completa Proyector PDI'}
-          >
-            <Tv className="w-4 h-4 text-tertiary" />
-          </button>
-
-          {/* ACTION BUTTON: Theme selector (Clásico / Físico / Nocturno) */}
-          <div className="relative">
-            <button
-              onClick={() => setThemeDropdownOpen(!themeDropdownOpen)}
-              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-surface-container-lowest dark:bg-slate-800 text-on-surface flex items-center justify-center hover:bg-surface-container active:scale-95 transition-all shadow-[0_2px_0_#cbd5e1] dark:shadow-none cursor-pointer"
-              title="Cambiar tema visual del mapa"
-            >
-              <Palette className="w-4 h-4 text-slate-700 dark:text-slate-300" />
-            </button>
-
-            {themeDropdownOpen && (
-              <div className="absolute right-0 top-11 bg-surface-container-lowest dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-DEFAULT shadow-xl p-2 w-48 z-50 flex flex-col gap-1 animate-fadeIn">
-                <span className="font-label-caps text-[9px] text-on-surface-variant uppercase px-2 py-1">
-                  Estilo Cartográfico
-                </span>
-                <button
-                  onClick={() => {
-                    onThemeChange('clasico');
-                    setThemeDropdownOpen(false);
-                  }}
-                  className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-body-bold text-left cursor-pointer transition-colors ${
-                    theme === 'clasico' ? 'bg-primary text-on-primary' : 'hover:bg-surface-container'
-                  }`}
-                >
-                  <span>Atlas Clásico</span>
-                  {theme === 'clasico' && <Check className="w-3.5 h-3.5" />}
-                </button>
-                <button
-                  onClick={() => {
-                    onThemeChange('fisico_moderno');
-                    setThemeDropdownOpen(false);
-                  }}
-                  className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-body-bold text-left cursor-pointer transition-colors ${
-                    theme === 'fisico_moderno' ? 'bg-primary text-on-primary' : 'hover:bg-surface-container'
-                  }`}
-                >
-                  <span>Relieve Moderno</span>
-                  {theme === 'fisico_moderno' && <Check className="w-3.5 h-3.5" />}
-                </button>
-                <button
-                  onClick={() => {
-                    onThemeChange('nocturno');
-                    setThemeDropdownOpen(false);
-                  }}
-                  className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-body-bold text-left cursor-pointer transition-colors ${
-                    theme === 'nocturno' ? 'bg-primary text-on-primary' : 'hover:bg-surface-container'
-                  }`}
-                >
-                  <span>Modo Nocturno 🌙</span>
-                  {theme === 'nocturno' && <Check className="w-3.5 h-3.5" />}
-                </button>
-              </div>
-            )}
+        {!isVectorEditMode ? <>
+          <nav className="header-modes" aria-label="Modos de juego">
+            {MODES.map(({id,label,icon:Icon}) => <button key={id} type="button" onClick={() => onModeChange(id)}
+              aria-current={currentMode === id ? 'page' : undefined}><Icon size={15} /><span>{label}</span></button>)}
+          </nav>
+          <div className="header-actions">
+            {currentMode === 'explorar' && <button type="button" className="ui-icon header-search-button" aria-label="Buscar accidentes" title="Buscar accidentes"
+              aria-expanded={popup === 'search'} onClick={() => toggle('search')}><Search size={17} /></button>}
+            <button type="button" className="ui-icon" aria-label="Cambiar tema visual del mapa" title="Cambiar tema visual del mapa"
+              aria-expanded={popup === 'theme'} onClick={() => toggle('theme')}><Palette size={17} /></button>
+            <button type="button" className="ui-icon" aria-label="Más herramientas" title="Más herramientas"
+              aria-expanded={popup === 'tools'} onClick={() => toggle('tools')}><MoreHorizontal size={20} /></button>
           </div>
-
-          {/* ACTION BUTTON: Audio toggle */}
-          <button
-            onClick={onToggleSound}
-            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-surface-container-lowest dark:bg-slate-800 text-on-surface flex items-center justify-center hover:bg-surface-container active:scale-95 transition-all shadow-[0_2px_0_#cbd5e1] dark:shadow-none cursor-pointer"
-            title={soundEnabled ? 'Silenciar sonidos del aula' : 'Activar efectos de audio'}
-          >
-            {soundEnabled ? (
-              <Volume2 className="w-4 h-4 text-primary" />
-            ) : (
-              <VolumeX className="w-4 h-4 text-danger-rose" />
-            )}
-          </button>
-
-          {/* ACTION BUTTON: Printable Map Sheets */}
-          <button
-            onClick={onOpenPrintable}
-            className="hidden sm:flex w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-surface-container-lowest dark:bg-slate-800 text-on-surface items-center justify-center hover:bg-surface-container active:scale-95 transition-all shadow-[0_2px_0_#cbd5e1] dark:shadow-none cursor-pointer"
-            title="Imprimir mapa mudo y fichas de clase"
-          >
-            <Printer className="w-4 h-4 text-slate-600 dark:text-slate-300" />
-          </button>
-
-          {/* ACTION BUTTON: Didactic Manual */}
-          <button
-            onClick={onOpenManual}
-            className="flex w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-surface-container-lowest dark:bg-slate-800 text-on-surface items-center justify-center hover:bg-surface-container active:scale-95 transition-all shadow-[0_2px_0_#cbd5e1] dark:shadow-none cursor-pointer"
-            title="Manual didáctico y guía del profesor"
-          >
-            <BookOpen className="w-4 h-4 text-slate-600 dark:text-slate-300" />
-          </button>
-
-          {/* ACTION BUTTON: Achievements / Logros Modal (Hidden on mobile where bottom nav has it) */}
-          <button
-            onClick={onOpenAchievements}
-            className="hidden md:flex w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-surface-container-lowest dark:bg-slate-800 text-on-surface items-center justify-center hover:bg-surface-container active:scale-95 transition-all shadow-[0_2px_0_#cbd5e1] dark:shadow-none cursor-pointer"
-            title="Insignias y logros desbloqueados"
-          >
-            <Trophy className="w-4 h-4 text-secondary-container" />
-          </button>
-
-          {/* Flame Streak Chip (Racha Máxima idéntica a la tarjeta de logros) */}
-          <button
-            onClick={onOpenAchievements}
-            title={`Racha Máxima: ${stats.maxStreak || 0} aciertos consecutivos. Haz clic para ver el panel de logros.`}
-            className="flex items-center gap-1.5 bg-surface-container-lowest dark:bg-slate-800 px-2.5 sm:px-3 py-1 rounded-full shadow-[0_2px_0_#cbd5e1] dark:shadow-none hover:bg-orange-50 dark:hover:bg-slate-700/60 active:scale-95 transition-all cursor-pointer border border-transparent hover:border-orange-200 dark:hover:border-orange-900/40"
-          >
-            <Flame className={`w-4 h-4 text-orange-500 fill-orange-500 ${(stats.maxStreak || 0) >= 3 ? 'animate-bounce' : ''}`} />
-            <span className="font-stat-lg text-xs sm:text-sm text-orange-600 dark:text-orange-400 font-bold">
-              {stats.maxStreak || 0}
-            </span>
-            <span className="font-label-caps text-[9px] text-slate-500 dark:text-slate-400 hidden sm:inline font-bold">
-              Racha Máx.
-            </span>
-          </button>
-
-          {/* XP Score Chip */}
-          <button
-            onClick={onOpenAchievements}
-            title={`Puntos XXXXX: ${stats.xp || 0} puntos XXXXXX. Haz clic para ver el panel de logros.`}
-            className="flex items-center gap-1.5 bg-surface-container-lowest dark:bg-slate-800 px-2.5 sm:px-3 py-1 rounded-full shadow-[0_2px_0_#cbd5e1] dark:shadow-none hover:bg-orange-50 dark:hover:bg-slate-700/60 active:scale-95 transition-all cursor-pointer border border-transparent hover:border-orange-200 dark:hover:border-orange-900/40"
-          >
-            <Trophy className="w-4 h-4 text-secondary-container" />
-            <span className="font-stat-lg text-xs sm:text-sm text-on-surface dark:text-white font-bold">
-              {stats.xp}
-            </span>
-            <span className="font-label-caps text-[9px] text-on-surface-variant hidden sm:inline">
-              XP
-            </span>
-          </button>
-
-          {/* Level Progress Mini Track (Desktop) */}
-          <div className="hidden xl:flex flex-col gap-0.5 w-20">
-            <div className="flex justify-between items-center text-[9px] font-label-caps text-on-surface-variant">
-              <span>NV. {currentLevel}</span>
-              <span className="text-primary font-bold">{xpInCurrentLevel}/500</span>
-            </div>
-            <div className="w-full h-1.5 bg-surface-container rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-primary to-success-emerald rounded-full transition-all duration-300"
-                style={{ width: `${levelProgressPercent}%` }}
-              />
-            </div>
+        </> : <>
+          <span className="header-editing-name">{editingElementName || 'Selecciona un accidente'}</span>
+          <div className="header-actions">
+            <button type="button" className="ui-icon" onClick={onExportConfiguration} aria-label="Exportar configuración" title="Exportar configuración"><Download size={17} /></button>
+            <button type="button" className="ui-icon" onClick={onSaveVectorEdit} disabled={!hasUnsavedChanges} aria-label="Guardar cambios" title="Guardar cambios"><Save size={17} /></button>
+            <button type="button" className="ui-icon" onClick={onToggleEditorPanelCollapse}
+              aria-label={isEditorPanelCollapsed ? 'Mostrar panel lateral de edición' : 'Ocultar panel lateral de edición y ampliar el mapa'}>
+              {isEditorPanelCollapsed ? <PanelRightOpen size={17} /> : <PanelRightClose size={17} />}</button>
+            <button type="button" className="ui-icon" onClick={onCancelVectorEdit} aria-label="Cancelar modo edición" title="Salir de edición"><X size={18} /></button>
           </div>
-
-        </div>
+        </>}
       </div>
+      {popup && <div className="header-menu ui-glass" role="dialog" aria-label={popup === 'tools' ? 'Herramientas' : popup === 'theme' ? 'Apariencia' : 'Búsqueda de accidentes'}>
+        <div className="header-menu-title"><span>{popup === 'tools' ? 'Herramientas' : popup === 'theme' ? 'Apariencia del mapa' : 'Buscar en el atlas'}</span>
+          <button type="button" className="ui-icon" onClick={() => setPopup(null)} aria-label="Cerrar herramientas"><X size={16} /></button></div>
+        {popup === 'theme' && <div className="header-theme-options">
+          {([{id:'clasico',name:'Clásico · Claro'},{id:'fisico_moderno',name:'Relieve Moderno · Claro'},{id:'nocturno',name:'Modo Nocturno'}] as const).map(item =>
+            <button type="button" key={item.id} aria-pressed={theme === item.id} onClick={() => action(() => onThemeChange(item.id))}>
+              <span className={`theme-swatch theme-${item.id}`} /><span>{item.name}</span>{theme === item.id && <Check size={16} />}</button>)}
+        </div>}
+        {popup === 'search' && <>
+          <label className="header-search-field"><Search size={17} /><input ref={searchRef} value={query} aria-label="Buscar accidentes geográficos"
+            placeholder="Río, pico, cabo…" onChange={event => { setQuery(event.target.value); onSearchSelect?.(event.target.value); }}
+            onKeyDown={event => { if (event.key === 'Enter' && matches[0]) choose(matches[0]); }} />
+            {query && <button type="button" className="ui-icon" aria-label="Borrar búsqueda" onClick={() => { setQuery(''); onSearchSelect?.(''); searchRef.current?.focus(); }}><X size={15} /></button>}</label>
+          <div className="header-search-results">{matches.map(element => <button type="button" key={element.id} onClick={() => choose(element)}>
+            <span>{element.name}<small>{element.subCategory || element.category}</small></span><span>{element.elevationOrLength}</span></button>)}
+            {query && !matches.length && <p>No hay resultados para esta búsqueda.</p>}</div>
+        </>}
+        {popup === 'tools' && <>
+          <div className="header-tool-grid">
+            <button type="button" onClick={() => action(onOpenAccidentFilter)}><Layers size={18} />Capas y filtros<small>{activeCount} accidentes activos</small></button>
+            <button type="button" onClick={() => action(onOpenAchievements)}><Trophy size={18} />Logros e insignias<small>{stats.xp || 0} XP · Nivel {stats.level || 1}</small></button>
+            <button type="button" onClick={() => action(onOpenPrintable)}><Printer size={18} />Imprimir mapa<small>Ficha y soluciones</small></button>
+            <button type="button" onClick={() => action(onOpenManual)}><BookOpen size={18} />Manual de juego<small>Guía didáctica</small></button>
+            <button type="button" onClick={() => action(onToggleSound)}>{soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}{soundEnabled ? 'Silenciar sonidos' : 'Activar sonidos'}<small>Audio de la aplicación</small></button>
+            <button type="button" onClick={() => action(fullscreen)}>{isFullScreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}{isFullScreen ? 'Salir de pantalla completa' : 'Pantalla completa'}<small>Proyector y aula</small></button>
+          </div>
+          <button type="button" className="header-progress" onClick={() => action(onOpenAchievements)}>
+            <Flame size={17} /><span>Mejor racha: {stats.maxStreak || 0}</span><span>{stats.xp || 0} XP</span>
+            <span className="header-progress-track"><span style={{width:`${Math.min(100, ((stats.xp || 0) % 500) / 5)}%`}} /></span>
+          </button>
+        </>}
+      </div>}
     </header>
   );
 };

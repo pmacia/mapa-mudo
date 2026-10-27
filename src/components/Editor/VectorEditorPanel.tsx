@@ -188,7 +188,7 @@ export const VectorEditorPanel: React.FC<VectorEditorPanelProps> = ({
   };
 
   return (
-    <div className="w-full flex flex-col h-full bg-white dark:bg-slate-900 rounded-2xl shadow-xl border-2 border-amber-400/80 dark:border-amber-500/50 overflow-hidden transition-all">
+    <div className="vector-editor w-full flex flex-col h-full bg-white dark:bg-slate-900 rounded-2xl shadow-xl border-2 border-amber-400/80 dark:border-amber-500/50 overflow-hidden transition-all">
       {/* HEADER: Title & Exit */}
       <div className="p-3.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white flex items-center justify-between shrink-0 shadow-sm">
         <div className="flex items-center gap-2 min-w-0">

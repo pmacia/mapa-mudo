@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import React, { useEffect, useState, useCallback } from 'react';
 import { GeoElement } from '../../types/geography';
 import { useChallengeSession, ChallengeType } from '../../hooks/useChallengeSession';
@@ -38,6 +39,7 @@ import { GAME_CONFIG } from '../../constants/gameConfig';
 export type { ChallengeType };
 
 export interface ChallengeModeProps {
+  telemetryTarget?: HTMLElement | null;
   session: ReturnType<typeof useChallengeSession>;
   challengeType: ChallengeType;
   lastClickedElement?: GeoElement | null;
@@ -48,6 +50,7 @@ export interface ChallengeModeProps {
 }
 
 export const ChallengeMode: React.FC<ChallengeModeProps> = ({
+  telemetryTarget,
   session,
   challengeType,
   onSwitchToAtlas,
@@ -184,7 +187,7 @@ export const ChallengeMode: React.FC<ChallengeModeProps> = ({
   // -------------------------------------------------------------
   if (isCompleted || isGameOver) {
     return (
-      <div className={`w-full bg-surface-container-lowest dark:bg-slate-900 rounded-DEFAULT p-4 sm:p-6 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col gap-5 animate-fadeIn ${className || ''}`}>
+      <div data-challenge="results" className={`challenge-results w-full bg-surface-container-lowest dark:bg-slate-900 rounded-DEFAULT p-4 sm:p-6 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col gap-5 animate-fadeIn ${className || ''}`}>
         {/* 1. Header Hero Banner motivador y festivo */}
         <section className="relative overflow-hidden bg-gradient-to-b from-primary via-primary-container to-primary text-on-primary rounded-DEFAULT p-5 sm:p-6 shadow-md flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="absolute -top-16 -left-16 w-64 h-64 bg-secondary-container/20 rounded-full blur-2xl pointer-events-none" />
@@ -310,10 +313,7 @@ export const ChallengeMode: React.FC<ChallengeModeProps> = ({
   // SCREEN: MODO 60S CONTRARRELOJ
   // -------------------------------------------------------------
     if (challengeType === 'contrarreloj') {
-    return (
-      <div className={`w-full flex flex-col gap-3 ${className || ''}`}>
-        {/* Critical Adrenaline Heads-Up Display */}
-        <section className="w-full bg-surface-container-lowest dark:bg-slate-900 rounded-DEFAULT p-3 sm:p-4 portrait:p-2 shadow-[0_4px_0_#c3c6d7] portrait:shadow-[0_1px_0_#c3c6d7] dark:shadow-none border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
+    const telemetry = (<section className="timed-hud ui-glass w-full bg-surface-container-lowest dark:bg-slate-900 rounded-DEFAULT p-3 sm:p-4 portrait:p-2 shadow-[0_4px_0_#c3c6d7] portrait:shadow-[0_1px_0_#c3c6d7] dark:shadow-none border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
           {/* Gigantic Pulsing Critical Timer */}
           <div className="flex items-center gap-3 portrait:gap-1.5 bg-error-container/80 dark:bg-red-950/60 px-4 py-2 portrait:px-2 portrait:py-1 rounded-DEFAULT portrait:rounded-md shadow-[0_3px_0_#93000a] portrait:shadow-[0_2px_0_#93000a] animate-pulse portrait:shrink-0">
             <div className="w-10 h-10 portrait:w-6 portrait:h-6 rounded-full bg-danger-rose text-on-error flex items-center justify-center shadow-[0_2px_0_#ba1a1a] portrait:shadow-[0_1px_0_#ba1a1a]">
@@ -323,7 +323,7 @@ export const ChallengeMode: React.FC<ChallengeModeProps> = ({
               <span className="font-label-caps text-[9px] text-on-error-container uppercase tracking-wider font-extrabold portrait:hidden">
                 ¡Ritmo Crítico!
               </span>
-              <span className="font-display-lg text-2xl portrait:text-base font-black text-danger-rose tracking-tight">
+              <span data-testid="game-timer" className="font-display-lg text-2xl portrait:text-base font-black text-danger-rose tracking-tight">
                 00:{timeLeft < 10 ? `0${timeLeft}` : timeLeft}s
               </span>
             </div>
@@ -375,11 +375,15 @@ export const ChallengeMode: React.FC<ChallengeModeProps> = ({
               </div>
             </div>
           </div>
-        </section>
+        </section>);
+    return (
+      <div data-challenge="contrarreloj" className={`timed-challenge w-full flex flex-col gap-3 ${className || ''}`}>
+        {/* Critical Adrenaline Heads-Up Display */}
+        {telemetryTarget ? createPortal(telemetry, telemetryTarget) : telemetry}
 
         {/* Rapid Identification Question Banner */}
         {currentQuestion && (
-          <div className="w-full bg-primary text-on-primary rounded-DEFAULT p-4 shadow-[0_4px_0_#003ea8] portrait:shadow-[0_2px_0_#003ea8] flex flex-col gap-2">
+          <div className="timed-question w-full bg-primary text-on-primary rounded-DEFAULT p-4 shadow-[0_4px_0_#003ea8] portrait:shadow-[0_2px_0_#003ea8] flex flex-col gap-2">
             <div className="flex items-center justify-between portrait:hidden">
               <span className="font-label-caps text-[10px] text-primary-fixed uppercase tracking-wider font-extrabold">
                 Identificacón Relámpago • {currentQuestion.subCategory || currentQuestion.category}
@@ -399,7 +403,7 @@ export const ChallengeMode: React.FC<ChallengeModeProps> = ({
 
         {/* Dual Massive Tactile Buttons (Sí / No) */}
         {currentQuestion && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 portrait:grid-cols-2 gap-3 portrait:gap-2 mt-1 portrait:mt-0.5">
+          <div className="timed-answers grid grid-cols-1 sm:grid-cols-2 portrait:grid-cols-2 gap-3 portrait:gap-2 mt-1 portrait:mt-0.5">
             {/* SÍ, ES CORRECTO */}
             <button
               onClick={() => handleContrarrelojAnswer(true)}
@@ -448,7 +452,7 @@ export const ChallengeMode: React.FC<ChallengeModeProps> = ({
 
         {/* Fast Feedback Notification for Contrarreloj */}
         {feedback && (
-          <div className={`p-3 portrait:py-1 portrait:px-2 rounded-DEFAULT portrait:rounded-lg border flex items-center justify-between gap-2.5 portrait:gap-1.5 animate-fadeIn shadow-sm portrait:shadow-xs ${
+          <div className={`timed-feedback p-3 portrait:py-1 portrait:px-2 rounded-DEFAULT portrait:rounded-lg border flex items-center justify-between gap-2.5 portrait:gap-1.5 animate-fadeIn shadow-sm portrait:shadow-xs ${
             feedback.isCorrect
               ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200'
               : 'bg-rose-50 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800 text-rose-900 dark:text-rose-200'
@@ -479,7 +483,7 @@ export const ChallengeMode: React.FC<ChallengeModeProps> = ({
   // -------------------------------------------------------------
   if (challengeType === 'identificar') {
     return (
-      <div className={`w-full flex flex-col gap-3.5 ${className || ''}`}>
+      <div data-challenge="identificar" className={`w-full flex flex-col gap-3.5 ${className || ''}`}>
         {/* Top Telemetry & Status Bar */}
         <section className="w-full bg-surface-container-lowest dark:bg-slate-900 rounded-DEFAULT p-3 sm:p-4 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
@@ -560,7 +564,7 @@ export const ChallengeMode: React.FC<ChallengeModeProps> = ({
 
         {/* 4 Large Interactive Multiple-Choice Cards */}
         {currentQuestion && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5" role="radiogroup">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5" role="group" aria-label="Opciones de respuesta">
             {options.map((opt, idx) => {
               const letter = ['A', 'B', 'C', 'D'][idx] || `${idx + 1}`;
               const isHidden = hiddenOptions.includes(opt.id);
@@ -592,7 +596,7 @@ export const ChallengeMode: React.FC<ChallengeModeProps> = ({
               }
 
               return (
-                <div
+                <button type="button" disabled={hasAnswered}
                   key={opt.id}
                   onClick={() => {
                     if (!hasAnswered) handleAnswer(isTarget, opt);
@@ -622,7 +626,7 @@ export const ChallengeMode: React.FC<ChallengeModeProps> = ({
                       +200 XP
                     </span>
                   )}
-                </div>
+                </button>
               );
             })}
           </div>
@@ -673,7 +677,7 @@ export const ChallengeMode: React.FC<ChallengeModeProps> = ({
   // SCREEN: MODO UBICAR ("¿Dónde está?")
   // -------------------------------------------------------------
   return (
-    <div className={`w-full flex flex-col gap-3.5 ${className || ''}`}>
+    <div data-challenge="localizar" className={`w-full flex flex-col gap-3.5 ${className || ''}`}>
       {/* 1. HUD Superior de Partida (Stitch Ubicar) */}
       <section className="w-full bg-surface-container-lowest dark:bg-slate-900 rounded-DEFAULT p-3 sm:p-4 shadow-[0_4px_0_#dbe1ff] dark:shadow-none border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
         {/* Ronda y Progreso Segmentado */}
