@@ -6,6 +6,21 @@ import { ACCIDENTS_VECTOR_DATA } from './geographyAccidentsData';
 export const GEO_ELEMENTS: GeoElement[] = [
 ...TRIBUTARIES,
 {
+  "id": "montes-de-toledo-copia-mvphd1sp",
+  "name": "Montes de Toledo",
+  "category": "montanas",
+  "subCategory": "Sistema Montañoso Interior",
+  "difficulty": "medio",
+  "elevationOrLength": "350 km en la Submeseta Sur",
+  "svgType": "polygon",
+  "description": "Cadena de relieve apalachano en el centro de la Submeseta Sur que separa las cuencas del Tajo y del Guadiana.",
+  "curiosity": "Alberga el Parque Nacional de Cabañeros, famoso por sus dehesas repletas de ciervos, corzos y águilas imperiales."
+,
+  mapX: ACCIDENTS_VECTOR_DATA.rangeCenters["montes-de-toledo-copia-mvphd1sp"].x,
+  mapY: ACCIDENTS_VECTOR_DATA.rangeCenters["montes-de-toledo-copia-mvphd1sp"].y,
+  svgPath: ACCIDENTS_VECTOR_DATA.mountainRanges["montes-de-toledo-copia-mvphd1sp"]
+},
+{
   "id": "cordillera-cantabrica-copia-mvp4qkp2",
   "name": "Cordillera Cantábrica",
   "category": "montanas",
@@ -124,21 +139,6 @@ export const GEO_ELEMENTS: GeoElement[] = [
   mapX: ACCIDENTS_VECTOR_DATA.rangeCenters["sistema-iberico"].x,
   mapY: ACCIDENTS_VECTOR_DATA.rangeCenters["sistema-iberico"].y,
   svgPath: ACCIDENTS_VECTOR_DATA.mountainRanges["sistema-iberico"]
-},
-{
-  "id": "montes-de-toledo",
-  "name": "Montes de Toledo",
-  "category": "montanas",
-  "subCategory": "Sistema Montañoso Interior",
-  "difficulty": "medio",
-  "elevationOrLength": "350 km en la Submeseta Sur",
-  "svgType": "polygon",
-  "description": "Cadena de relieve apalachano en el centro de la Submeseta Sur que separa las cuencas del Tajo y del Guadiana.",
-  "curiosity": "Alberga el Parque Nacional de Cabañeros, famoso por sus dehesas repletas de ciervos, corzos y águilas imperiales."
-,
-  mapX: ACCIDENTS_VECTOR_DATA.rangeCenters["montes-de-toledo"].x,
-  mapY: ACCIDENTS_VECTOR_DATA.rangeCenters["montes-de-toledo"].y,
-  svgPath: ACCIDENTS_VECTOR_DATA.mountainRanges["montes-de-toledo"]
 },
 {
   "id": "sierra-morena",
