@@ -43,8 +43,8 @@
 ### Task 3: Mobile gameplay and whole-branch verification
 **Files:** `tests/immersive-ui.mjs`, any presentation files needing fixes, plan completion checkboxes.
 **Interfaces:** tests use `BASE_URL`, `PLAYWRIGHT_MODULE` and optional `BROWSER_EXECUTABLE` so bundled automation can run without adding product dependencies.
-- [ ] Exercise real timed responses, penalty/bonus/feedback, hide/restore, orientation and results/restart; assert no timer reset or duplicate answer.
-- [ ] Exercise locate and quiz, atlas and vector editing, restore controls and each theme at 360×640, 390×844, 430×932, 768×1024, desktop, both sides of 1024 and mobile landscape.
-- [ ] Save and inspect screenshots; run all node tests, TypeScript, build, browser checks and diff whitespace checks.
-- [ ] Request one fresh whole-branch review against the approved spec; address critical/important findings and rerun relevant regressions plus full checks.
-- [ ] Commit validated changes and report the branch, evidence and any limitations without publishing or merging.
+- [x] Exercise real timed responses, penalty/bonus/feedback, hide/restore, orientation and results/restart; assert no timer reset or duplicate answer.
+- [x] Exercise locate and quiz, atlas and vector editing, restore controls and each theme at 360×640, 390×844, 430×932, 768×1024, desktop, both sides of 1024 and mobile landscape.
+- [x] Save and inspect screenshots; run all node tests, TypeScript, build, browser checks and diff whitespace checks.
+- [x] Request one fresh whole-branch review against the approved spec; address critical/important findings and rerun relevant regressions plus full checks.
+- [x] Commit validated changes and report the branch, evidence and any limitations without publishing or merging.

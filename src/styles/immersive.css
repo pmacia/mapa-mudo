@@ -110,6 +110,8 @@
   .map-safe-frame { inset:80px 0 320px; }
   .companion-region { width:auto; left:12px; right:12px; top:auto; bottom:calc(92px + env(safe-area-inset-bottom)); max-height:43dvh; border-radius:23px; }
   .companion-region[data-collapsed="true"] { left:auto; max-height:none; }
+  .immersive-shell[data-mode="reto_identificar"] .companion-region,
+  .immersive-shell[data-mode="reto_localizar"] .companion-region { height:43dvh; }
   .atlas-region { height:210px; }
   .expand-atlas { display:inline-flex; }
   .immersive-shell[data-expanded="true"] .atlas-region { top:82px; height:auto; max-height:none; }
@@ -140,7 +142,7 @@
   .map-tools-toggle { right:12px; top:auto; bottom:0; }
   .immersive-map .map-tools { top:auto; bottom:42px; right:12px; }
   .immersive-map .map-tools button { width:34px; height:34px; }
-  .immersive-shell[data-finished="true"]:not([data-mode="explorar"]):not([data-mode="editor"]) .companion-region { top:82px; max-height:none; }
+  .immersive-shell[data-finished="true"]:not([data-mode="explorar"]):not([data-mode="editor"]) .companion-region { top:82px; height:auto; max-height:none; }
   .immersive-shell[data-interface-hidden="true"] .map-safe-frame { inset:10px; }
 }
 @media(max-width:1023px) and (orientation:landscape) {
@@ -173,8 +175,16 @@
   .timed-answers>button { min-height:54px!important; }
   .immersive-shell[data-mode="contrarreloj"] .map-safe-frame { bottom:280px; }
 }
-@supports not (backdrop-filter:blur(1px)) { .ui-glass,.header-region header,.mobile-dock { background:var(--ui-solid); } }
-@media(prefers-reduced-transparency:reduce) { .ui-glass,.header-region header,.mobile-dock { background:var(--ui-solid); backdrop-filter:none; } }
+@supports not (backdrop-filter:blur(1px)) {
+  .immersive-shell .ui-glass,.immersive-shell .header-region header,.immersive-shell .navigation-region .mobile-dock {
+    background:var(--ui-solid)!important; backdrop-filter:none!important; -webkit-backdrop-filter:none!important;
+  }
+}
+@media(prefers-reduced-transparency:reduce) {
+  .immersive-shell .ui-glass,.immersive-shell .header-region header,.immersive-shell .navigation-region .mobile-dock {
+    background:var(--ui-solid)!important; backdrop-filter:none!important; -webkit-backdrop-filter:none!important;
+  }
+}
 @media(prefers-reduced-motion:reduce) { .immersive-shell * { animation:none!important; transition:none!important; } }
 /* Navigation surfaces have their own concise hierarchy, in light and dark alike. */
 .immersive-header { color:var(--ui-text); }
