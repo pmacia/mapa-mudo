@@ -15,7 +15,7 @@ try {
   const toggle=async label=>{await open();await menu.getByRole('button',{name:label,exact:true}).click();await page.keyboard.press('Escape');};
   await open();assert.equal(await menu.getByRole('button',{name:'Atlas',exact:true}).count(),1);assert.equal(await menu.getByRole('button',{name:'Marcador',exact:true}).count(),0);await page.keyboard.press('Escape');
   await open();
-  const anchor=await page.getByRole('button',{name:'Subopciones de visibilidad',exact:true}).boundingBox();
+  const anchor=await page.getByRole('button',{name:'Subopciones de visibilidad',exact:true}).locator('svg').boundingBox();
   const pointer=await menu.evaluate(el=>{const b=el.getBoundingClientRect(),s=getComputedStyle(el,'::after');return b.y+parseFloat(s.top)+parseFloat(s.height)/2;});
   assert.ok(Math.abs(pointer-(anchor.y+anchor.height/2))<=3,'Menu pointer aligns with its disclosure control');
   await page.keyboard.press('Escape');
