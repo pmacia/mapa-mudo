@@ -331,3 +331,7 @@
 .category-label-option[data-disabled="true"] { color:var(--ui-muted); opacity:.5; cursor:default; }
 .companion-region .panel-collapse { background:transparent; color:var(--ui-muted); }
 @media(max-width:359px) { .category-label-grid { grid-template-columns:1fr; } }
+.atlas-search-drag-handle { display:flex; align-items:center; gap:8px; flex:1; min-width:0; min-height:44px;
+  padding:0; border:0; background:transparent; color:var(--ui-text); text-align:left; cursor:grab!important; touch-action:none; user-select:none; }
+.atlas-search-drag-handle:active { cursor:grabbing!important; }
+.atlas-search-drag-handle>svg { color:var(--ui-muted); flex-shrink:0; }
