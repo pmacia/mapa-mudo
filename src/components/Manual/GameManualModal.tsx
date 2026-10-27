@@ -75,27 +75,27 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/75 backdrop-blur-md animate-fadeIn"
+      className="manual-backdrop"
       onClick={onClose}
     >
       <div 
-        role="dialog" aria-modal="true" aria-labelledby="game-manual-title" className="bg-white dark:bg-slate-900 w-full max-w-4xl h-[92vh] max-h-[850px] rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col transition-all"
+        role="dialog" aria-modal="true" aria-labelledby="game-manual-title" className="manual-dialog ui-glass"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Header */}
-        <div className="px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 text-white shrink-0 shadow-md">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/15 backdrop-blur-md flex items-center justify-center border border-white/20 shadow-inner">
-              <BookOpen className="w-5 h-5 text-amber-300" />
+        <div className="manual-heading">
+          <div className="manual-heading-main">
+            <div className="manual-heading-icon">
+              <BookOpen className="w-5 h-5" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h2 id="game-manual-title" className="text-base sm:text-lg font-black tracking-tight">Manual del Juego y Guía Didáctica</h2>
-                <span className="text-[10px] uppercase font-black tracking-wider px-2 py-0.5 rounded-full bg-amber-400 text-slate-900 shadow-xs">
+              <div className="manual-heading-title">
+                <h2 id="game-manual-title" className="manual-title">Manual del Juego y Guía Didáctica</h2>
+                <span className="manual-version">
                   Guía actualizada
                 </span>
               </div>
-              <p className="text-xs text-blue-100/90 hidden sm:block">
+              <p className="manual-subtitle">
                 GeoEspaña Junior · Reglas pedagógicas, controles de teclado, sistema de puntuación y cartografía
               </p>
             </div>
@@ -103,7 +103,7 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
 
           <button
             onClick={onClose}
-            className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-colors cursor-pointer"
+            className="ui-icon"
             aria-label="Cerrar manual"
           >
             <X className="w-5 h-5" />
@@ -111,9 +111,9 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
         </div>
 
         {/* Quick Search and Navigation Tabs */}
-        <div className="px-4 py-2.5 bg-slate-100 dark:bg-slate-800/90 border-b border-slate-200 dark:border-slate-700/60 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 shrink-0">
+        <div className="manual-navigation">
           {/* Scrollable Tabs */}
-          <div className="overflow-x-auto flex items-center gap-1.5 scrollbar-thin py-0.5">
+          <div className="manual-sections">
             {SECTIONS.map((sec) => {
               const Icon = sec.icon;
               const isActive = activeSection === sec.id;
@@ -124,13 +124,9 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
                   onClick={() => {
                     setActiveSection(sec.id);
                   }}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                    isActive
-                      ? 'bg-blue-600 text-white shadow-xs'
-                      : 'text-slate-600 dark:text-slate-300 hover:bg-white/80 dark:hover:bg-slate-700/70'
-                  }`}
+                  className="manual-section"
                 >
-                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-blue-500 dark:text-blue-400'}`} />
+                  <Icon className="w-3.5 h-3.5" />
                   <span>{sec.label}</span>
                 </button>
               );
@@ -139,7 +135,7 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
         </div>
 
         {/* Main Content Area (Scrollable) */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 text-slate-700 dark:text-slate-300">
+        <div className="manual-content">
           
           {activeSection === 'interfaz' && <InterfaceGuide />}
           {activeSection === 'edicion' && <EditorGuide />}
@@ -832,23 +828,22 @@ export const GameManualModal: React.FC<GameManualModalProps> = ({
         </div>
 
         {/* Modal Footer */}
-        <div className="px-5 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90 flex flex-wrap items-center justify-between gap-3 shrink-0">
-          <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
+        <div className="manual-footer">
+          <div className="manual-footer-brand">
             <strong>GeoEspaña Junior</strong> · Geografía física interactiva de España (v2.0)
           </div>
 
           <div className="flex items-center gap-2">
             <button
               onClick={onClose}
-              className="px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+              className="manual-action"
             >
               Cerrar Guía
             </button>
             {onSelectMode && (
               <button
                 onClick={() => { onSelectMode('reto_localizar'); onClose(); }}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
+                className="manual-action manual-action-primary"
               >
                 <span>¡Jugar Ahora!</span>
               </button>
