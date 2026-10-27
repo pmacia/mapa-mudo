@@ -739,7 +739,7 @@ export default function App() {
               />
         </div>
       </main>
-      <FloatingRegion id="companion" label={isVectorEditMode ? 'editor' : currentMode === 'explorar' ? 'Atlas' : 'reto'}
+      <FloatingRegion id="companion" resetKey={isVectorEditMode ? 'editor' : currentMode} label={isVectorEditMode ? 'editor' : currentMode === 'explorar' ? 'Atlas' : 'reto'}
         className={`companion-region ui-glass ${currentMode === 'explorar' && !isVectorEditMode ? 'atlas-region' : ''}`}
         collapsed={isVectorEditMode ? isEditorPanelCollapsed : isCompanionCollapsed}
         onCollapse={() => isVectorEditMode ? setIsEditorPanelCollapsed(true) : setIsCompanionCollapsed(true)}

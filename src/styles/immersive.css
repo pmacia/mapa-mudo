@@ -341,3 +341,8 @@
 .timed-hud-grip { display:flex; align-items:center; justify-content:center; min-width:44px; min-height:44px; padding:0; flex-shrink:0;
   border:0; border-radius:10px; background:transparent; color:var(--ui-muted); cursor:grab!important; }
 .timed-hud-grip:active { cursor:grabbing!important; }
+.panel-drag-handle { display:flex; align-items:center; gap:7px; flex:1; min-width:0; min-height:32px; padding:0; border:0;
+  color:var(--ui-muted); background:transparent; text-align:left; font:inherit; letter-spacing:inherit; text-transform:inherit;
+  cursor:grab!important; touch-action:none; user-select:none; }
+.panel-drag-handle:active { cursor:grabbing!important; }
+@media(pointer:coarse) { .panel-drag-handle { min-height:44px; } }

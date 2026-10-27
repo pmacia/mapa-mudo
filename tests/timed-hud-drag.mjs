@@ -5,10 +5,10 @@ try {
  const page=await browser.newPage({viewport:{width:1200,height:800},hasTouch:true,reducedMotion:'reduce'});page.setDefaultTimeout(5000);
  await page.goto(process.env.BASE_URL||'http://localhost:3002');await page.getByRole('button',{name:'60 segundos contrarreloj',exact:true}).click();
  const hud=page.locator('.timed-hud');const start=await hud.boundingBox();
- const map=page.locator('[data-map-canvas]');const framing=await map.getAttribute('viewBox');
+ const map=page.locator('[data-map-canvas]');const framing=await map.getAttribute('viewBox');const questionPosition=await page.locator('.companion-region').boundingBox();
  await page.mouse.move(start.x+25,start.y+25);await page.mouse.down();await page.mouse.move(start.x+125,start.y+125,{steps:5});await page.mouse.up();
  const moved=await hud.boundingBox();assert.ok(moved.x>start.x+70&&moved.y>start.y+70,`Timed scoreboard must be draggable: ${JSON.stringify({start,moved})}`);
- assert.equal(await map.getAttribute('viewBox'),framing,'Moving HUD cannot pan the map');
+ assert.equal(await map.getAttribute('viewBox'),framing,'Moving HUD cannot pan the map');assert.deepEqual(await page.locator('.companion-region').boundingBox(),questionPosition,'Moving HUD must not move the question panel');
  const readTime=async()=>Number((await page.getByTestId('game-timer').innerText()).match(/00:(\d+)/)[1]);const time=await readTime();await page.waitForTimeout(1100);assert.ok(await readTime()<time,'Timer must continue counting while HUD moves');
  const grip=page.getByRole('button',{name:'Mover marcador de contrarreloj',exact:true});await grip.focus();
  const answerCount=()=>page.locator('[title="Aciertos"],[title="Fallos"]').allInnerTexts().then(t=>t.map(s=>Number(s.match(/\d+/)?.[0])).reduce((a,b)=>a+b,0));

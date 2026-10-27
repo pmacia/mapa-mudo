@@ -1,11 +1,13 @@
-import { useEffect, useRef, useState, type PointerEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type PointerEvent, type KeyboardEvent, type ReactNode } from 'react';
 
 /** Move an overlay without remounting its contents or changing the map beneath it. */
-export function DraggableOverlay({ children }: { children: ReactNode }) {
-  const root = useRef<HTMLDivElement>(null);
+export function useDraggableOverlay<T extends HTMLElement>({ enabled = true, handleOnly = false, resetKey }: { enabled?: boolean; handleOnly?: boolean; resetKey?: string } = {}) {
+  const root = useRef<T>(null);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const drag = useRef<{ id: number; x: number; y: number; offsetX: number; offsetY: number; rect: DOMRect } | null>(null);
+  useEffect(() => { setOffset({ x: 0, y: 0 }); drag.current = null; }, [resetKey]);
   useEffect(() => {
+    if (!enabled) return;
     let frame = 0;
     const fit = () => {
       cancelAnimationFrame(frame);
@@ -21,8 +23,11 @@ export function DraggableOverlay({ children }: { children: ReactNode }) {
     if (root.current) observer.observe(root.current);
     window.addEventListener('resize', fit);
     return () => { cancelAnimationFrame(frame); observer.disconnect(); window.removeEventListener('resize', fit); };
-  }, []);
-  const begin = (event: PointerEvent<HTMLDivElement>) => {
+  }, [enabled]);
+  const begin = (event: PointerEvent<T>) => {
+    // Portals bubble through their React ancestors; move only the physical owner.
+    if (!root.current?.contains(event.target as Node)) return;
+    if (!enabled || (handleOnly && !(event.target as Element).closest('[data-overlay-drag-handle]'))) return;
     if (event.button !== 0 || !event.isPrimary || (event.target as Element).closest('button:not([data-overlay-drag-handle]), input, select, textarea')) return;
     const rect = root.current?.getBoundingClientRect();
     if (!rect) return;
@@ -30,17 +35,18 @@ export function DraggableOverlay({ children }: { children: ReactNode }) {
     event.currentTarget.setPointerCapture(event.pointerId);
     drag.current = { id: event.pointerId, x: event.clientX, y: event.clientY, offsetX: offset.x, offsetY: offset.y, rect };
   };
-  return <div ref={root} className="draggable-overlay" style={{ transform: `translate(${offset.x}px, ${offset.y}px)` }}
-    onPointerDown={begin} onPointerMove={event => {
+  return { ref: root, style: enabled ? { transform: `translate(${offset.x}px, ${offset.y}px)` } : undefined,
+    onPointerDown: begin, onPointerMove: (event: PointerEvent<T>) => {
       const start = drag.current;
       if (!start || start.id !== event.pointerId) return;
       setOffset({
         x: start.offsetX + Math.max(12 - start.rect.x, Math.min(event.clientX - start.x, innerWidth - start.rect.right - 12)),
         y: start.offsetY + Math.max(12 - start.rect.y, Math.min(event.clientY - start.y, innerHeight - start.rect.bottom - 12)),
       });
-    }} onPointerUp={() => { drag.current = null; }} onPointerCancel={() => { drag.current = null; }}
-    onKeyDown={event => {
-      if (!(event.target as Element).closest('[data-overlay-drag-handle]')) return;
+    }, onPointerUp: () => { drag.current = null; }, onPointerCancel: () => { drag.current = null; },
+    onKeyDown: (event: KeyboardEvent<T>) => {
+      if (!root.current?.contains(event.target as Node)) return;
+      if (!enabled || !(event.target as Element).closest('[data-overlay-drag-handle]')) return;
       const direction = { ArrowLeft: [-16, 0], ArrowRight: [16, 0], ArrowUp: [0, -16], ArrowDown: [0, 16] }[event.key];
       const rect = root.current?.getBoundingClientRect();
       if (!direction || !rect) return;
@@ -50,5 +56,10 @@ export function DraggableOverlay({ children }: { children: ReactNode }) {
         x: value.x + Math.max(12 - rect.x, Math.min(direction[0], innerWidth - rect.right - 12)),
         y: value.y + Math.max(12 - rect.y, Math.min(direction[1], innerHeight - rect.bottom - 12)),
       }));
-    }}>{children}</div>;
+    } };
+}
+
+export function DraggableOverlay({ children }: { children: ReactNode }) {
+  const drag = useDraggableOverlay<HTMLDivElement>();
+  return <div className="draggable-overlay" {...drag}>{children}</div>;
 }
