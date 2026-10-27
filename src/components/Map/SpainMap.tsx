@@ -45,6 +45,7 @@ export interface MapLayers {
   islas: boolean;
   unidades_relieve: boolean;
   showLabels: boolean;
+  labelsByCategory?: Partial<Record<CategoryType, boolean>>;
   showCommunities?: boolean;
   showProvinces?: boolean;
 }
@@ -287,6 +288,9 @@ export const SpainMap: React.FC<SpainMapProps> = ({
     return isLayerActive || isTarget || isFeedback;
   });
 
+  const showElementLabel = (element: GeoElement) => layers.showLabels && !blankMode &&
+    layers.labelsByCategory?.[element.category] !== false;
+
   const targetHighlightElement = effectiveTargetHighlightId
     ? elements.find((e) => e.id === effectiveTargetHighlightId)
     : null;
@@ -499,7 +503,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
                   )}
 
                   {/* Mountain Name Label */}
-                  {layers.showLabels && !blankMode && (
+                  {showElementLabel(elem) && (
                     <text
                       x={elem.mapX}
                       y={elem.mapY}
@@ -587,7 +591,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
                   />
 
                   {/* River Label */}
-                  {layers.showLabels && !blankMode && (
+                  {showElementLabel(elem) && (
                     <text
                       x={elem.mapX}
                       y={elem.mapY - 8}
@@ -787,7 +791,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
                 )}
 
                 {/* River and range labels are already rendered alongside their paths. */}
-                {elem.svgType === 'point' && layers.showLabels && !blankMode && (
+                {elem.svgType === 'point' && showElementLabel(elem) && (
                   <text
                     x="0"
                     y={elem.category === 'picos' ? -18 : 18}
@@ -905,7 +909,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
       </svg>
 
       {/* Floating Hover Tooltip (Disabled during vector edit mode) */}
-      {hoveredElement && layers.showLabels && !blankMode && !isVectorEditMode && (
+      {hoveredElement && showElementLabel(hoveredElement) && !isVectorEditMode && (
         <div
           className="pointer-events-none absolute bottom-18 right-4 z-30 flex items-center gap-3 bg-slate-900/95 text-white px-4 py-2.5 rounded-2xl shadow-xl backdrop-blur-md border border-slate-700 animate-fadeIn"
         >

@@ -29,6 +29,7 @@ export interface AccidentFilterState {
   islas: boolean;
   unidades_relieve: boolean;
   showLabels: boolean;
+  labelsByCategory?: Partial<Record<CategoryType, boolean>>;
   showCommunities?: boolean;
   showProvinces?: boolean;
 }
@@ -36,7 +37,8 @@ interface AccidentFilterPanelProps {
   isOpen: boolean;
   onClose: () => void;
   filters: AccidentFilterState;
-  onToggleFilter: (category: keyof AccidentFilterState) => void;
+  onToggleFilter: (category: keyof Omit<AccidentFilterState, 'labelsByCategory'>) => void;
+  onToggleCategoryLabel: (category: CategoryType) => void;
   onApplyPreset: (preset: 'todos' | 'rios' | 'relieve' | 'costas') => void;
   activeCount: number;
   totalCount: number;
@@ -46,6 +48,7 @@ export const AccidentFilterPanel: React.FC<AccidentFilterPanelProps> = ({
   onClose,
   filters,
   onToggleFilter,
+  onToggleCategoryLabel,
   onApplyPreset,
   activeCount,
   totalCount,
@@ -229,6 +232,7 @@ export const AccidentFilterPanel: React.FC<AccidentFilterPanelProps> = ({
                 return (
                   <button
                     key={cat.key}
+                    aria-pressed={isActive}
                     onClick={() => (setActivePreset(null), onToggleFilter(cat.key))}
                     className={`p-3 rounded-DEFAULT border text-left flex items-center justify-between gap-2.5 transition-all cursor-pointer ${
                       isActive
@@ -331,6 +335,8 @@ export const AccidentFilterPanel: React.FC<AccidentFilterPanelProps> = ({
               Opciones de Aprendizaje y Examen
             </span>
             <button
+              aria-label="Mostrar textos en el mapa"
+              aria-pressed={filters.showLabels}
               onClick={() => onToggleFilter('showLabels')}
               className={`w-full p-3 rounded-DEFAULT border text-left flex items-center justify-between gap-3 transition-all cursor-pointer ${
                 filters.showLabels
@@ -357,6 +363,20 @@ export const AccidentFilterPanel: React.FC<AccidentFilterPanelProps> = ({
                 {filters.showLabels ? 'Activado' : 'Mudo'}
               </div>
             </button>
+            <fieldset className="category-label-options" aria-label="Textos por tipo de accidente">
+              <legend>Textos por tipo de accidente</legend>
+              <p>{filters.showLabels ? 'Elige qué nombres mostrar. Las capas desactivadas no están disponibles.' : 'Activa los textos para ajustar los nombres por tipo. Tu selección se conserva.'}</p>
+              <div className="category-label-grid">
+                {categoriesList.map(cat => <label key={cat.key} className="category-label-option"
+                  data-disabled={!filters[cat.key] || !filters.showLabels}>
+                  <input type="checkbox" aria-label={`Textos: ${cat.label}`}
+                    checked={filters.labelsByCategory?.[cat.key] !== false}
+                    disabled={!filters[cat.key] || !filters.showLabels}
+                    onChange={() => onToggleCategoryLabel(cat.key)} />
+                  <span>{cat.label}</span>
+                </label>)}
+              </div>
+            </fieldset>
           </div>
         </div>
         {/* Footer with Apply button */}

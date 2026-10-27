@@ -19,7 +19,7 @@ import { PrintableMapModal } from './components/Printable/PrintableMapModal';
 import { AtlasStampCelebrationModal } from './components/Achievements/AtlasStampCelebrationModal';
 import { GameManualModal } from './components/Manual/GameManualModal';
 import { playSound } from './utils/audio';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { Maximize2, Minimize2 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { MobileBottomNav } from './components/Navigation/MobileBottomNav';
 import { GAME_CONFIG } from './constants/gameConfig';
@@ -419,11 +419,17 @@ export default function App() {
       setAccidentFilters((prev) => ({ ...prev, showLabels: true }));
     }
   };
-  const handleToggleAccidentFilter = (key: keyof AccidentFilterState) => {
+  const handleToggleAccidentFilter = (key: keyof Omit<AccidentFilterState, 'labelsByCategory'>) => {
     setAccidentFilters((prev) => ({
       ...prev,
       [key]: !prev[key],
     }));
+  };
+  const handleToggleCategoryLabel = (category: CategoryType) => {
+    setAccidentFilters(prev => {
+      if (!prev[category] || !prev.showLabels) return prev;
+      return { ...prev, labelsByCategory: { ...prev.labelsByCategory, [category]: prev.labelsByCategory?.[category] === false } };
+    });
   };
   const handleApplyPreset = (preset: 'todos' | 'rios' | 'relieve' | 'costas') => {
     playSound('click');
@@ -736,9 +742,10 @@ export default function App() {
       <FloatingRegion id="companion" label={isVectorEditMode ? 'editor' : currentMode === 'explorar' ? 'Atlas' : 'reto'}
         className={`companion-region ui-glass ${currentMode === 'explorar' && !isVectorEditMode ? 'atlas-region' : ''}`}
         collapsed={isVectorEditMode ? isEditorPanelCollapsed : isCompanionCollapsed}
+        onCollapse={() => isVectorEditMode ? setIsEditorPanelCollapsed(true) : setIsCompanionCollapsed(true)}
         actions={currentMode === 'explorar' && !isVectorEditMode ? <button type="button" className="ui-icon expand-atlas" onClick={() => setIsMobileDrawerOpen(value => !value)}
           aria-label={isMobileDrawerOpen ? 'Bajar ficha y ver el mapa' : 'Subir ficha de exploración'} aria-expanded={isMobileDrawerOpen}>
-          {isMobileDrawerOpen ? <ChevronDown size={17} /> : <ChevronUp size={17} />}</button> : undefined}>
+          {isMobileDrawerOpen ? <Minimize2 size={17} /> : <Maximize2 size={17} />}</button> : undefined}>
         {isVectorEditMode ? (
           <VectorEditorPanel
                   elements={geoElements}
@@ -793,6 +800,7 @@ export default function App() {
         onClose={() => setIsAccidentFilterOpen(false)}
         filters={accidentFilters}
         onToggleFilter={handleToggleAccidentFilter}
+        onToggleCategoryLabel={handleToggleCategoryLabel}
         onApplyPreset={handleApplyPreset}
         activeCount={activeElements.length}
         totalCount={geoElements.length}

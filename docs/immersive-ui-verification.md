@@ -13,6 +13,7 @@ node tests/immersive-accessibility.mjs
 node tests/immersive-layout.mjs
 node tests/map-visibility.mjs
 node tests/map-interactions.mjs
+node tests/category-labels.mjs
 ```
 
 Las pruebas de navegador necesitan Playwright y un navegador instalado. Admiten `BASE_URL`, `PLAYWRIGHT_MODULE` (ruta al módulo Playwright) y `BROWSER_EXECUTABLE` (ruta al navegador); no añaden dependencias a la aplicación.
@@ -26,3 +27,5 @@ Las pruebas táctiles usan emulación de Chrome; queda pendiente la comprobació
 La revisión de visibilidad centralizada comprueba el menú dinámico, la alineación de su flecha, pulsación larga/cancelada, el ojo sincronizado con todos los elementos y el encuadre estable al abrir o cerrar fichas. El mapa llena la ventana en ambas orientaciones; el zoom inicial encuadra la península con 16 px de margen, limitado por ancho y altura. Alejar permite recuperar los archipiélagos y el desplazamiento admite ratón y tacto.
 
 La revisión independiente de esta segunda iteración detectó y verificó tres correcciones: desplazamiento del fondo en edición (sin interferir con los tiradores), acceso real a los botones de zoom sobre el quiz vertical e inclusión de Portugal en el encuadre inicial. `map-interactions.mjs` reprodujo los tres problemas antes de corregirlos y pasa después de los cambios.
+
+Etiquetas por categoría: se comprueba que los ríos puedan ocultar sus nombres sin afectar afluentes ni relieve; las categorías ausentes quedan bloqueadas; el interruptor global conserva la selección y los juegos mantienen su modo mudo. Los paneles grandes recuperan cierre directo y se reabren desde Visibilidad. El Atlas diferencia expandir/reducir de ocultar mediante iconos distintos.
