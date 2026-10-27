@@ -4,7 +4,7 @@ import { GEO_ELEMENTS } from '../data/geographyData';
 import type { MapTheme } from './Map/SpainMap';
 import { Compass, Target, CircleHelp, Timer, Search, X, Palette, Check, MoreHorizontal, Printer,
   Trophy, Layers, Volume2, VolumeX, BookOpen, Maximize2, Minimize2, Save, Download,
-  PanelRightClose, PanelRightOpen, Flame } from 'lucide-react';
+  Flame } from 'lucide-react';
 interface HeaderProps {
   currentMode: GameMode;
   onModeChange: (mode: GameMode) => void;
@@ -18,14 +18,10 @@ interface HeaderProps {
   onOpenManual: () => void;
   soundEnabled: boolean;
   onToggleSound: () => void;
-  isCollapsed: boolean;
-  onToggleCollapse: () => void;
   onSearchSelect?: (query: string) => void;
   onSelectElement?: (element: GeoElement) => void;
   // Vector Edit Mode Props
   isVectorEditMode?: boolean;
-  isEditorPanelCollapsed?: boolean;
-  onToggleEditorPanelCollapse?: () => void;
   onSaveVectorEdit?: () => void;
   onExportConfiguration?: () => void;
   onCancelVectorEdit?: () => void;
@@ -43,7 +39,7 @@ const MODES = [
 export const Header: React.FC<HeaderProps> = ({ currentMode, onModeChange, activeCount,
   onOpenAccidentFilter, theme, onThemeChange, stats, onOpenAchievements, onOpenPrintable,
   onOpenManual, soundEnabled, onToggleSound, onSearchSelect, onSelectElement, isVectorEditMode,
-  isEditorPanelCollapsed, onToggleEditorPanelCollapse, onSaveVectorEdit, onExportConfiguration,
+  onSaveVectorEdit, onExportConfiguration,
   onCancelVectorEdit, hasUnsavedChanges, editingElementName }) => {
   const [popup, setPopup] = useState<'tools' | 'theme' | 'search' | null>(null);
   const [query, setQuery] = useState('');
@@ -95,9 +91,7 @@ export const Header: React.FC<HeaderProps> = ({ currentMode, onModeChange, activ
           <div className="header-actions">
             <button type="button" className="ui-icon" onClick={onExportConfiguration} aria-label="Exportar configuración" title="Exportar configuración"><Download size={17} /></button>
             <button type="button" className="ui-icon" onClick={onSaveVectorEdit} disabled={!hasUnsavedChanges} aria-label="Guardar cambios" title="Guardar cambios"><Save size={17} /></button>
-            <button type="button" className="ui-icon" onClick={onToggleEditorPanelCollapse}
-              aria-label={isEditorPanelCollapsed ? 'Mostrar panel lateral de edición' : 'Ocultar panel lateral de edición y ampliar el mapa'}>
-              {isEditorPanelCollapsed ? <PanelRightOpen size={17} /> : <PanelRightClose size={17} />}</button>
+
             <button type="button" className="ui-icon" onClick={onCancelVectorEdit} aria-label="Cancelar modo edición" title="Salir de edición"><X size={18} /></button>
           </div>
         </>}

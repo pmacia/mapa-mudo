@@ -2,7 +2,7 @@ import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { GeoElement, CategoryType } from '../../types/geography';
 import { LAYERED_SPAIN_MAP, SvgMapPath } from '../../data/spainBaseMapData';
 import { CompassRose } from './CompassRose';
-import { ZoomIn, ZoomOut, RotateCcw, Pencil, PanelRightOpen, PanelRightClose } from 'lucide-react';
+import { ZoomIn, ZoomOut, RotateCcw, Pencil } from 'lucide-react';
 import { VectorEditOverlay } from './VectorEditOverlay';
 
 // Geographic coordinates remain unchanged. Only the displayed selector may move.
@@ -75,8 +75,6 @@ interface SpainMapProps {
   onToggleVectorEditMode?: () => void;
   editingElement?: GeoElement | null;
   onUpdateElementGeometry?: (updated: Partial<GeoElement>) => void;
-  isEditorPanelCollapsed?: boolean;
-  onToggleEditorPanelCollapse?: () => void;
 }
 
 export const SpainMap: React.FC<SpainMapProps> = ({
@@ -101,34 +99,55 @@ export const SpainMap: React.FC<SpainMapProps> = ({
   onToggleVectorEditMode,
   editingElement,
   onUpdateElementGeometry,
-  isEditorPanelCollapsed = false,
-  onToggleEditorPanelCollapse,
 }) => {
-  const [mapControlsCollapsed, setMapControlsCollapsed] = useState(false);
-  useEffect(() => setMapControlsCollapsed(false), [currentMode]);
   const [hoveredElement, setHoveredElement] = useState<GeoElement | null>(null);
-  const initialZoom = useRef(typeof window !== 'undefined' && window.innerWidth >= 1024 ? 1.4 : 1.32);
-  const [zoomLevel, setZoomLevel] = useState<number>(initialZoom.current);
+  const [zoomLevel, setZoomLevel] = useState(1);
   const [panOffset, setPanOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const panGesture = useRef<{ x: number; y: number; panX: number; panY: number } | null>(null);
+  const didPan = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const svgElementRef = useRef<SVGSVGElement | null>(null);
 
   const markerPositions = useMemo(() => getSeparatedMarkerPositions(elements), [elements]);
 
-  // Preserve the user's zoom/pan while fitting the map into short portrait/landscape windows.
-  const [frameFit, setFrameFit] = useState(1);
+  // The base framing depends only on the viewport and the mainland geometry, never on overlays.
+  const [frame, setFrame] = useState({ x: 0, y: 0, width: 1200, height: 675, scale: 1 });
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
-    const observer = new ResizeObserver(([entry]) => {
-      const { width, height } = entry.contentRect;
-      setFrameFit(width > 0 ? Math.min(1, height / (width * 0.74)) : 1);
-    });
+    const mainland = svgElementRef.current?.querySelector<SVGPathElement>('[data-map-part="Relleno_Peninsula"]');
+    if (!container || !mainland) return;
+    const bounds = mainland.getBBox();
+    const sourceScale = LAYERED_SPAIN_MAP.sourceScale;
+    const fit = (width: number, height: number) => {
+      if (width <= 32 || height <= 32) return;
+      const scale = Math.min((width - 32) / (bounds.width * sourceScale), (height - 32) / (bounds.height * sourceScale));
+      const viewWidth = width / scale;
+      const viewHeight = height / scale;
+      const centerX = (bounds.x + bounds.width / 2) * sourceScale;
+      const centerY = (bounds.y + bounds.height / 2) * sourceScale;
+      // A fixed portrait bias keeps the peninsula higher for touch gameplay, regardless of panel visibility.
+      const verticalCenter = width < height ? Math.max(.42, (bounds.height * sourceScale * scale / 2 + 16) / height) : .5;
+      setFrame({ x: centerX - viewWidth / 2, y: centerY - viewHeight * verticalCenter,
+        width: viewWidth, height: viewHeight, scale });
+    };
+    const initial = container.getBoundingClientRect();
+    fit(initial.width, initial.height);
+    const observer = new ResizeObserver(([entry]) => fit(entry.contentRect.width, entry.contentRect.height));
     observer.observe(container);
     return () => observer.disconnect();
   }, []);
+  useEffect(() => {
+    setZoomLevel(1);
+    setPanOffset({ x: 0, y: 0 });
+    panGesture.current = null;
+    didPan.current = false;
+    setIsDragging(false);
+  }, [currentMode, isVectorEditMode]);
+  const viewWidth = frame.width / zoomLevel;
+  const viewHeight = frame.height / zoomLevel;
+  const viewX = frame.x + (frame.width - viewWidth) / 2 - panOffset.x / (frame.scale * zoomLevel);
+  const viewY = frame.y + (frame.height - viewHeight) / 2 - panOffset.y / (frame.scale * zoomLevel);
 
   // Theme styling definitions
   const themeStyles = {
@@ -178,34 +197,34 @@ export const SpainMap: React.FC<SpainMapProps> = ({
 
   const handleZoom = (delta: number) => {
     setZoomLevel((prev) => {
-      const next = Math.max(1, Math.min(3, prev + delta));
-      if (next === 1) setPanOffset({ x: 0, y: 0 });
+      const next = Math.max(0.5, Math.min(3, prev + delta));
       return next;
     });
   };
 
   const handleResetZoom = () => {
-    setZoomLevel(initialZoom.current);
+    setZoomLevel(1);
     setPanOffset({ x: 0, y: 0 });
   };
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (zoomLevel > 1) {
-      setIsDragging(true);
-      setDragStart({ x: e.clientX - panOffset.x, y: e.clientY - panOffset.y });
-    }
+  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    didPan.current = false;
+    if (!event.isPrimary || event.button !== 0 || isVectorEditMode || (event.target as Element).closest('button')) return;
+    panGesture.current = { x: event.clientX, y: event.clientY, panX: panOffset.x, panY: panOffset.y };
   };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (isDragging && zoomLevel > 1) {
-      setPanOffset({
-        x: e.clientX - dragStart.x,
-        y: e.clientY - dragStart.y,
-      });
-    }
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    const gesture = panGesture.current;
+    if (!gesture) return;
+    const dx = event.clientX - gesture.x;
+    const dy = event.clientY - gesture.y;
+    if (!didPan.current && Math.hypot(dx, dy) < 6) return;
+    didPan.current = true;
+    setIsDragging(true);
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setPanOffset({ x: gesture.panX + dx, y: gesture.panY + dy });
   };
-
-  const handleMouseUp = () => {
+  const finishPan = () => {
+    panGesture.current = null;
     setIsDragging(false);
   };
 
@@ -268,7 +287,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
       : boundaryLayer ? themeStyles.communityStroke
       : (isCoast || part.stroke === '#000000') ? themeStyles.landBorder
       : part.stroke === '#87cdde' ? themeStyles.coastShadow : part.stroke;
-    return <path key={`${part.id}-${index}`} d={part.d} fill={fill} stroke={stroke}
+    return <path data-map-part={part.id} key={`${part.id}-${index}`} d={part.d} fill={fill} stroke={stroke}
       strokeWidth={part.strokeWidth} fillRule={part.fillRule}
       strokeLinecap="round" strokeLinejoin="round" />;
   });
@@ -279,24 +298,25 @@ export const SpainMap: React.FC<SpainMapProps> = ({
       className="immersive-map relative w-full h-full select-none"
       style={{
         backgroundColor: themeStyles.seaBg,
-        cursor: isDragging ? 'grabbing' : zoomLevel > 1 ? 'grab' : 'default',
+        cursor: isVectorEditMode ? 'default' : isDragging ? 'grabbing' : 'grab',
+        touchAction: 'none',
       }}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={() => {
-        handleMouseUp();
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={finishPan}
+      onPointerCancel={finishPan}
+      onPointerLeave={event => {
+        if (!event.currentTarget.hasPointerCapture(event.pointerId)) finishPan();
         setHoveredElement(null);
+      }}
+      onClickCapture={event => {
+        if (didPan.current && !(event.target as Element).closest('button')) event.stopPropagation();
+        didPan.current = false;
       }}
     >
 
-      {!controlsHidden && <button type="button" className="map-tools-toggle ui-glass ui-icon" onClick={() => setMapControlsCollapsed(value => !value)}
-        aria-label={mapControlsCollapsed ? 'Mostrar controles del mapa' : 'Ocultar controles del mapa'}
-        aria-expanded={!mapControlsCollapsed} aria-controls="map-tools">
-        {mapControlsCollapsed ? <ZoomIn size={17} /> : <PanelRightClose size={17} />}
-      </button>}
       {/* Zoom / Pan Controls Overlay */}
-      <div id="map-tools" className="map-tools absolute top-3 right-3 z-20 flex flex-col gap-2" hidden={controlsHidden || mapControlsCollapsed}>
+      <div id="map-tools" className="map-tools absolute top-3 right-3 z-20 flex flex-col gap-2" hidden={controlsHidden}>
         <button
           onClick={() => handleZoom(0.32)}
           aria-label="Acercar mapa"
@@ -309,12 +329,12 @@ export const SpainMap: React.FC<SpainMapProps> = ({
           onClick={() => handleZoom(-0.32)}
           aria-label="Alejar mapa"
           title="Alejar mapa (-)"
-          disabled={zoomLevel <= 1}
+          disabled={zoomLevel <= 0.5}
           className="w-10 h-10 rounded-full bg-surface-container-lowest dark:bg-slate-800 text-on-surface dark:text-white flex items-center justify-center shadow-[0_3px_0_#d3e4fe] dark:shadow-none active:translate-y-0.5 active:scale-95 disabled:opacity-30 transition-all cursor-pointer"
         >
           <ZoomOut className="w-5 h-5 text-on-surface-variant" />
         </button>
-        {zoomLevel !== initialZoom.current && (
+        {(zoomLevel !== 1 || panOffset.x !== 0 || panOffset.y !== 0) && (
           <button
             onClick={handleResetZoom}
             aria-label="Recentrar mapa"
@@ -327,13 +347,13 @@ export const SpainMap: React.FC<SpainMapProps> = ({
       </div>
 
       {/* Decorative Classical Compass Rose (Rosa de los vientos náutica) */}
-      <div hidden={controlsHidden || mapControlsCollapsed}
+      <div hidden={controlsHidden}
         className="map-chrome map-compass absolute top-4 left-4 z-10 pointer-events-none hidden md:block opacity-90 transition-opacity hover:opacity-100">
         <CompassRose theme={theme} size={84} />
       </div>      
 
       {/* Vector Editor Toggle & Panel Toggle Buttons (Desktop & Tablet only, located in bottom-right corner) */}
-      <div hidden={controlsHidden || mapControlsCollapsed}
+      <div hidden={controlsHidden}
         className="map-chrome map-editor-control absolute bottom-4 right-4 z-20 hidden md:flex items-center gap-2">
 
         <button
@@ -355,12 +375,8 @@ export const SpainMap: React.FC<SpainMapProps> = ({
       <svg
         data-map-canvas="true"
         ref={svgElementRef}
-        viewBox={LAYERED_SPAIN_MAP.viewBox}
-        className="w-full h-full transition-transform duration-100 ease-out"
-        style={{
-          transform: `scale(${zoomLevel * frameFit}) translate(${panOffset.x / (zoomLevel * frameFit)}px, ${panOffset.y / (zoomLevel * frameFit)}px)`,
-          transformOrigin: 'center center',
-        }}
+        viewBox={`${viewX} ${viewY} ${viewWidth} ${viewHeight}`}
+        className="w-full h-full"
       >
         <defs>
           <pattern id="seaGridReal" width="40" height="40" patternUnits="userSpaceOnUse">

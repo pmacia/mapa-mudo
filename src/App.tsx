@@ -1,3 +1,4 @@
+import { VisibilityControl, VisibilityRegion } from './components/Layout/VisibilityControl';
 import { FloatingRegion } from './components/Layout/FloatingRegion';
 import { geometryForCategory } from './utils/vectorEditorUtils';
 import { downloadGeographyConfiguration } from './utils/exportGeography';
@@ -18,7 +19,7 @@ import { PrintableMapModal } from './components/Printable/PrintableMapModal';
 import { AtlasStampCelebrationModal } from './components/Achievements/AtlasStampCelebrationModal';
 import { GameManualModal } from './components/Manual/GameManualModal';
 import { playSound } from './utils/audio';
-import { Eye, EyeOff, ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { MobileBottomNav } from './components/Navigation/MobileBottomNav';
 import { GAME_CONFIG } from './constants/gameConfig';
@@ -71,7 +72,9 @@ export default function App() {
   const [theme, setTheme] = useState<MapTheme>('clasico');
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false);
-  const [interfaceHidden, setInterfaceHidden] = useState(false);
+  const [isNavigationCollapsed, setIsNavigationCollapsed] = useState(false);
+  const [isTelemetryCollapsed, setIsTelemetryCollapsed] = useState(false);
+  const [areMapToolsCollapsed, setAreMapToolsCollapsed] = useState(false);
   const [isCompanionCollapsed, setIsCompanionCollapsed] = useState(false);
   const [telemetryTarget, setTelemetryTarget] = useState<HTMLDivElement | null>(null);
   const [exploreCategory, setExploreCategory] = useState<CategoryType | 'todos'>('todos');
@@ -380,7 +383,10 @@ export default function App() {
 
   // Handle mode changes
   const handleModeChange = (newMode: GameMode) => {
-    setInterfaceHidden(false);
+    setIsNavigationCollapsed(false);
+    setIsTelemetryCollapsed(false);
+    setAreMapToolsCollapsed(false);
+    setIsEditorPanelCollapsed(false);
     setIsCompanionCollapsed(false);
     setIsHeaderCollapsed(false);
     if (isVectorEditMode && hasUnsavedChanges) {
@@ -654,6 +660,20 @@ export default function App() {
     roundSize: GAME_CONFIG.GAMEPLAY.DEFAULT_ROUND_SIZE,
   });
   const isGameFinished = challengeSession.isGameOver || challengeSession.isCompleted;
+  const companionLabel = isVectorEditMode ? 'Editor' : currentMode === 'explorar' ? 'Atlas' : isGameFinished ? 'Resultados' : 'Ficha del reto';
+  const regions: VisibilityRegion[] = [
+    { id: 'header', label: 'Barra superior', visible: !isHeaderCollapsed, onToggle: () => setIsHeaderCollapsed(value => !value) },
+    { id: 'navigation', label: 'Navegación', visible: !isNavigationCollapsed, onToggle: () => setIsNavigationCollapsed(value => !value) },
+    { id: 'companion', label: companionLabel, visible: !(isVectorEditMode ? isEditorPanelCollapsed : isCompanionCollapsed),
+      onToggle: () => isVectorEditMode ? setIsEditorPanelCollapsed(value => !value) : setIsCompanionCollapsed(value => !value) },
+    ...(currentMode === 'contrarreloj' && !isGameFinished && !isVectorEditMode
+      ? [{ id: 'telemetry', label: 'Marcador', visible: !isTelemetryCollapsed, onToggle: () => setIsTelemetryCollapsed(value => !value) }] : []),
+    { id: 'tools', label: 'Herramientas del mapa', visible: !areMapToolsCollapsed, onToggle: () => setAreMapToolsCollapsed(value => !value) },
+  ];
+  const interfaceHidden = regions.every(region => !region.visible);
+  const toggleAllRegions = () => {
+    regions.filter(region => region.visible !== interfaceHidden).forEach(region => region.onToggle());
+  };
   const activeTargetHighlightId = !isGameFinished && currentMode !== 'explorar' ? targetHighlightId : null;
   const activeFeedbackElementId = !isGameFinished && currentMode !== 'explorar' ? feedbackElementId : null;
   const activeFeedbackStatus = !isGameFinished && currentMode !== 'explorar' ? feedbackStatus : null;
@@ -662,12 +682,8 @@ export default function App() {
       data-mode={isVectorEditMode ? 'editor' : currentMode} data-interface-hidden={interfaceHidden}
       data-panel-collapsed={isVectorEditMode ? isEditorPanelCollapsed : isCompanionCollapsed}
       data-expanded={isMobileDrawerOpen} data-finished={isGameFinished}>
-      <button type="button" className="interface-toggle ui-glass ui-icon" onClick={() => setInterfaceHidden(value => !value)}
-        aria-label={interfaceHidden ? 'Mostrar interfaz' : 'Ocultar interfaz'} title={interfaceHidden ? 'Mostrar interfaz' : 'Ocultar interfaz'}>
-        {interfaceHidden ? <Eye size={19} /> : <EyeOff size={19} />}
-      </button>
-      <FloatingRegion id="header" label="barra superior" className="header-region" collapsed={isHeaderCollapsed}
-        onToggle={() => setIsHeaderCollapsed(value => !value)}>
+      <VisibilityControl regions={regions} onToggleAll={toggleAllRegions} />
+      <FloatingRegion id="header" label="barra superior" className="header-region" collapsed={isHeaderCollapsed}>
         <Header
         currentMode={currentMode}
         onModeChange={handleModeChange}
@@ -681,8 +697,6 @@ export default function App() {
         onOpenManual={() => setIsManualOpen(true)}
         soundEnabled={soundEnabled}
         onToggleSound={() => setSoundEnabled(!soundEnabled)}
-        isCollapsed={isHeaderCollapsed}
-        onToggleCollapse={() => setIsHeaderCollapsed((prev) => !prev)}
         onSelectElement={handleMapElementClick}
         isVectorEditMode={isVectorEditMode}
         onSaveVectorEdit={handleSaveDraft}
@@ -690,8 +704,6 @@ export default function App() {
         onCancelVectorEdit={handleExitEditMode}
         hasUnsavedChanges={hasUnsavedChanges}
         editingElementName={draftElement?.name}
-        isEditorPanelCollapsed={isEditorPanelCollapsed}
-        onToggleEditorPanelCollapse={() => setIsEditorPanelCollapsed(prev => !prev)}
       />
       </FloatingRegion>
       <main className="map-stage" aria-label="Mapa interactivo de España">
@@ -717,16 +729,13 @@ export default function App() {
                 onToggleVectorEditMode={handleToggleVectorEditMode}
                 editingElement={isVectorEditMode ? draftElement : null}
                 onUpdateElementGeometry={handleUpdateDraftGeometry}
-                isEditorPanelCollapsed={isEditorPanelCollapsed}
-                controlsHidden={interfaceHidden}
-                onToggleEditorPanelCollapse={() => setIsEditorPanelCollapsed((prev) => !prev)}
+                controlsHidden={areMapToolsCollapsed}
               />
         </div>
       </main>
       <FloatingRegion id="companion" label={isVectorEditMode ? 'editor' : currentMode === 'explorar' ? 'Atlas' : 'reto'}
         className={`companion-region ui-glass ${currentMode === 'explorar' && !isVectorEditMode ? 'atlas-region' : ''}`}
         collapsed={isVectorEditMode ? isEditorPanelCollapsed : isCompanionCollapsed}
-        onToggle={() => isVectorEditMode ? setIsEditorPanelCollapsed(value => !value) : setIsCompanionCollapsed(value => !value)}
         actions={currentMode === 'explorar' && !isVectorEditMode ? <button type="button" className="ui-icon expand-atlas" onClick={() => setIsMobileDrawerOpen(value => !value)}
           aria-label={isMobileDrawerOpen ? 'Bajar ficha y ver el mapa' : 'Subir ficha de exploración'} aria-expanded={isMobileDrawerOpen}>
           {isMobileDrawerOpen ? <ChevronDown size={17} /> : <ChevronUp size={17} />}</button> : undefined}>
@@ -744,7 +753,6 @@ export default function App() {
                   onDuplicate={handleDuplicateElement}
                   onDelete={handleDeleteElement}
                   onExitEditMode={handleExitEditMode}
-                  onToggleCollapse={() => setIsEditorPanelCollapsed(true)}
                 />
         ) : currentMode === 'explorar' ? (
           <ExplorePanel
@@ -772,10 +780,10 @@ export default function App() {
             onOpenPrintable={() => setIsPrintableOpen(true)} />
         )}
       </FloatingRegion>
-      {currentMode === 'contrarreloj' && !isGameFinished && <FloatingRegion id="telemetry" label="marcador" resetKey={currentMode} className="telemetry-region">
+      {currentMode === 'contrarreloj' && !isGameFinished && !isVectorEditMode && <FloatingRegion id="telemetry" label="marcador" collapsed={isTelemetryCollapsed} className="telemetry-region">
         <div ref={setTelemetryTarget} />
       </FloatingRegion>}
-      <FloatingRegion id="navigation" label="navegación" resetKey={currentMode} className="navigation-region">
+      <FloatingRegion id="navigation" label="navegación" collapsed={isNavigationCollapsed} className="navigation-region">
         <MobileBottomNav currentMode={currentMode} onModeChange={handleModeChange}
           onOpenLayers={() => setIsAccidentFilterOpen(true)} onOpenAchievements={() => setIsAchievementsOpen(true)} />
       </FloatingRegion>

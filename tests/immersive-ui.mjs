@@ -53,6 +53,7 @@ try {
   await page.clock.install();
   await page.goto(baseURL);
   const openTools=()=>page.getByRole('button',{name:'Más herramientas',exact:true}).click();
+  const toggleRegion=async label=>{await page.getByRole('button',{name:'Subopciones de visibilidad',exact:true}).click();await page.getByRole('dialog',{name:'Visibilidad',exact:true}).getByRole('button',{name:label,exact:true}).click();await page.keyboard.press('Escape');};
   await openTools();
   for(const name of ['Capas y filtros','Logros e insignias','Imprimir mapa','Manual de juego','Silenciar sonidos','Pantalla completa']){
     assert.equal(await page.getByRole('dialog',{name:'Herramientas',exact:true}).getByRole('button',{name:new RegExp(name)}).isVisible(),true,name);
@@ -66,16 +67,20 @@ try {
     assert.equal(await page.locator('.immersive-shell').getAttribute('data-theme'),name==='Modo Nocturno'?'nocturno':name==='Clásico · Claro'?'clasico':'fisico_moderno');
     assert.equal(await page.locator('main [data-map-canvas]').isVisible(),true);
   }
-  await page.getByRole('button',{name:'Ocultar barra superior',exact:true}).click();
-  await page.getByRole('button',{name:'Mostrar barra superior',exact:true}).click();
-  await page.getByRole('button',{name:'Ocultar controles del mapa',exact:true}).click();
-  await page.getByRole('button',{name:'Mostrar controles del mapa',exact:true}).click();
+  await toggleRegion('Barra superior');
+  await toggleRegion('Barra superior');
+  await toggleRegion('Herramientas del mapa');
+  await toggleRegion('Herramientas del mapa');
   await page.getByRole('button',{name:'Activar modo edición vectorial',exact:true}).click();
+  await page.getByRole('button',{name:'Subopciones de visibilidad',exact:true}).click();
+  assert.equal(await page.getByRole('dialog',{name:'Visibilidad',exact:true}).getByRole('button',{name:'Editor',exact:true}).isVisible(),true);
+  assert.equal(await page.getByRole('dialog',{name:'Visibilidad',exact:true}).getByRole('button',{name:'Marcador',exact:true}).count(),0);
+  await page.keyboard.press('Escape');
   await page.keyboard.press('Control+n');
   const nameInput=page.locator('.vector-editor input[type="text"]').nth(1);
   await nameInput.fill('Borrador conservado');
-  await page.getByRole('button',{name:'Ocultar editor',exact:true}).click();
-  await page.getByRole('button',{name:'Mostrar editor',exact:true}).click();
+  await toggleRegion('Editor');
+  await toggleRegion('Editor');
   assert.equal(await nameInput.inputValue(),'Borrador conservado');
   await page.keyboard.press('Control+s');
   await page.getByRole('button',{name:'Ayuda de atajos de edición',exact:true}).click();
@@ -112,14 +117,19 @@ try {
     const box=await button.boundingBox();assert.ok(box&&box.height>=44&&box.y+box.height<=640);
     const hit=await button.evaluate(el=>{const b=el.getBoundingClientRect();return el.contains(document.elementFromPoint(b.x+b.width/2,b.y+b.height/2));});assert.ok(hit);
   }
-  await page.getByRole('button',{name:'Ocultar reto',exact:true}).click();
-  await page.getByRole('button',{name:'Mostrar reto',exact:true}).click();
-  await page.getByRole('button',{name:'Ocultar marcador',exact:true}).click();
-  await page.getByRole('button',{name:'Mostrar marcador',exact:true}).click();
-  await page.getByRole('button',{name:'Ocultar navegación',exact:true}).click();
-  await page.getByRole('button',{name:'Mostrar navegación',exact:true}).click();
+  await toggleRegion('Ficha del reto');
+  await toggleRegion('Ficha del reto');
+  await toggleRegion('Marcador');
+  await toggleRegion('Marcador');
+  await toggleRegion('Navegación');
+  await toggleRegion('Navegación');
   await page.clock.runFor(61000);
   await page.locator('[data-challenge="results"]').waitFor();
+  await page.getByRole('button',{name:'Subopciones de visibilidad',exact:true}).click();
+  const visibility=page.getByRole('dialog',{name:'Visibilidad',exact:true});
+  assert.equal(await visibility.getByRole('button',{name:'Resultados',exact:true}).isVisible(),true);
+  assert.equal(await visibility.getByRole('button',{name:'Marcador',exact:true}).count(),0);
+  await page.keyboard.press('Escape');
   console.log('PASS all themes, tools, editor retention/export/shortcuts, locate/quiz, touch controls and timed results');
   assert.deepEqual(errors,[]);
 }finally{await browser2.close();}

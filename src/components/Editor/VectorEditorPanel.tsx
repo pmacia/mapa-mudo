@@ -57,7 +57,6 @@ interface VectorEditorPanelProps {
   onDuplicate: (element: GeoElement) => void;
   onDelete: (element: GeoElement) => void;
   onExitEditMode: () => void;
-  onToggleCollapse?: () => void;
 }
 
 const CATEGORIES: { id: CategoryType | 'todos'; label: string; icon: string }[] = [
@@ -85,7 +84,6 @@ export const VectorEditorPanel: React.FC<VectorEditorPanelProps> = ({
   onDuplicate,
   onDelete,
   onExitEditMode,
-  onToggleCollapse,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<CategoryType | 'todos'>('todos');

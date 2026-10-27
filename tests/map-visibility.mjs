@@ -1,0 +1,56 @@
+import assert from 'node:assert/strict';
+const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'playwright');
+const browser=await chromium.launch({headless:true,...(process.env.BROWSER_EXECUTABLE?{executablePath:process.env.BROWSER_EXECUTABLE}:{})});
+try {
+  const page=await browser.newPage({viewport:{width:844,height:390},hasTouch:true,reducedMotion:'reduce'});
+  page.setDefaultTimeout(5000);
+  const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.goto(process.env.BASE_URL||'http://localhost:3002');
+  const canvas=page.locator('[data-map-canvas]');
+  const viewport=await canvas.evaluate(el=>{const b=el.getBoundingClientRect();return {x:b.x,y:b.y,width:b.width,height:b.height};});
+  assert.deepEqual(viewport,{x:0,y:0,width:844,height:390},'Landscape canvas must fill the viewport');
+  const snapshot=()=>canvas.evaluate(el=>({box:el.getAttribute('viewBox'),transform:el.style.transform}));
+  const open=()=>page.getByRole('button',{name:'Subopciones de visibilidad',exact:true}).click();
+  const menu=page.getByRole('dialog',{name:'Visibilidad',exact:true});
+  const toggle=async label=>{await open();await menu.getByRole('button',{name:label,exact:true}).click();await page.keyboard.press('Escape');};
+  await open();assert.equal(await menu.getByRole('button',{name:'Atlas',exact:true}).count(),1);assert.equal(await menu.getByRole('button',{name:'Marcador',exact:true}).count(),0);await page.keyboard.press('Escape');
+  await open();
+  const anchor=await page.getByRole('button',{name:'Subopciones de visibilidad',exact:true}).boundingBox();
+  const pointer=await menu.evaluate(el=>{const b=el.getBoundingClientRect(),s=getComputedStyle(el,'::after');return b.y+parseFloat(s.top)+parseFloat(s.height)/2;});
+  assert.ok(Math.abs(pointer-(anchor.y+anchor.height/2))<=3,'Menu pointer aligns with its disclosure control');
+  await page.keyboard.press('Escape');
+  const initial=await snapshot();await toggle('Atlas');assert.deepEqual(await snapshot(),initial);assert.equal(await page.locator('.explore-panel').isVisible(),false);
+  await page.getByRole('button',{name:'Ocultar interfaz',exact:true}).click();await page.getByRole('button',{name:'Mostrar interfaz',exact:true}).click();
+  assert.equal(await page.locator('.explore-panel').isVisible(),true,'Crossed-out eye activates every available region');assert.deepEqual(await snapshot(),initial);
+  await open();for(const label of ['Atlas','Barra superior','Navegación','Herramientas del mapa'])await menu.getByRole('button',{name:label,exact:true}).click();
+  assert.equal(await page.getByRole('button',{name:'Mostrar interfaz',exact:true}).getAttribute('aria-pressed'),'true');
+  await page.keyboard.press('Escape');await page.getByRole('button',{name:'Mostrar interfaz',exact:true}).click();
+  assert.equal(await page.getByRole('button',{name:'Ocultar interfaz',exact:true}).isVisible(),true);await page.getByRole('button',{name:'Ocultar interfaz',exact:true}).click();await page.getByRole('button',{name:'Mostrar interfaz',exact:true}).click();
+  await page.getByRole('button',{name:'60 segundos contrarreloj',exact:true}).click();
+  await open();assert.equal(await menu.getByRole('button',{name:'Marcador',exact:true}).isVisible(),true);assert.equal(await menu.getByRole('button',{name:'Ficha del reto',exact:true}).isVisible(),true);await page.keyboard.press('Escape');
+  const eye=page.getByRole('button',{name:'Ocultar interfaz',exact:true});await eye.dispatchEvent('pointerdown',{pointerId:1,isPrimary:true,button:0});await page.waitForTimeout(600);await eye.dispatchEvent('pointerup',{pointerId:1,isPrimary:true,button:0});await eye.dispatchEvent('click');
+  assert.equal(await menu.isVisible(),true);assert.equal(await eye.isVisible(),true,'Long press does not hide interface');await page.keyboard.press('Escape');
+  await eye.dispatchEvent('pointerdown',{pointerId:2,isPrimary:true,button:0});await eye.dispatchEvent('pointercancel',{pointerId:2});await page.waitForTimeout(600);assert.equal(await menu.isVisible(),false,'Canceled press cannot open menu');
+  for(const [width,height] of [[360,640],[390,844],[844,390],[1440,900]]){
+    await page.setViewportSize({width,height});await page.waitForTimeout(150);
+    const base=await snapshot();await toggle('Ficha del reto');assert.deepEqual(await snapshot(),base);await toggle('Ficha del reto');
+    const fit=await page.locator('[data-map-part="Relleno_Peninsula"]').boundingBox();
+    assert.ok(fit&&fit.x>=12&&fit.y>=12&&fit.x+fit.width<=width-12&&fit.y+fit.height<=height-12,`Peninsula must fit ${width}x${height}: ${JSON.stringify(fit)}`);
+    assert.ok(fit.width>=width*.88||fit.height>=height*.88,'Peninsula uses available width or height');
+  }
+  await page.setViewportSize({width:390,height:844});await page.waitForTimeout(150);
+  const touchBefore=await snapshot();
+  const cdp=await page.context().newCDPSession(page);
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:190,y:300}]});
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:260,y:340}]});
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+  await page.waitForTimeout(100);
+  assert.notDeepEqual(await snapshot(),touchBefore,'Touch drag must allow exploring beyond the initial peninsula framing');
+  await page.getByRole('button',{name:'Recentrar mapa',exact:true}).focus();await page.keyboard.press('Enter');assert.deepEqual(await snapshot(),touchBefore);
+  await open();await menu.getByRole('button',{name:'Barra superior',exact:true}).click();await page.keyboard.press('Escape');
+  await page.getByRole('button',{name:'Ocultar interfaz',exact:true}).click();await page.getByRole('button',{name:'Mostrar interfaz',exact:true}).click();
+  assert.equal(await page.locator('.header-region header').isVisible(),true);
+  await page.getByRole('button',{name:'Acercar mapa',exact:true}).click();assert.notDeepEqual(await snapshot(),touchBefore);
+  await page.getByRole('button',{name:'Quiz Curricular con opciones',exact:true}).click();assert.deepEqual(await snapshot(),touchBefore,'Each mode starts at the fitted peninsula framing');
+  assert.deepEqual(errors,[]);console.log('PASS stable full-window map, peninsula framing, dynamic visibility, eye restore and gestures');
+}finally{await browser.close();}
