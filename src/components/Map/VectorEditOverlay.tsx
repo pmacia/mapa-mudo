@@ -369,13 +369,13 @@ export const VectorEditOverlay: React.FC<VectorEditOverlayProps> = ({
       >
         <circle
           r="10"
-          fill="#3b82f6"
+          fill="var(--ui-accent)"
           fillOpacity="0.25"
-          stroke="#2563eb"
+          stroke="var(--ui-accent)"
           strokeWidth="1.5"
           className="group-hover:scale-125 transition-transform"
         />
-        <circle r="4" fill="#2563eb" stroke="#ffffff" strokeWidth="1.5" />
+        <circle r="4" fill="var(--ui-accent)" stroke="#ffffff" strokeWidth="1.5" />
         {/* Crosshair arrows */}
         <path
           d="M -8 0 L 8 0 M 0 -8 L 0 8"
@@ -429,7 +429,7 @@ export const VectorEditOverlay: React.FC<VectorEditOverlayProps> = ({
           >
             <circle
               r="4.5"
-              fill="#10b981"
+              fill="var(--ui-accent)"
               stroke="#ffffff"
               strokeWidth="1.5"
               className="drop-shadow group-hover:scale-135 transition-transform"
@@ -461,7 +461,7 @@ export const VectorEditOverlay: React.FC<VectorEditOverlayProps> = ({
               <circle
                 r={isSelected ? 7.5 : 5.5}
                 fill={isSelected ? '#f59e0b' : '#ffffff'}
-                stroke={isSelected ? '#b45309' : '#2563eb'}
+                stroke={isSelected ? '#b45309' : 'var(--ui-accent)'}
                 strokeWidth={isSelected ? 2.5 : 2}
                 className="drop-shadow group-hover:scale-125 transition-transform"
               />

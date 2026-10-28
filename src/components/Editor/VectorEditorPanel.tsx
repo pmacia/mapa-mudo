@@ -299,8 +299,8 @@ export const VectorEditorPanel: React.FC<VectorEditorPanelProps> = ({
           >
             {saveSuccessMsg ? (
               <>
-                <Check className="w-4 h-4 text-emerald-300" />
-                <span className="text-emerald-100 font-bold">¡Guardado!</span>
+                <Check className="w-4 h-4 text-orange-300" />
+                <span className="text-orange-100 font-bold">¡Guardado!</span>
               </>
             ) : (
               <>
@@ -813,7 +813,7 @@ export const VectorEditorPanel: React.FC<VectorEditorPanelProps> = ({
                     rows={4}
                     value={draftElement.svgPath}
                     onChange={(e) => onUpdateDraftField('svgPath', e.target.value)}
-                    className="w-full px-2.5 py-1.5 bg-slate-900 text-emerald-300 font-mono text-[10px] rounded border border-slate-700 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                    className="w-full px-2.5 py-1.5 bg-slate-900 text-orange-300 font-mono text-[10px] rounded border border-slate-700 focus:outline-none focus:ring-1 focus:ring-amber-500"
                   />
                 )}
               </div>

@@ -15,6 +15,13 @@
   --ui-shadow:0 14px 40px rgba(0,0,0,.26); --ui-negative:#ff9aaf;
   --color-on-surface:#edf5f5; --color-on-surface-variant:#b2c4cb;
 }
+/* Editing has its own accent; cartographic category colors stay independent. */
+.immersive-shell[data-mode="editor"] {
+  --ui-accent:#c2410c; --ui-on-accent:#fff; --ui-soft:rgba(194,65,12,.075); --ui-border:rgba(194,65,12,.24);
+}
+.immersive-shell[data-mode="editor"][data-theme="nocturno"] {
+  --ui-accent:#fdba74; --ui-on-accent:#431407; --ui-soft:rgba(253,186,116,.09); --ui-border:rgba(253,186,116,.25);
+}
 .immersive-shell { --color-primary:var(--ui-accent); --color-on-primary:var(--ui-on-accent); }
 .immersive-shell button { cursor:pointer; }
 .immersive-shell button:disabled { cursor:default; }
@@ -404,3 +411,5 @@
 }
 
 @media(prefers-reduced-transparency:reduce) { .manual-backdrop { backdrop-filter:none; } }
+
+.immersive-shell[data-mode="editor"] .vector-editor .bg-primary { color:var(--ui-on-accent); }

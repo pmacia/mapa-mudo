@@ -578,7 +578,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
                         : isTargetHighlight
                         ? '#e11d48'
                         : isSelected
-                        ? '#0284c7'
+                        ? isVectorEditMode ? 'var(--ui-accent)' : '#0284c7'
                         : isHovered
                         ? '#0369a1'
                         : themeStyles.riverStroke
@@ -637,7 +637,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
               : isTargetHighlight
               ? '#e11d48'
               : isSelected
-              ? '#2563eb'
+              ? isVectorEditMode ? 'var(--ui-accent)' : '#2563eb'
               : categoryColors[elem.category] || '#ef4444';
 
             return (
@@ -669,7 +669,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
                     cy="0"
                     r="15"
                     fill="none"
-                    stroke="#10b981"
+                    stroke={isVectorEditMode ? 'var(--ui-accent)' : '#10b981'}
                     strokeWidth="1.6"
                     strokeDasharray="3 2"
                     opacity="0.85"
