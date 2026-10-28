@@ -4,7 +4,7 @@ import { GEO_ELEMENTS } from '../data/geographyData';
 import type { MapTheme } from './Map/SpainMap';
 import { Compass, Target, CircleHelp, Timer, Search, X, Palette, Check, MoreHorizontal, Printer,
   Trophy, Layers, Volume2, VolumeX, BookOpen, Maximize2, Minimize2, Save, Download,
-  Flame, GripHorizontal } from 'lucide-react';
+  Flame, GripHorizontal, ArrowLeft } from 'lucide-react';
 interface HeaderProps {
   currentMode: GameMode;
   onModeChange: (mode: GameMode) => void;
@@ -112,8 +112,8 @@ export const Header: React.FC<HeaderProps> = ({ currentMode, onModeChange, activ
           <div className="header-actions">
             {currentMode === 'explorar' && <button type="button" className="ui-icon header-search-button" aria-label="Buscar accidentes" title="Buscar en el Atlas · Arrastra el título para mover la ventana"
               aria-expanded={popup === 'search'} onClick={() => toggle('search')}><Search size={17} /></button>}
-            <button type="button" className="ui-icon" aria-label="Cambiar tema visual del mapa" title="Cambiar tema visual del mapa"
-              aria-expanded={popup === 'theme'} onClick={() => toggle('theme')}><Palette size={17} /></button>
+            <button type="button" className="ui-icon" aria-label={isFullScreen ? 'Salir de pantalla completa' : 'Pantalla completa'} title={isFullScreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
+              onClick={fullscreen}>{isFullScreen ? <Minimize2 size={17} /> : <Maximize2 size={17} />}</button>
             <button type="button" className="ui-icon" aria-label="Más herramientas" title="Más herramientas"
               aria-expanded={popup === 'tools'} onClick={() => toggle('tools')}><MoreHorizontal size={20} /></button>
           </div>
@@ -153,8 +153,13 @@ export const Header: React.FC<HeaderProps> = ({ currentMode, onModeChange, activ
               if (direction) { event.preventDefault(); moveSearch(direction[0], direction[1]); }
             }}>
             <GripHorizontal size={16} aria-hidden="true" /><span>Buscar en el Atlas</span>
-          </button> : <span>{popup === 'tools' ? 'Herramientas' : 'Apariencia del mapa'}</span>}
-          <button type="button" className="ui-icon" onClick={() => setPopup(null)} aria-label={popup === 'search' ? 'Cerrar búsqueda' : 'Cerrar herramientas'}><X size={16} /></button>
+          </button> : popup === 'theme' ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <button type="button" className="ui-icon" onClick={() => setPopup('tools')} aria-label="Volver a herramientas" title="Volver a herramientas"><ArrowLeft size={16} /></button>
+              <span>Apariencia del mapa</span>
+            </div>
+          ) : <span>Herramientas</span>}
+          <button type="button" className="ui-icon" onClick={() => setPopup(null)} aria-label={popup === 'search' ? 'Cerrar búsqueda' : popup === 'theme' ? 'Cerrar temas' : 'Cerrar herramientas'}><X size={16} /></button>
         </div>
         {popup === 'theme' && <div className="header-theme-options">
           {([{id:'clasico',name:'Clásico · Claro'},{id:'fisico_moderno',name:'Relieve Moderno · Claro'},{id:'nocturno',name:'Modo Nocturno'}] as const).map(item =>
@@ -177,7 +182,7 @@ export const Header: React.FC<HeaderProps> = ({ currentMode, onModeChange, activ
             <button type="button" onClick={() => action(onOpenPrintable)}><Printer size={18} />Imprimir mapa<small>Ficha y soluciones</small></button>
             <button type="button" onClick={() => action(onOpenManual)}><BookOpen size={18} />Manual de juego<small>Controles, reglas y atajos</small></button>
             <button type="button" onClick={() => action(onToggleSound)}>{soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}{soundEnabled ? 'Silenciar sonidos' : 'Activar sonidos'}<small>Audio de la aplicación</small></button>
-            <button type="button" onClick={() => action(fullscreen)}>{isFullScreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}{isFullScreen ? 'Salir de pantalla completa' : 'Pantalla completa'}<small>Proyector y aula</small></button>
+            <button type="button" onClick={() => setPopup('theme')} aria-label="Cambiar tema visual del mapa"><Palette size={18} />Tema del mapa<small>{theme === 'clasico' ? 'Clásico · Claro' : theme === 'fisico_moderno' ? 'Relieve · Claro' : 'Modo Nocturno'}</small></button>
           </div>
           <button type="button" className="header-progress" onClick={() => action(onOpenAchievements)}>
             <Flame size={17} /><span>Mejor racha: {stats.maxStreak || 0}</span><span>{stats.xp || 0} XP</span>

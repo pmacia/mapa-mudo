@@ -55,13 +55,15 @@ try {
   const openTools=()=>page.getByRole('button',{name:'Más herramientas',exact:true}).click();
   const toggleRegion=async label=>{await page.getByRole('button',{name:'Subopciones de visibilidad',exact:true}).click();await page.getByRole('dialog',{name:'Visibilidad',exact:true}).getByRole('button',{name:label,exact:true}).click();await page.keyboard.press('Escape');};
   await openTools();
-  for(const name of ['Capas y filtros','Logros e insignias','Imprimir mapa','Manual de juego','Silenciar sonidos','Pantalla completa']){
+  for(const name of ['Capas y filtros','Logros e insignias','Imprimir mapa','Manual de juego','Silenciar sonidos','Tema del mapa']){
     assert.equal(await page.getByRole('dialog',{name:'Herramientas',exact:true}).getByRole('button',{name:new RegExp(name)}).isVisible(),true,name);
   }
   await page.getByRole('button',{name:'Silenciar sonidos',exact:false}).click();
   await openTools();assert.equal(await page.getByRole('button',{name:/Activar sonidos/}).isVisible(),true);
   await page.getByRole('button',{name:'Cerrar herramientas',exact:true}).click();
+  assert.equal(await page.locator('.header-actions').getByRole('button',{name:'Pantalla completa'}).isVisible(),true);
   for(const name of ['Clásico · Claro','Relieve Moderno · Claro','Modo Nocturno']){
+    await openTools();
     await page.getByRole('button',{name:'Cambiar tema visual del mapa',exact:true}).click();
     await page.getByRole('button',{name,exact:true}).click();
     assert.equal(await page.locator('.immersive-shell').getAttribute('data-theme'),name==='Modo Nocturno'?'nocturno':name==='Clásico · Claro'?'clasico':'fisico_moderno');

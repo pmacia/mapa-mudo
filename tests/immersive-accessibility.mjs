@@ -7,6 +7,7 @@ try {
   await cdp.send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-transparency',value:'reduce'},{name:'prefers-reduced-motion',value:'reduce'}]});
   await page.goto(process.env.BASE_URL||'http://localhost:3002');
   for(const theme of ['Clásico · Claro','Relieve Moderno · Claro','Modo Nocturno']){
+    await page.getByRole('button',{name:'Más herramientas',exact:true}).click();
     await page.getByRole('button',{name:'Cambiar tema visual del mapa',exact:true}).click();
     await page.getByRole('button',{name:theme,exact:true}).click();
     const surfaces=await page.locator('.immersive-header,.mobile-dock,.companion-region').evaluateAll(els=>els.map(el=>({color:getComputedStyle(el).backgroundColor,blur:getComputedStyle(el).backdropFilter})));
