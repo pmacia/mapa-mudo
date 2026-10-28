@@ -1,5 +1,7 @@
 # GeoEspaña Junior · Mapa mudo interactivo
 
+![Banner de GeoEspaña Junior con vistas de la aplicación en ordenador, tableta y móvil](src/assets/images/geoespana_v2_screenshot.jpg)
+
 Aplicación educativa para explorar la geografía física de España y practicar con retos de localización, identificación y contrarreloj. Incluye un editor de accidentes geográficos, fichas imprimibles y una guía didáctica integrada.
 
 Construida con React 19, TypeScript, Vite 8 y Tailwind CSS 4. Funciona en el navegador, con controles para ordenador, tableta y móvil en orientación vertical u horizontal.
