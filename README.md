@@ -1,331 +1,169 @@
-# 🗺️ GeoEspaña Junior (Versión 2.0): Mapa Mudo Interactivo & Retos de Geografía
+# GeoEspaña Junior · Mapa mudo interactivo
 
-> **Plataforma educativa gamificada y mapa mudo interactivo de España**, diseñada con rigor curricular para estudiantes de **1º y 2º de la ESO (12-14 años)**, Bachillerato, opositores y cualquier apasionado de la geografía física ibérica.
+Aplicación educativa para explorar la geografía física de España y practicar con retos de localización, identificación y contrarreloj. Incluye un editor de accidentes geográficos, fichas imprimibles y una guía didáctica integrada.
 
-[![React](https://img.shields.io/badge/React-19.x-61DAFB?logo=react&logoColor=white)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Vite](https://img.shields.io/badge/Vite-6.x-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
-[![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-4.x-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![Educational](https://img.shields.io/badge/Curriculum-ESO%20%7C%20LOMLOE-amber)](https://educacion.gob.es/)
-[![Version](https://img.shields.io/badge/Versión-2.0.0-blue.svg)](README.md)
-[![License](https://img.shields.io/badge/License-Apache_2.0-green.svg)](LICENSE)
+Construida con React 19, TypeScript, Vite 8 y Tailwind CSS 4. Funciona en el navegador, con controles para ordenador, tableta y móvil en orientación vertical u horizontal.
 
----
+## Interfaz y controles
 
-## 📸 Vista Previa de la Aplicación (v2.0)
+El mapa vectorial ocupa el fondo de la pantalla. Las barras y los paneles flotan sobre él con superficies traslúcidas; abrirlos u ocultarlos no modifica el tamaño del mapa. El encuadre inicial muestra la península aprovechando el espacio disponible. Se puede ampliar, reducir y desplazar para explorar también los archipiélagos.
 
-<p align="center">
-  <img src="./src/assets/images/geoespana_v2_screenshot.jpg" alt="Captura de pantalla de GeoEspaña Junior v2: Mapa mudo interactivo y panel pedagógico" width="100%" style="border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);" />
-</p>
+- **Temas:** Clásico · Claro, Relieve Moderno · Claro y Modo Nocturno.
+- **Visibilidad:** pulsa el ojo para ocultar todos los elementos flotantes. Al pulsar el ojo tachado se muestran todos. La flecha contigua, o una pulsación prolongada sobre el ojo, abre las opciones individuales disponibles para el modo actual.
+- **Paneles:** se pueden mover desde su cabecera y ocultar con su flecha. Se recuperan desde el menú de visibilidad. El temporizador de contrarreloj también es flotante y se puede mover.
+- **Búsqueda:** la ventana «Buscar en el Atlas» se puede desplazar desde su título; el Atlas dispone además de búsqueda y filtro por categoría.
+- **Ayuda:** en el menú de herramientas se encuentra el manual de juego, con controles, reglas, puntuación, edición y guía didáctica para ESO. La ayuda se adapta al tema claro u oscuro.
 
-*Interfaz principal de GeoEspaña Junior v2.0: mapa físico vectorial con rosa de los vientos minimalista, balizas de identificación, buscador con filtro compacto y panel companion con métricas didácticas.*
+**Ocultar controles o abrir el manual no pausa el cronómetro.** En móvil vertical, los botones de respuesta permiten jugar sin teclado.
 
----
+## Modos de juego
 
-## 📑 Tabla de Contenidos
+| Modo | Cómo se juega | Límite |
+| --- | --- | --- |
+| Explorar / Atlas | Consulta los accidentes del mapa y sus fichas, escucha sus nombres y descubre el catálogo. | Sin tiempo ni vidas. |
+| Ubicar / ¿Dónde está? | Localiza en el mapa el accidente solicitado. La pista muestra su descripción. | Tres vidas. |
+| Identificar / Quiz | Elige el nombre del accidente señalado entre cuatro opciones. La ayuda 50:50 elimina dos respuestas incorrectas. | Tres vidas. |
+| Contrarreloj | Responde si el nombre corresponde al accidente señalado: **← Sí**, **→ No**, o botones táctiles. | 60 segundos iniciales; cada acierto añade dos segundos. |
 
-1. [Novedades de la Versión 2.0](#-novedades-de-la-versión-20)
-2. [Visión y Propósito Pedagógico](#-visión-y-propósito-pedagógico)
-3. [Características Principales](#-características-principales)
-4. [Modos de Juego](#-modos-de-juego)
-5. [Mecánicas, Pistas y Puntuación](#-mecánicas-pistas-y-puntuación)
-6. [Sistema de Gamificación y Progresión](#-sistema-de-gamificación-y-progresión)
-7. [Cartografía y Capas Geográficas](#-cartografía-y-capas-geográficas)
-8. [Generador de Fichas Imprimibles (Para Docentes)](#-generador-de-fichas-imprimibles-para-docentes)
-9. [Configuración y Desacoplamiento (`gameConfig.ts`)](#-configuración-y-desacoplamiento-gameconfigts)
-10. [Instalación y Despliegue](#-instalación-y-despliegue)
-11. [Estructura del Proyecto](#-estructura-del-proyecto)
-12. [Créditos y Licencia](#-créditos-y-licencia)
+Las categorías activas en el menú de capas determinan el contenido disponible para el Atlas, los retos y las fichas imprimibles.
 
----
+### Puntuación y progreso
 
-## 🚀 Novedades de la Versión 2.0
+| Acción | Puntos |
+| --- | ---: |
+| Acierto en Ubicar | 30; 20 si se ha consultado la pista. |
+| Acierto en Quiz | 30; la ayuda 50:50 no reduce la puntuación. |
+| Acierto en Contrarreloj | 20 y dos segundos adicionales. |
+| Fallo en Contrarreloj | −5, sin bajar de cero. |
+| Primera visita a un accidente del Atlas | 10. |
+| Completar el catálogo del Atlas | 100 y sello del Atlas. |
 
-Esta segunda versión supone una evolución integral en precisión cartográfica, interactividad y experiencia pedagógica:
+El juego incluye niveles, medallas, rachas y resultados. La nota sobre diez se calcula sobre el total de preguntas de la ronda, incluidas las que quedan sin responder. Las reglas y bonificaciones se pueden consultar en el manual integrado y en [gameConfig.ts](src/constants/gameConfig.ts).
 
-- 🗺️ **Nuevo Motor Cartográfico Vectorial (`spainBaseMapData` y `geographyAccidentsData`)**:
-  - Trazo continuo y riguroso de la costa peninsular, límites fronterizos con Portugal, sur de Francia (franja pirenaica), norte de África (Marruecos y Estrecho de Gibraltar), Islas Baleares y recuadro cartográfico canario.
-  - Polígonos de relieve adaptados a la orografía real: *Pirineos, Sistema Central, Sistema Ibérico, Cordillera Cantábrica, Montes de Toledo, Sierra Morena, Macizo Galaico, Montes de León, Montes Vascos, Cordillera Costero-Catalana* y desglose de las *Cordilleras Béticas* (*Subbética, Penibética y Sierra Nevada*).
-  - Trazado hidrológico preciso para cada curso de agua según su vertiente (*Cantábrica, Atlántica y Mediterránea*).
-- 🧭 **Rosa de los Vientos Minimalista**:
-  - Nuevo diseño estilizado, funcional y de alto contraste con puntos cardinales N (rojo carmín), S, E (azul marino) y O, junto con rumbos secundarios (NE, SE, SO, NO).
-- ⚡ **Renovación Completa del Modo 60s Contrarreloj**:
-  - Dinámica de **preguntas relámpago Verdadero / Falso** (`¿Es este el...?`) con validación inmediata por teclado (`← Flecha Izquierda` para **SÍ**, `→ Flecha Derecha` para **NO**) o botones táctiles de gran tamaño.
-  - Baliza interactiva con radar concéntrico animado y puntero vertical `¿ES ESTE?` señalando exactamente el accidente sobre el mapa mudo.
-  - Desactivación limpia e instantánea del señalador en cuanto el tiempo se agota o termina la ronda.
-  - Panel superior con monitor de **Aciertos**, **Fallos** (con icono distintivo rojo) y **Puntos XP**.
-  - Bonificación de tiempo de **+2s por acierto** y penalización equilibrada de **-5 pts por fallo** (sin descender de 0).
-- 🔍 **Buscador con Menú de Filtro Compacto**:
-  - El selector de categorías se condensó en un desplegable elegante a la derecha del cuadro de búsqueda en el Atlas.
-  - Icono dinámico con botón de limpieza directa (`FilterX` en color rojo) para descartar el filtro activo con un solo clic.
-- 🎚️ **Sincronización Total de Capas y Estado Vacío**:
-  - Al desactivar categorías desde el modal de capas, tanto la lista del explorador como los desafíos de juego y el generador de fichas impresas se filtran automáticamente a los elementos activos.
-  - Si no hay elementos seleccionados, se presenta un estado visual pedagógico invitando al alumno a seleccionar contenidos.
-- 📈 **Métricas de Racha Máxima (`maxStreak`) y Calificación Escolar**:
-  - Registro de la racha actual y la mejor racha de la sesión.
-  - Cálculo de calificación escolar sobre 10 (*Sobresaliente, Notable, Aprobado o Necesita Mejorar*).
-- 🎖️ **Sello del Atlas Dinámico**:
-  - La meta de exploración se calcula en tiempo real sobre la cantidad real de accidentes registrados (`GEO_ELEMENTS.length`), garantizando consistencia en todas las vistas y modales.
+## Cartografía y capas
 
----
+El catálogo distingue **ríos, afluentes, montañas, picos, costas, mares, islas y unidades de relieve**. Los afluentes mantienen una relación con su río receptor, que también puede ser otro afluente; por ejemplo, Cinca → Segre → Ebro. Consulta los criterios y relaciones en [Afluentes](docs/tributaries.md).
 
-## 🎯 Visión y Propósito Pedagógico
+El menú de capas permite:
 
-El aprendizaje de la geografía física tradicionalmente ha sufrido de aridez memorística: memorizar listas de ríos, cordilleras y picos sin anclaje visual o espacial.
+- Activar o desactivar cada categoría de accidentes.
+- Mostrar u ocultar globalmente los nombres para usar el mapa mudo.
+- Elegir las etiquetas de cada categoría por separado. Una categoría desactivada aparece en gris y no permite activar sus etiquetas.
+- Mantener la selección individual de etiquetas al ocultarlas globalmente.
+- Mostrar límites autonómicos y provinciales.
 
-**GeoEspaña Junior** transforma este proceso en una **experiencia interactiva y motivadora**, combinando:
-- **Cartografía vectorial precisa SVG** de la Península Ibérica, Islas Baleares y Archipiélago Canario.
-- **Locución fonética por síntesis de voz (Web Speech API)** para aprender la pronunciación exacta de cada topónimo.
-- **Gamificación estructurada** (experiencia, niveles, rachas, retroalimentación acústica e insignias).
-- **Herramientas para docentes**: capacidad de silenciar etiquetas para exámenes de mapa mudo y generador de exámenes en papel A4 con clave de corrección.
+La base incluye el realce azul de la línea de costa y una rosa de los vientos adaptada al tema. Los temas son representaciones vectoriales, sin imágenes de satélite.
 
----
+Desde las herramientas se pueden generar fichas A4 con numeración y soluciones; el diálogo de impresión del navegador permite imprimirlas o guardarlas como PDF.
 
-## ✨ Características Principales
+## Edición de accidentes geográficos
 
-- 🗺️ **Mapa Mudo Vectorial Responsive**: Proyección cuidada con detalles del litoral, rías gallegas, golfos, cabos, ríos y sistemas montañosos.
-- 🎨 **3 Temas Cartográficos**:
-  - **Atlas Clásico**: Estilo pergamino cálido y pedagógico, ideal para proyectores escolares.
-  - **Físico Moderno**: Relieve tridimensional con altitudes, tierras bajas y mares vivos.
-  - **Nocturno / Satélite**: Modo oscuro de alto contraste (*gamer mode*) para evitar fatiga visual.
-- 📚 **Catálogo de Accidentes Geográficos Curriculares**:
-  - **Ríos Principales y Afluentes**: Vertiente Atlántica (Miño, Duero, Tajo, Guadiana, Guadalquivir), Vertiente Mediterránea (Ebro, Júcar, Segura, Turia, Ter, Llobregat) y Vertiente Cantábrica (Nalón, Navia, Bidasoa, Nervión).
-  - **Cordilleras y Sistemas**: Pirineos, Sistema Central, Sistema Ibérico, Cordilleras Béticas (Subbética y Penibética), Sierra Nevada, Cordillera Cantábrica, Montes de Toledo, Sierra Morena, Montes de León, Montes Vascos, Macizo Galaico y Cordillera Costero-Catalana.
-  - **Picos Más Altos**: Teide (3.718 m), Mulhacén (3.479 m), Aneto (3.404 m), Torre Cerredo, Moncayo, Almanzor...
-  - **Costas y Accidentes Litorales**: Cabos (Finisterre, Gata, Creus, Palos, Peñas, Ajo, Trafalgar, Nao), Golfos (Vizcaya, Cádiz, Valencia, Rosas) y Rías Altas y Baixas.
-  - **Archipiélagos e Islas**: Islas Canarias (Tenerife, Gran Canaria, Fuerteventura, Lanzarote, La Palma, La Gomera, El Hierro, La Graciosa) e Islas Baleares (Mallorca, Menorca, Ibiza, Formentera, Cabrera).
-  - **Grandes Unidades de Relieve**: Meseta Central (Submeseta Norte y Sur), Depresión del Ebro y Depresión del Guadalquivir.
-- 🔊 **Efectos de Audio y Voz**: Locución nativa en castellano y efectos sonoros espaciales para aciertos, fallos, rachas, subidas de nivel y confetti.
-- 📱 **100% Adaptativo**: Optimizado para pizarras digitales interactivas (PDI), ordenadores portátiles, Chromebooks escolares, tablets y móviles.
-- 🔒 **Privacidad Total (Zero Telemetry)**: Guarda el progreso localmente en el navegador (`localStorage`) sin recopilar datos personales de menores.
+El botón del lápiz abre el editor. Sus controles y selecciones usan **naranja** para distinguir este modo. Permite crear, modificar, duplicar y eliminar accidentes; cambiar su categoría adapta la geometría correspondiente. También permite editar vértices, desplazar, girar y escalar figuras, y configurar las relaciones de los afluentes.
 
----
+El botón **?** del panel muestra la ayuda de atajos:
 
-## 🎮 Modos de Juego
+| Acción | Atajo |
+| --- | --- |
+| Guardar cambios | Ctrl / Cmd + S |
+| Nuevo accidente | Ctrl / Cmd + N |
+| Duplicar accidente | Ctrl / Cmd + D |
+| Copiar accidente | Ctrl / Cmd + C |
+| Pegar accidente | Ctrl / Cmd + V |
+| Salir del editor | Esc |
+| Insertar un vértice a partir del seleccionado | + |
+| Eliminar el vértice seleccionado | − / Supr |
 
-| Modo | Dinámica | Vidas / Tiempo | Objetivo Pedagógico |
-| :--- | :--- | :--- | :--- |
-| **📖 Atlas Interactivo** | Exploración libre sin cronómetro. Al pulsar sobre cualquier punto o buscar en la lista, se abre la ficha con fotos, altitud, vertiente, curiosidad histórica y pronunciación. | Ilimitado | Fase de estudio, descubrimiento guiado y repaso autónomo. |
-| **🎯 ¿Dónde está? (Localizar)** | El sistema propone un accidente geográfico y el alumno debe hacer clic sobre su ubicación exacta en el mapa mudo. | 3 Vidas | Fijación de la memoria espacial y coordenadas relativas. |
-| **🔍 Identificar (Quiz)** | Un accidente geográfico parpadea con la baliza fucsia `¿QUÉ ES?` en el mapa y se debe elegir la opción correcta entre 4 alternativas. | 3 Vidas | Reconocimiento topónimo-visual y descarte deductivo. |
-| **⚡ Contrarreloj 60s** | Reto relámpago Verdadero/Falso con baliza `¿ES ESTE?`. Responde con teclado (`← Sí`, `→ No`) o botones táctiles. | 60s (+2s por acierto) | Automatización del conocimiento y reflejos rápidos. |
+Copiar y pegar accidentes se aplica fuera de los campos de texto, donde se conserva la edición habitual. Al salir con cambios pendientes se solicita guardarlos o descartarlos. La configuración se puede exportar en un archivo ZIP.
 
----
+## Instalación y ejecución
 
-## 💡 Mecánicas, Pistas y Puntuación
+### Desarrollo local
 
-El juego cuenta con un **sistema de puntuación balanceado** que premia la destreza individual pero garantiza que ningún estudiante se sienta frustrado ante una duda:
+Necesitas **Node.js 22.12 o posterior** y npm. No se necesita una cuenta ni una clave de API para utilizar los modos actuales de la aplicación.
 
-### 📊 Tabla de Puntos
-
-| Modo de Juego | Acierto Directo | Acierto con Pista | Efecto Especial |
-| :--- | :---: | :---: | :--- |
-| **¿Dónde está?** | **+30 XP** | **+20 XP** *(Penalización de 10 pts)* | Centra el mapa e ilumina la región geográfica |
-| **Identificar** | **+30 XP** | **+20 XP** *(Penalización de 10 pts)* | Ayuda 50/50: descarta 2 respuestas erróneas |
-| **Contrarreloj 60s** | **+20 XP** | **+15 XP** *(Penalización de 5 pts)* | **+2 segundos extra** acumulados al reloj por acierto |
-| **Atlas Interactivo** | **+10 XP** *(Por primer hallazgo)* | — | **+100 XP** y Sello Real al completar el catálogo |
-
-### ⏱️ Bonificación de Tiempo en Contrarreloj (+2s)
-En el modo Contrarreloj de 60 segundos, **cada respuesta acertada añade +2 segundos al cronómetro**, permitiendo a los jugadores expertos encadenar rachas de aciertos continuos.
-
-### 💡 El Botón "Pedir Pista"
-- Si un estudiante se bloquea en **¿Dónde está?**, puede pulsar **Pedir Pista**.
-- El visor del mapa despliega una descripción orientativa para deducir la localización.
-- Si acierta tras usar la pista, recibe una puntuación reducida pero positiva (20 pts en ¿Dónde está?, 15 pts en Contrarreloj).
-
-### 🔥 Rachas de Aciertos Consecutivos y Racha Máxima
-- Encadenar aciertos activa un multiplicador visual de llamas (`x2`, `x3`, `x4`...).
-- Se registra tanto la racha en curso como la **Racha Máxima** de la partida, visible en el resumen de resultados.
-
----
-
-## 🏆 Sistema de Gamificación y Progresión
-
-### Rangos de Jugador
-A medida que se acumula Experiencia (XP), el alumno asciende en la escala cartográfica:
-1. **Novato de la Cartografía**: 0 – 99 XP
-2. **Geógrafo Junior**: 100 – 249 XP
-3. **Cartógrafo Aventurero**: 250 – 499 XP
-4. **Gran Explorador de España**: 500 – 999 XP
-5. **Catedrático de Geografía Ibérica**: 1.000+ XP
-
-### Insignias y Logros Desbloqueables
-- 🌊 **Maestro de Ríos**: Acierta 5 ríos de diferentes vertientes.
-- 🏔️ **Conquistador de Cumbres**: Acierta 5 cordilleras o picos principales.
-- 🏖️ **Centinela Costero**: Ubica 5 cabos, rías o golfos peninsulares.
-- 🏝️ **Navegante Insular**: Demuestra dominio sobre Baleares y Canarias.
-- ⚡ **Racha Imparable**: Consigue una racha continua de 5 aciertos sin fallos.
-- 📜 **El Sello Dorado del Explorador**: Visita y consulta todos los accidentes en el Atlas Interactivo para estampar el pasaporte oficial con fuegos artificiales.
-
----
-
-## 🗺️ Cartografía y Jerarquía de Capas
-
-El panel de **Capas** permite configurar el mapa desde su contorno físico mudo más esencial hasta la división territorial provincial completa, además de seleccionar qué accidentes geográficos entran en los retos:
-
-### 🏛️ Capas de Territorio y División Administrativa
-- **🗺️ Capa 0: Contorno Geográfico Base (Siempre Activa)**: Silueta física continental continua de España peninsular, Portugal contiguo, el sur de Francia (franja pirenaica de Aquitania y Golfo de León), la costa norte de África (Marruecos y Estrecho de Gibraltar), Islas Baleares y el recuadro cartográfico de las Islas Canarias. Sin rótulos ni divisiones interiores: el auténtico mapa mudo.
-- **🏛️ Capa 1: Comunidades Autónomas**: Conmutador para mostrar u ocultar las líneas fronterizas de las 17 Comunidades Autónomas y las 2 Ciudades Autónomas (Ceuta y Melilla).
-- **📍 Capa 2: Provincias de España**: Conmutador para activar o desactivar la división de las 50 provincias españolas con trazo fino delimitador.
-- **🏷️ Rótulos Didácticos**: Conmutador para alternar entre el modo de estudio con nombres visibles y el **Modo Mapa Mudo 100% puro** para autoevaluación o examen.
-
-### ⛰️ Capas de Accidentes Geográficos Físicos
-- 🌊 **Ríos**: Trazados hidrológicos vectoriales reales de las tres vertientes (*Cantábrica, Atlántica y Mediterránea*).
-- 🏔️ **Cordilleras**: Áreas orográficas con relieves característicos vectorizados.
-- ⛰️ **Picos**: Coordenadas exactas con triángulos altimétricos.
-- 🏖️ **Costas**: Cabos, rías y golfos costeros señalizados.
-- 🌊 **Mares y Océanos**: Océano Atlántico, Mar Cantábrico y Mar Mediterráneo.
-- 🏝️ **Islas y Archipiélagos**: Comunidades insulares al completo.
-- 🏞️ **Unidades de Relieve**: Mesetas y depresiones fluviales.
-
----
-
-## 🖨️ Generador de Fichas Imprimibles (Para Docentes)
-
-Pensado específicamente para el profesorado de Geografía e Historia en Secundaria:
-
-1. Permite filtrar los accidentes que han entrado en la unidad didáctica.
-2. Genera una vista lista para imprimir optimizada en **formato DIN A4** (tanto en blanco y negro para fotocopiadora como en color).
-3. **Encabezado oficial**: Alumno/a, Grupo/Curso, Fecha y Calificación.
-4. **Mapa con números aleatorios** y **tabla de respuestas** para rellenar a mano.
-5. **Hoja de Soluciones**: El docente puede imprimir con un clic la clave de corrección con las soluciones numeradas para una corrección rápida.
-
----
-
-## ⚙️ Configuración y Desacoplamiento (`gameConfig.ts`)
-
-Todos los valores numéricos del juego están **estrictamente parametrizados y desacoplados del código** en el archivo [`src/constants/gameConfig.ts`](src/constants/gameConfig.ts).
-
-Esto permite a cualquier profesor o desarrollador adaptar las reglas del juego en segundos:
-
-```typescript
-export const GAME_CONFIG = {
-  POINTS: {
-    LOCALIZAR_BASE: 30,
-    LOCALIZAR_WITH_HINT: 20,
-    CONTRARRELOJ_BASE: 20,
-    CONTRARRELOJ_WITH_HINT: 15,
-    IDENTIFICAR_BASE: 30,
-    IDENTIFICAR_WITH_HINT: 20,
-    CONTRARRELOJ_WRONG_PENALTY: 5,
-    ATLAS_DISCOVERY_XP: 10,
-    ATLAS_STAMP_BONUS_XP: 100,
-  },
-  TIMERS: {
-    CONTRARRELOJ_INITIAL_SECONDS: 60,
-    CONTRARRELOJ_TIME_BONUS_SECONDS: 2, // +2s por acierto en 60s
-    CONTRARRELOJ_WARNING_SECONDS: 10,
-    AUTO_ADVANCE_COUNTDOWN_SECONDS: 2,
-  },
-  GAMEPLAY: {
-    INITIAL_LIVES: 3,
-    DEFAULT_ROUND_SIZE: 20,
-    MIN_PASSING_RATIO: 0.5,
-    PERFECT_PASSING_RATIO: 1.0,
-    LEVEL_XP_STEP: 100,
-    STREAK_CELEBRATION_INTERVAL: 5,
-  },
-  // ...
-} as const;
+```bash
+git clone https://github.com/pmacia/mapa-mudo.git
+cd mapa-mudo
+npm ci
+npm run dev
 ```
 
----
+Abre la dirección que muestra Vite, normalmente `http://localhost:3000`. Si ese puerto está ocupado, utiliza el que indique la consola.
 
-## 🚀 Instalación y Despliegue
+Para probar desde un móvil de la misma red, abre `http://IP_LOCAL_DEL_ORDENADOR:PUERTO`. El servidor de desarrollo escucha en la red local. Para instalar la web app en un dispositivo, es preferible utilizar una publicación estable con HTTPS.
 
-### Requisitos Previos
-- **Node.js** >= 18.0.0
-- **npm** >= 9.0.0
+### Compilación y publicación
 
-### Pasos de Instalación
-
-1. **Clonar el repositorio**:
-   ```bash
-   git clone https://github.com/tu-usuario/geoespana-junior.git
-   cd geoespana-junior
-   ```
-
-2. **Instalar dependencias**:
-   ```bash
-   npm install
-   ```
-
-3. **Iniciar el servidor de desarrollo**:
-   ```bash
-   npm run dev
-   ```
-   Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
-
-4. **Verificar tipos y linting**:
-   ```bash
-   npm run lint
-   ```
-
-5. **Compilar para producción**:
-   ```bash
-   npm run build
-   ```
-   Los archivos estáticos optimizados se generarán en la carpeta `dist/`.
-
----
-
-## 📁 Estructura del Proyecto
-
-```text
-├── src/
-│   ├── assets/
-│   │   └── images/              # Capturas y recursos gráficos de la aplicación
-│   ├── components/
-│   │   ├── Achievements/        # Modales de medallas, rangos y celebración del Sello
-│   │   ├── Controls/            # Selector unificado de capas y filtros geográficos
-│   │   ├── Explore/             # Panel del Atlas, buscador con menú compacto y fichas
-│   │   ├── Manual/              # Modal interactivo del Manual del Juego y Guía Didáctica
-│   │   ├── Map/                 # Mapa vectorial SVG (SpainMap) y Rosa de los Vientos (CompassRose)
-│   │   ├── Navigation/          # Barra de navegación móvil inferior (MobileBottomNav)
-│   │   ├── Printable/           # Generador de exámenes y fichas A4 con soluciones
-│   │   ├── Quiz/                # Componente de desafíos (ChallengeMode), HUD y resultados
-│   │   └── Header.tsx           # Barra superior con selector de modos, temas y controles
-│   ├── constants/
-│   │   └── gameConfig.ts        # Configuración centralizada de parámetros y constantes
-│   ├── data/
-│   │   ├── spainBaseMapData.ts  # Trazados vectoriales base: costas, fronteras, CCAA y provincias
-│   │   ├── geographyAccidentsData.ts # Coordenadas y polígonos/trazos de accidentes
-│   │   └── geographyData.ts     # Dataset completo con descripciones didácticas y curiosidades
-│   ├── hooks/
-│   │   └── useChallengeSession.ts # Máquina de estados desacoplada para los modos de juego
-│   ├── types/
-│   │   └── geography.ts         # Definiciones TypeScript de entidades y estados
-│   ├── utils/
-│   │   └── audio.ts             # Síntesis de sonido Web Audio y voz Web Speech
-│   ├── App.tsx                  # Componente raíz y coordinación del layout responsive
-│   ├── index.css                # Estilos globales y Tailwind CSS
-│   └── main.tsx                 # Entrada de la aplicación React
-├── public/                      # Recursos estáticos
-├── metadata.json                # Metadatos del applet en AI Studio
-├── package.json                 # Dependencias y scripts
-├── README.md                    # Esta documentación
-└── vite.config.ts               # Configuración del bundler Vite
+```bash
+npm run lint
+npm run build
+npm run preview
 ```
 
----
+`lint` comprueba los tipos de TypeScript; `build` genera la aplicación en `dist/`; `preview` sirve esa compilación para comprobarla localmente.
 
-## ♿ Accesibilidad y Rendimiento
+Publica el contenido de `dist/` en un alojamiento estático con HTTPS. El servidor de desarrollo y `preview` no sustituyen a un alojamiento de producción. La configuración actual usa rutas de recursos desde la raíz del dominio: si se publica bajo una subcarpeta, hay que adaptar la base de Vite y las rutas de los recursos de instalación antes de compilar.
 
-- **Navegación accesible**: Compatibilidad con lectores de pantalla y etiquetas ARIA en todos los controles interactivos.
-- **Atajos de teclado**: Soporte en el modo Contrarreloj con `←` para Sí y `→` para No.
-- **Modo silencioso**: Interruptor de audio para aulas de informática o bibliotecas.
-- **Cabecera colapsable**: Botón para minimizar la barra superior y aprovechar el 100% de la pantalla en dispositivos móviles y portátiles pequeños.
-- **Rendimiento ligero**: Sin librerías pesadas de mapas externos; 100% SVG renderizado por el navegador con respuesta instantánea.
+Subir cambios a GitHub conserva el código; por sí solo no publica una nueva versión del sitio web.
 
----
+### Instalar desde el navegador como web app
 
-## 📄 Licencia
+Abre primero la dirección publicada de GeoEspaña en el navegador. La aplicación incluye un manifiesto e iconos de instalación para abrirse en una ventana independiente cuando el navegador lo permite.
 
-Este proyecto se distribuye bajo la licencia **Apache 2.0**. Puedes consultarla en el archivo [LICENSE](LICENSE).
+| Dispositivo y navegador | Pasos |
+| --- | --- |
+| **Ordenador · Chrome** | Menú **⋮ → Enviar, guardar y compartir → Instalar página como aplicación…**. También puedes usar el icono de instalación de la barra de direcciones si aparece. Confirma la instalación. [Ayuda de Chrome](https://support.google.com/chrome/answer/9658361?co=GENIE.Platform%3DDesktop&hl=es). |
+| **Ordenador · Edge** | Menú **⋯ → Más herramientas → Aplicaciones → Instalar este sitio como una aplicación**. Según la versión, «Aplicaciones» puede aparecer directamente en el menú. [Ayuda de Microsoft](https://support.microsoft.com/en-US/edge/install-manage-or-uninstall-apps-in-microsoft-edge). |
+| **Mac · Safari** | En macOS Sonoma 14 o posterior, abre **Archivo → Añadir al Dock**, elige el nombre y confirma. También puede aparecer en el menú Compartir. [Ayuda de Apple](https://support.apple.com/en-ie/104996). |
+| **Android · Chrome** | Menú **⋮ → Instalar y crear acceso directo → Instalar** y sigue las instrucciones. El texto puede variar según la versión. [Ayuda de Chrome para Android](https://support.google.com/chrome/answer/9658361?co=GENIE.Platform%3DAndroid&hl=es). |
+| **iPhone / iPad · Safari** | Abre **Compartir → Añadir a pantalla de inicio**. Si aparece **Abrir como app web**, actívalo y pulsa **Añadir**. [Ayuda de Apple](https://support.apple.com/guide/iphone/open-as-web-app-iphea86e5236/ios), [compatibilidad de Safari](https://webkit.org/blog/17333/webkit-features-in-safari-26-0/). |
 
----
+Después, abre GeoEspaña desde su icono en el escritorio, el Dock, el menú de aplicaciones o la pantalla de inicio. Si el navegador solo ofrece crear un acceso directo, este puede abrir el sitio en una pestaña en lugar de una ventana independiente.
 
-<p align="center">
-  Hecho con ❤️ para la enseñanza y el aprendizaje activo de la Geografía de España.<br>
-  <strong>¡Que disfrutes explorando la Península y sus Islas! 🇪🇸</strong>
-</p>
+**La instalación no añade funcionamiento sin conexión.** Actualmente no se incluye un service worker ni una caché offline gestionada por la aplicación. Mantén acceso a la dirección donde esté alojada; una instalación basada en un servidor local depende de que ese servidor siga disponible.
+
+### Datos guardados
+
+El progreso y los accidentes editados se guardan localmente en el navegador mediante `localStorage`. No hay sincronización entre dispositivos. Cambiar de navegador, de dirección del sitio o de contexto de instalación puede dar acceso a un almacenamiento distinto. Borrar los datos del sitio puede eliminar el progreso y las ediciones: exporta la configuración del editor para conservar una copia de ese trabajo.
+
+## Comprobaciones de desarrollo
+
+```bash
+npm run lint
+npm run build
+node --import tsx --test src/utils/editorGeometry.test.ts tests/tributaries.test.ts
+```
+
+Las pruebas de navegador están en `tests/*.mjs`. Utilizan Playwright y permiten indicar el módulo, el ejecutable del navegador y la dirección de la aplicación mediante variables de entorno. Por ejemplo, con Playwright disponible en el entorno:
+
+```bash
+PLAYWRIGHT_MODULE=/ruta/absoluta/a/playwright/index.mjs \
+BROWSER_EXECUTABLE=/ruta/absoluta/al/navegador \
+BASE_URL=http://localhost:3000 \
+node tests/help-and-icons.mjs
+```
+
+Hay comprobaciones de disposición responsive, interacción con el mapa, visibilidad, etiquetas por categoría, accesibilidad, arrastre de paneles y temporizador, ayuda e iconos. Consulta también [Verificación de la interfaz](docs/immersive-ui-verification.md).
+
+## Organización del proyecto
+
+| Ruta | Contenido |
+| --- | --- |
+| `src/App.tsx` | Estado general, modos y composición de la interfaz. |
+| `src/components/Map/` | Mapa SVG, rosa de los vientos y edición vectorial. |
+| `src/components/Layout/` | Regiones flotantes, arrastre y control de visibilidad. |
+| `src/components/Editor/` | Formulario y controles de edición. |
+| `src/components/Manual/` | Manual integrado y ayuda de interfaz. |
+| `src/components/Quiz/` | Interfaz de los retos. |
+| `src/data/` | Base cartográfica, accidentes y afluentes. |
+| `src/constants/gameConfig.ts` | Reglas, puntuaciones y progresión. |
+| `src/constants/editorShortcuts.ts` | Atajos compartidos por el editor y el manual. |
+| `src/hooks/` y `src/utils/` | Lógica de sesiones, geometría y utilidades. |
+| `public/manifest.webmanifest` y `public/icons/` | Manifiesto, favicon e iconos de instalación. |
+| `tests/` | Pruebas de navegador y de relaciones entre afluentes. |
+
+## Créditos y licencia
+
+El proyecto utiliza React, Vite, Tailwind CSS, D3 Geo, Lucide, Motion y otras dependencias cuyas versiones y licencias se pueden consultar en `package.json` y en sus respectivos paquetes.
+
+El código incluye identificadores SPDX `Apache-2.0`. Actualmente el repositorio no contiene un archivo `LICENSE` independiente.
