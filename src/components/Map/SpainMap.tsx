@@ -156,8 +156,15 @@ export const SpainMap: React.FC<SpainMapProps> = ({
       const viewHeight = height / scale;
       const centerX = (bounds.x + bounds.width / 2) * sourceScale;
       const centerY = (bounds.y + bounds.height / 2) * sourceScale;
-      // A fixed portrait bias keeps the peninsula higher for touch gameplay, regardless of panel visibility.
-      const verticalCenter = width < height ? Math.max(.42, (bounds.height * sourceScale * scale / 2 + 16) / height) : .5;
+      // In portrait: contrarreloj keeps its perfect height (0.42),
+      // while other modes (explorar, ubicar, quiz) align higher up (0.17 - 0.28 according to device).
+      const isPortrait = width < height;
+      const portraitOtherModesCenter = Math.max(0.17, Math.min(0.28, 0.17 + (Math.max(0.45, Math.min(0.75, width / height)) - 0.45) / 0.30 * 0.11));
+      const verticalCenter = isPortrait
+        ? (currentMode === 'contrarreloj'
+            ? Math.max(.42, (bounds.height * sourceScale * scale / 2 + 16) / height)
+            : portraitOtherModesCenter)
+        : .5;
       setFrame({ x: centerX - viewWidth / 2, y: centerY - viewHeight * verticalCenter,
         width: viewWidth, height: viewHeight, scale });
     };
@@ -166,7 +173,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
     const observer = new ResizeObserver(([entry]) => fit(entry.contentRect.width, entry.contentRect.height));
     observer.observe(container);
     return () => observer.disconnect();
-  }, []);
+  }, [currentMode]);
   useEffect(() => {
     setZoomLevel(DEFAULT_MAP_ZOOM);
     setPanOffset({ x: 0, y: 0 });

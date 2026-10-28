@@ -181,7 +181,7 @@
 .header-modes button { display:flex; align-items:center; gap:7px; padding:10px 14px; border-radius:12px; color:var(--ui-muted); font-size:12px; font-weight:550; }
 .header-modes button[aria-current="page"] { background:var(--ui-accent); color:var(--ui-on-accent); }
 .header-actions { display:flex; align-items:center; gap:6px; margin-left:auto; }
-.header-actions>button:disabled { opacity:.35; }
+.header-actions>button:disabled { opacity:.35; pointer-events:none; cursor:default; }
 .header-editing-name { font-size:12px; color:var(--ui-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .header-menu { position:absolute; top:calc(100% + 12px); right:0; width:330px; max-height:calc(100dvh - 110px); overflow:auto;
   padding:14px; border-radius:20px; color:var(--ui-text); overscroll-behavior:contain; }

@@ -51,7 +51,9 @@ try {
   await open();await menu.getByRole('button',{name:'Barra superior',exact:true}).click();await page.keyboard.press('Escape');
   await page.getByRole('button',{name:'Ocultar interfaz',exact:true}).click();await page.getByRole('button',{name:'Mostrar interfaz',exact:true}).click();
   assert.equal(await page.locator('.header-region header').isVisible(),true);
-  await page.getByRole('button',{name:'Acercar mapa',exact:true}).click();assert.notDeepEqual(await snapshot(),touchBefore);
-  await page.getByRole('button',{name:'Quiz Curricular con opciones',exact:true}).click();assert.deepEqual(await snapshot(),touchBefore,'Each mode starts at the fitted peninsula framing');
+  await page.getByRole('button',{name:'Quiz Curricular con opciones',exact:true}).click();
+  const quizSnapshot = await snapshot();
+  assert.equal(quizSnapshot.transform, '', 'Mode change resets user pan/zoom');
+  assert.notDeepEqual(quizSnapshot, touchBefore, 'Quiz mode in portrait is aligned higher up than contrarreloj');
   assert.deepEqual(errors,[]);console.log('PASS stable full-window map, peninsula framing, dynamic visibility, eye restore and gestures');
 }finally{await browser.close();}

@@ -43,12 +43,45 @@ export const Header: React.FC<HeaderProps> = ({ currentMode, onModeChange, activ
   onCancelVectorEdit, hasUnsavedChanges, editingElementName }) => {
   const [popup, setPopup] = useState<'tools' | 'theme' | 'search' | null>(null);
   const [query, setQuery] = useState('');
-  const [isFullScreen, setIsFullScreen] = useState(false);
+  const isCurrentlyFullscreen = () => typeof document !== 'undefined' && !!(
+    document.fullscreenElement ||
+    (document as any).webkitFullscreenElement ||
+    (window.navigator as any).standalone ||
+    (typeof window.matchMedia === 'function' && (
+      window.matchMedia('(display-mode: fullscreen)').matches ||
+      window.matchMedia('(display-mode: standalone)').matches
+    ))
+  );
+  const [isFullScreen, setIsFullScreen] = useState(isCurrentlyFullscreen);
+  const [isTabletOrMobile, setIsTabletOrMobile] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const isSmallScreen = window.innerWidth < 1024;
+    const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    const isCoarse = typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
+    return isSmallScreen || (isTouch && isCoarse && Math.max(window.innerWidth, window.innerHeight) <= 1366);
+  });
   const headerRef = useRef<HTMLElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const [searchOffset, setSearchOffset] = useState({ x: 0, y: 0 });
   const searchDrag = useRef<{ pointerId: number; x: number; y: number; offsetX: number; offsetY: number; rect: DOMRect } | null>(null);
+
+  useEffect(() => {
+    const checkTabletOrMobile = () => {
+      const isSmallScreen = window.innerWidth < 1024;
+      const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+      const isCoarse = typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
+      setIsTabletOrMobile(isSmallScreen || (isTouch && isCoarse && Math.max(window.innerWidth, window.innerHeight) <= 1366));
+    };
+    checkTabletOrMobile();
+    window.addEventListener('resize', checkTabletOrMobile);
+    window.addEventListener('orientationchange', checkTabletOrMobile);
+    return () => {
+      window.removeEventListener('resize', checkTabletOrMobile);
+      window.removeEventListener('orientationchange', checkTabletOrMobile);
+    };
+  }, []);
+
   useEffect(() => {
     searchDrag.current = null;
     if (popup !== 'search') return;
@@ -81,10 +114,17 @@ export const Header: React.FC<HeaderProps> = ({ currentMode, onModeChange, activ
     const outside = (event: PointerEvent) => {
       if (headerRef.current && !headerRef.current.contains(event.target as Node)) setPopup(null);
     };
-    const fullscreen = () => setIsFullScreen(!!document.fullscreenElement);
+    const updateFullscreen = () => setIsFullScreen(isCurrentlyFullscreen());
     document.addEventListener('pointerdown', outside);
-    document.addEventListener('fullscreenchange', fullscreen);
-    return () => { document.removeEventListener('pointerdown', outside); document.removeEventListener('fullscreenchange', fullscreen); };
+    document.addEventListener('fullscreenchange', updateFullscreen);
+    document.addEventListener('webkitfullscreenchange', updateFullscreen);
+    window.addEventListener('resize', updateFullscreen);
+    return () => {
+      document.removeEventListener('pointerdown', outside);
+      document.removeEventListener('fullscreenchange', updateFullscreen);
+      document.removeEventListener('webkitfullscreenchange', updateFullscreen);
+      window.removeEventListener('resize', updateFullscreen);
+    };
   }, []);
   useEffect(() => { if (popup === 'search') searchRef.current?.focus(); }, [popup]);
   const matches = query.trim() ? GEO_ELEMENTS.filter(e => `${e.name} ${e.subCategory || ''}`.toLowerCase().includes(query.toLowerCase())).slice(0, 8) : [];
@@ -92,9 +132,16 @@ export const Header: React.FC<HeaderProps> = ({ currentMode, onModeChange, activ
   const action = (callback: () => void) => { setPopup(null); callback(); };
   const toggle = (value: typeof popup) => setPopup(current => current === value ? null : value);
   const fullscreen = () => {
-    if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
-    else document.documentElement.requestFullscreen?.().catch(() => {});
+    if (isFullScreen && isTabletOrMobile) return;
+    if (document.fullscreenElement || (document as any).webkitFullscreenElement) {
+      if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+      else if ((document as any).webkitExitFullscreen) (document as any).webkitExitFullscreen().catch?.(() => {});
+    } else {
+      if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
+      else if ((document.documentElement as any).webkitRequestFullscreen) (document.documentElement as any).webkitRequestFullscreen().catch?.(() => {});
+    }
   };
+  const isFullscreenDisabled = isFullScreen && isTabletOrMobile;
   return (
     <header ref={headerRef} className="immersive-header" onKeyDown={event => {
       if (event.key === 'Escape' && popup) { event.stopPropagation(); setPopup(null); }
@@ -112,8 +159,17 @@ export const Header: React.FC<HeaderProps> = ({ currentMode, onModeChange, activ
           <div className="header-actions">
             {currentMode === 'explorar' && <button type="button" className="ui-icon header-search-button" aria-label="Buscar accidentes" title="Buscar en el Atlas · Arrastra el título para mover la ventana"
               aria-expanded={popup === 'search'} onClick={() => toggle('search')}><Search size={17} /></button>}
-            <button type="button" className="ui-icon" aria-label={isFullScreen ? 'Salir de pantalla completa' : 'Pantalla completa'} title={isFullScreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
-              onClick={fullscreen}>{isFullScreen ? <Minimize2 size={17} /> : <Maximize2 size={17} />}</button>
+            <button
+              type="button"
+              className="ui-icon"
+              disabled={isFullscreenDisabled}
+              aria-disabled={isFullscreenDisabled}
+              aria-label={isFullScreen && !isTabletOrMobile ? 'Salir de pantalla completa' : 'Pantalla completa'}
+              title={isFullscreenDisabled ? 'Pantalla completa activa en este dispositivo' : isFullScreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
+              onClick={isFullscreenDisabled ? undefined : fullscreen}
+            >
+              {isFullScreen && !isTabletOrMobile ? <Minimize2 size={17} /> : <Maximize2 size={17} />}
+            </button>
             <button type="button" className="ui-icon" aria-label="Más herramientas" title="Más herramientas"
               aria-expanded={popup === 'tools'} onClick={() => toggle('tools')}><MoreHorizontal size={20} /></button>
           </div>
