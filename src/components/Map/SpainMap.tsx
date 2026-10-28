@@ -105,7 +105,12 @@ export const SpainMap: React.FC<SpainMapProps> = ({
   const [zoomLevel, setZoomLevel] = useState(1);
   const [panOffset, setPanOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
-  const panGesture = useRef<{ x: number; y: number; panX: number; panY: number } | null>(null);
+  const panGesture = useRef<{ pointerId: number; x: number; y: number; panX: number; panY: number } | null>(null);
+  const touchPointers = useRef(new Map<number, { x: number; y: number }>());
+  const pinchGesture = useRef<{
+    distance: number; zoom: number; x: number; y: number;
+    centerX: number; centerY: number; panX: number; panY: number;
+  } | null>(null);
   const didPan = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const svgElementRef = useRef<SVGSVGElement | null>(null);
@@ -165,6 +170,8 @@ export const SpainMap: React.FC<SpainMapProps> = ({
     setZoomLevel(1);
     setPanOffset({ x: 0, y: 0 });
     panGesture.current = null;
+    touchPointers.current.clear();
+    pinchGesture.current = null;
     didPan.current = false;
     setIsDragging(false);
   }, [currentMode, isVectorEditMode]);
@@ -232,13 +239,52 @@ export const SpainMap: React.FC<SpainMapProps> = ({
   };
 
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-    didPan.current = false;
-    if (!event.isPrimary || event.button !== 0 || (event.target as Element).closest('button, #vector-editor-overlay')) return;
-    panGesture.current = { x: event.clientX, y: event.clientY, panX: panOffset.x, panY: panOffset.y };
+    if (event.button !== 0 || (event.target as Element).closest('button, #vector-editor-overlay')) return;
+    if (event.pointerType === 'touch') {
+      // Only contacts starting on the map participate; overlays keep their own gestures.
+      if (touchPointers.current.size >= 2) return;
+      if (touchPointers.current.size === 0) didPan.current = false;
+      touchPointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      if (touchPointers.current.size === 2) {
+        const [a, b] = [...touchPointers.current.values()];
+        const rect = event.currentTarget.getBoundingClientRect();
+        pinchGesture.current = {
+          distance: Math.max(1, Math.hypot(b.x - a.x, b.y - a.y)), zoom: zoomLevel,
+          x: (a.x + b.x) / 2, y: (a.y + b.y) / 2,
+          centerX: rect.x + rect.width / 2, centerY: rect.y + rect.height / 2,
+          panX: panOffset.x, panY: panOffset.y,
+        };
+        panGesture.current = null;
+        didPan.current = true;
+        setIsDragging(true);
+        for (const id of touchPointers.current.keys()) event.currentTarget.setPointerCapture(id);
+        return;
+      }
+    } else {
+      if (!event.isPrimary || touchPointers.current.size > 0) return;
+      didPan.current = false;
+    }
+    panGesture.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, panX: panOffset.x, panY: panOffset.y };
   };
   const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (touchPointers.current.has(event.pointerId)) {
+      touchPointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      const pinch = pinchGesture.current;
+      if (pinch && touchPointers.current.size === 2) {
+        const [a, b] = [...touchPointers.current.values()];
+        const zoom = Math.max(0.5, Math.min(3, pinch.zoom * Math.hypot(b.x - a.x, b.y - a.y) / pinch.distance));
+        const ratio = zoom / pinch.zoom;
+        setZoomLevel(zoom);
+        // Keep the geographic point below the midpoint anchored, even while both fingers move.
+        setPanOffset({
+          x: (a.x + b.x) / 2 - pinch.centerX - (pinch.x - pinch.centerX - pinch.panX) * ratio,
+          y: (a.y + b.y) / 2 - pinch.centerY - (pinch.y - pinch.centerY - pinch.panY) * ratio,
+        });
+        return;
+      }
+    }
     const gesture = panGesture.current;
-    if (!gesture) return;
+    if (!gesture || gesture.pointerId !== event.pointerId) return;
     const dx = event.clientX - gesture.x;
     const dy = event.clientY - gesture.y;
     if (!didPan.current && Math.hypot(dx, dy) < 6) return;
@@ -247,9 +293,18 @@ export const SpainMap: React.FC<SpainMapProps> = ({
     event.currentTarget.setPointerCapture(event.pointerId);
     setPanOffset({ x: gesture.panX + dx, y: gesture.panY + dy });
   };
-  const finishPan = () => {
-    panGesture.current = null;
-    setIsDragging(false);
+  const finishPan = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (touchPointers.current.delete(event.pointerId)) {
+      pinchGesture.current = null;
+      // Continue with the remaining finger from its current position, without a jump.
+      const remaining = [...touchPointers.current.entries()][0];
+      panGesture.current = remaining ? {
+        pointerId: remaining[0], ...remaining[1], panX: panOffset.x, panY: panOffset.y,
+      } : null;
+    } else if (panGesture.current?.pointerId === event.pointerId) {
+      panGesture.current = null;
+    }
+    setIsDragging(panGesture.current !== null);
   };
 
   const handleElementHover = (elem: GeoElement) => {
@@ -333,12 +388,12 @@ export const SpainMap: React.FC<SpainMapProps> = ({
       onPointerUp={finishPan}
       onPointerCancel={finishPan}
       onPointerLeave={event => {
-        if (!event.currentTarget.hasPointerCapture(event.pointerId)) finishPan();
+        if (!event.currentTarget.hasPointerCapture(event.pointerId)) finishPan(event);
         setHoveredElement(null);
       }}
       onClickCapture={event => {
-        if (didPan.current && !(event.target as Element).closest('button')) event.stopPropagation();
-        didPan.current = false;
+        if (didPan.current && !(event.target as Element).closest('button, #vector-editor-overlay')) event.stopPropagation();
+        // Keep suppression until a fresh map contact: either finger may produce a click.
       }}
     >
 

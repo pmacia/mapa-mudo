@@ -10,6 +10,7 @@ Construida con React 19, TypeScript, Vite 8 y Tailwind CSS 4. Funciona en el nav
 
 El mapa vectorial ocupa el fondo de la pantalla. Las barras y los paneles flotan sobre él con superficies traslúcidas; abrirlos u ocultarlos no modifica el tamaño del mapa. El encuadre inicial muestra la península aprovechando el espacio disponible. Se puede ampliar, reducir y desplazar para explorar también los archipiélagos.
 
+- **Gestos táctiles:** arrastra con un dedo para desplazarte y separa o junta dos dedos sobre el mapa para acercar o alejar. El zoom sigue el punto entre los dedos; los paneles conservan sus controles y desplazamiento propios. También puedes utilizar los botones + y −.
 - **Temas:** Clásico · Claro, Relieve Moderno · Claro y Modo Nocturno.
 - **Visibilidad:** pulsa el ojo para ocultar todos los elementos flotantes. Al pulsar el ojo tachado se muestran todos. La flecha contigua, o una pulsación prolongada sobre el ojo, abre las opciones individuales disponibles para el modo actual.
 - **Paneles:** se pueden mover desde su cabecera y ocultar con su flecha. Se recuperan desde el menú de visibilidad. El temporizador de contrarreloj también es flotante y se puede mover.

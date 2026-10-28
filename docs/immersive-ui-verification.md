@@ -13,6 +13,7 @@ node tests/immersive-accessibility.mjs
 node tests/immersive-layout.mjs
 node tests/map-visibility.mjs
 node tests/map-interactions.mjs
+node tests/map-pinch-zoom.mjs
 node tests/category-labels.mjs
 node tests/atlas-search-drag.mjs
 node tests/timed-hud-drag.mjs
@@ -43,3 +44,5 @@ Los paneles de Atlas, retos, resultados y edición se desplazan desde su cabecer
 Iconos y ayuda: `public/icons/favicon.svg` es la fuente vectorial de los favicons SVG/PNG/ICO y los iconos de instalación. `scripts/generate-app-icons.mjs` genera todos los tamaños y mantiene compatibles las rutas antiguas; admite las mismas variables Playwright y navegador que las pruebas. El manifiesto usa los iconos de 192/512 px con zona segura para recorte y Apple usa 180 px.
 
 El manual integrado incluye interfaz, paneles, editor y atajos; usa los datos actuales para sus recuentos. Las reglas y ayudas se contrastaron con el juego: pista de Ubicar 30→20 puntos, 50:50 de un solo uso sin penalización, y contrarreloj sin pista. Los atajos de edición se comparten entre su ficha de ayuda y el manual. Las flechas de contrarreloj no envían respuestas mientras hay un diálogo modal abierto.
+
+Zoom táctil con dos dedos: se comprueban escala proporcional, anclaje al punto medio, desplazamiento simultáneo, límites de zoom, continuidad con un dedo, cancelación y ausencia de respuestas accidentales. Se verifica que el zoom del navegador no cambie y que los controles de contrarreloj sigan respondiendo en móvil vertical y horizontal.
