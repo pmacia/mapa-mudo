@@ -4,6 +4,7 @@ import { LAYERED_SPAIN_MAP, SvgMapPath } from '../../data/spainBaseMapData';
 import { CompassRose } from './CompassRose';
 import { ZoomIn, ZoomOut, RotateCcw, Pencil } from 'lucide-react';
 import { VectorEditOverlay } from './VectorEditOverlay';
+import { DEFAULT_MAP_ZOOM, MIN_MAP_ZOOM, MAX_MAP_ZOOM, ZOOM_STEP } from '../../constants/mapConfig';
 
 // Geographic coordinates remain unchanged. Only the displayed selector may move.
 // The layout uses every feature, so toggling layers never moves another selector.
@@ -102,7 +103,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
   onUpdateElementGeometry,
 }) => {
   const [hoveredElement, setHoveredElement] = useState<GeoElement | null>(null);
-  const [zoomLevel, setZoomLevel] = useState(1);
+  const [zoomLevel, setZoomLevel] = useState<number>(DEFAULT_MAP_ZOOM);
   const [panOffset, setPanOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const panGesture = useRef<{ pointerId: number; x: number; y: number; panX: number; panY: number } | null>(null);
@@ -167,7 +168,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
     return () => observer.disconnect();
   }, []);
   useEffect(() => {
-    setZoomLevel(1);
+    setZoomLevel(DEFAULT_MAP_ZOOM);
     setPanOffset({ x: 0, y: 0 });
     panGesture.current = null;
     touchPointers.current.clear();
@@ -228,13 +229,13 @@ export const SpainMap: React.FC<SpainMapProps> = ({
 
   const handleZoom = (delta: number) => {
     setZoomLevel((prev) => {
-      const next = Math.max(0.5, Math.min(3, prev + delta));
+      const next = Math.max(MIN_MAP_ZOOM, Math.min(MAX_MAP_ZOOM, prev + delta));
       return next;
     });
   };
 
   const handleResetZoom = () => {
-    setZoomLevel(1);
+    setZoomLevel(DEFAULT_MAP_ZOOM);
     setPanOffset({ x: 0, y: 0 });
   };
 
@@ -272,7 +273,7 @@ export const SpainMap: React.FC<SpainMapProps> = ({
       const pinch = pinchGesture.current;
       if (pinch && touchPointers.current.size === 2) {
         const [a, b] = [...touchPointers.current.values()];
-        const zoom = Math.max(0.5, Math.min(3, pinch.zoom * Math.hypot(b.x - a.x, b.y - a.y) / pinch.distance));
+        const zoom = Math.max(MIN_MAP_ZOOM, Math.min(MAX_MAP_ZOOM, pinch.zoom * Math.hypot(b.x - a.x, b.y - a.y) / pinch.distance));
         const ratio = zoom / pinch.zoom;
         setZoomLevel(zoom);
         // Keep the geographic point below the midpoint anchored, even while both fingers move.
@@ -400,23 +401,24 @@ export const SpainMap: React.FC<SpainMapProps> = ({
       {/* Zoom / Pan Controls Overlay */}
       <div id="map-tools" className="map-tools absolute top-3 right-3 z-20 flex flex-col gap-2" hidden={controlsHidden}>
         <button
-          onClick={() => handleZoom(0.32)}
+          onClick={() => handleZoom(ZOOM_STEP)}
           aria-label="Acercar mapa"
           title="Acercar mapa"
-          className="w-10 h-10 rounded-full bg-surface-container-lowest dark:bg-slate-800 text-on-surface dark:text-white flex items-center justify-center shadow-[0_3px_0_#d3e4fe] dark:shadow-none active:translate-y-0.5 active:scale-95 transition-all cursor-pointer"
+          disabled={zoomLevel >= MAX_MAP_ZOOM}
+          className="w-10 h-10 rounded-full bg-surface-container-lowest dark:bg-slate-800 text-on-surface dark:text-white flex items-center justify-center shadow-[0_3px_0_#d3e4fe] dark:shadow-none active:translate-y-0.5 active:scale-95 disabled:opacity-30 transition-all cursor-pointer"
         >
           <ZoomIn className="w-5 h-5 text-primary" />
         </button>
         <button
-          onClick={() => handleZoom(-0.32)}
+          onClick={() => handleZoom(-ZOOM_STEP)}
           aria-label="Alejar mapa"
           title="Alejar mapa · Permite ver los archipiélagos"
-          disabled={zoomLevel <= 0.5}
+          disabled={zoomLevel <= MIN_MAP_ZOOM}
           className="w-10 h-10 rounded-full bg-surface-container-lowest dark:bg-slate-800 text-on-surface dark:text-white flex items-center justify-center shadow-[0_3px_0_#d3e4fe] dark:shadow-none active:translate-y-0.5 active:scale-95 disabled:opacity-30 transition-all cursor-pointer"
         >
           <ZoomOut className="w-5 h-5 text-on-surface-variant" />
         </button>
-        {(zoomLevel !== 1 || panOffset.x !== 0 || panOffset.y !== 0) && (
+        {(zoomLevel !== DEFAULT_MAP_ZOOM || panOffset.x !== 0 || panOffset.y !== 0) && (
           <button
             onClick={handleResetZoom}
             aria-label="Recentrar mapa"
